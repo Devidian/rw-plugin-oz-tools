@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{HH:mm:ss}] %-5level %c{1} - %msg%n"/>
+        </Console>
+
+        <RollingFile name="RollingFile"
+                     fileName="${sys:logPath}/${sys:loggerName}/current.log"
+                     filePattern="${sys:logPath}/${sys:loggerName}/archive-%d{yyyy-MM-dd}.log">
+            <PatternLayout pattern="[%d{yyyy-MM-dd HH:mm:ss}] %-5level %c - %msg%n"/>
+            <Policies>
+                <!-- rotate daylie -->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- rotate by size -->
+                <!-- <SizeBasedTriggeringPolicy size="10MB"/> -->
+            </Policies>
+            <DefaultRolloverStrategy max="30"/>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="DEBUG">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>

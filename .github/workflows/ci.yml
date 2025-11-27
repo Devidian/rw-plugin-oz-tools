@@ -1,0 +1,159 @@
+name: Build and Release (Tools)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build Tools Plugin
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Detect version (from tag or fallback SNAPSHOT)
+      - id: meta
+        name: Detect version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF##*/}"
+            VERSION="${VERSION#v}"
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          else
+            echo "version=SNAPSHOT" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up JDK 20
+        uses: actions/setup-java@v4
+        with:
+          java-version: "20"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Install PluginAPI locally
+        run: |
+          mvn -B install:install-file \
+            -Dfile=libs/PluginAPI.jar \
+            -DgroupId=net.risingworld \
+            -DartifactId=PluginAPI \
+            -Dversion=1.0.0 \
+            -Dpackaging=jar
+
+      # Install xmlstarlet
+    #   - name: Install xmlstarlet
+    #     run: |
+    #       sudo apt-get update
+    #       sudo apt-get install -y xmlstarlet
+
+      # Patch version in pom + src/resources/plugin.yml
+      - name: Patch versions (tag only)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+      
+          echo "Patching pom.xml → ${VERSION}"
+          awk -v newver="$VERSION" '
+            /<artifactId>Tools<\/artifactId>/ { print; found=1; next }
+            found == 1 && /<version>/ { sub(/<version>.*<\/version>/, "<version>" newver "</version>"); found=0 }
+            { print }
+          ' pom.xml > pom.xml.tmp && mv pom.xml.tmp pom.xml
+      
+          echo "Patching src/resources/plugin.yml → ${VERSION}"
+          sed -i "s/^version: .*/version: ${VERSION}/" src/resources/plugin.yml
+      
+
+      - name: Show patched version
+        run: |
+          echo "POM VERSION:"
+          grep -R "<version>" -n pom.xml | head -n 5
+          echo ""
+          echo "PLUGIN.YML VERSION:"
+          grep -R "version:" -n src/resources/plugin.yml
+
+      - name: Build with Maven
+        run: mvn -B package
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            target/*.jar
+            dist/*.zip
+            pom.xml
+            src/resources/plugin.yml
+            libs/PluginAPI.jar
+            src/assembly/tools.xml
+
+
+  release:
+    name: Publish to GitHub Packages and Release
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      # Step 1: Download artifacts from the build job
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+
+      # Step 2: Set up Java and Maven for publishing
+      - name: Set up JDK 20
+        uses: actions/setup-java@v4
+        with:
+          java-version: "20"
+          distribution: "temurin"
+          # Important: Server ID must match the one in settings.xml and pom.xml
+          server-id: github
+          settings-path: ${{ github.workspace }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate settings.xml for Maven Deploy
+        run: |
+          echo '<settings><servers><server><id>github</id><username>${{ github.actor }}</username><password>${{ secrets.GITHUB_TOKEN }}</password></server></servers></settings>' > ${{ github.workspace }}/settings.xml
+
+    #   - name: Check generated Maven settings.xml
+    #     run: cat ${{ github.workspace }}/settings.xml
+
+      # Step 3: Publish JAR artifact to GitHub Packages
+      - name: Publish to GitHub Packages
+        run: |
+          # Find the JAR file that was downloaded from the build job
+          JAR_FILE=$(ls target/*.jar | head -n 1)
+          echo "Deploying $JAR_FILE to GitHub Packages..."
+          # Use deploy:deploy-file to upload only the JAR and its corresponding POM
+          # This avoids re-running the build and trying to deploy the ZIP to the Maven repo
+          mvn -B -X deploy:deploy-file \
+            --settings ${{ github.workspace }}/settings.xml \
+            -Dfile="$JAR_FILE" \
+            -DrepositoryId="github" \
+            -Durl="https://maven.pkg.github.com/Devidian/oz_rw_plugin_tools"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+      
+      # Step 4: Create GitHub Release and attach ZIP file
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Tools ${{ needs.build.outputs.version }}"
+          tag_name: "${{ github.ref_name }}"
+          files: |
+            dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
