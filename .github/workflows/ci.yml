@@ -65,7 +65,7 @@ jobs:
       
           echo "Patching pom.xml → ${VERSION}"
           awk -v newver="$VERSION" '
-            /<artifactId>Tools<\/artifactId>/ { print; found=1; next }
+            /<artifactId>rw-plugin-oz-tools<\/artifactId>/ { print; found=1; next }
             found == 1 && /<version>/ { sub(/<version>.*<\/version>/, "<version>" newver "</version>"); found=0 }
             { print }
           ' pom.xml > pom.xml.tmp && mv pom.xml.tmp pom.xml
@@ -141,7 +141,7 @@ jobs:
             --settings ${{ github.workspace }}/settings.xml \
             -Dfile="$JAR_FILE" \
             -DrepositoryId="github" \
-            -Durl="https://maven.pkg.github.com/Devidian/oz_rw_plugin_tools"
+            -Durl="https://maven.pkg.github.com/Devidian/rw-plugin-oz-tools"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
