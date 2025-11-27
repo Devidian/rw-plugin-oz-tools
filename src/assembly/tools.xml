@@ -12,7 +12,7 @@
 
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/dist/Tools</directory>
+            <directory>${project.basedir}/dist/OZTools</directory>
             <outputDirectory>/</outputDirectory>
         </fileSet>
     </fileSets>
