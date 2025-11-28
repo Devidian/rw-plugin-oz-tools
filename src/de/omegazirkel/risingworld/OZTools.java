@@ -125,22 +125,31 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     }
 
     private void initSettings(String filePath) {
-        Properties settings = new Properties();
-        FileInputStream in;
+        Path settingsFile = Paths.get(filePath);
+        Path defaultSettingsFile = settingsFile.resolveSibling("settings.default.properties");
+
         try {
-            in = new FileInputStream(filePath);
-            settings.load(new InputStreamReader(in, "UTF8"));
-            in.close();
+            if (Files.notExists(settingsFile) && Files.exists(defaultSettingsFile)) {
+                logger().info("settings.properties not found, copying from settings.default.properties...");
+                Files.copy(defaultSettingsFile, settingsFile);
+            }
+
+            Properties settings = new Properties();
+            if (Files.exists(settingsFile)) {
+                try (FileInputStream in = new FileInputStream(settingsFile.toFile())) {
+                    settings.load(new InputStreamReader(in, "UTF8"));
+                }
+            } else {
+                logger().warn("⚠️ Neither settings.properties nor settings.default.properties found. Using default values.");
+            }
+
             // fill global values
             logLevel = Integer.parseInt(settings.getProperty("logLevel", "0"));
             reloadOnChange = settings.getProperty("reloadOnChange", "false").contentEquals("true");
         } catch (IOException ex) {
             logger().fatal("❌ IOException on initSettings: " + ex.getMessage());
-            // e.printStackTrace();
         } catch (NumberFormatException ex) {
             logger().fatal("❌ NumberFormatException on initSettings: " + ex.getMessage());
-        } catch (Exception ex) {
-            logger().fatal("❌ Exception on initSettings: " + ex.getMessage());
         }
     }
 

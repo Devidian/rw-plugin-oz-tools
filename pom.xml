@@ -312,6 +312,25 @@
 							</resources>
 						</configuration>
 					</execution>
+					<!-- uncomment if i18n has any files -->
+					<!-- <execution>
+						<id>copy-i18n</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/dist/${project.name}/i18n</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/src/i18n</directory>
+									<includes>
+										<include>*.*</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution> -->
 				</executions>
 			</plugin>
 
