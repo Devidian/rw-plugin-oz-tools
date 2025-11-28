@@ -1,11 +1,8 @@
 name: "Auto-PR: Update Tools Dependencies"
 
 on:
-  push:
-    branches:
-    - deactivated-main
-  # release:
-  #   types: [published]
+  release:
+    types: [published]
 
 permissions:
   contents: write

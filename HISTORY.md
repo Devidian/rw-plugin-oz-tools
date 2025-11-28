@@ -2,6 +2,10 @@
 
 ## [unreleased]
 
+- refactor: dont ship `settings.properties`, renamed to `settings.default.properties` (0.9.1)
+  - prevent override on plugin update
+- ci: activated dependency-prs workflow (0.9.2)
+
 ## [0.9.0] - 2025-11-26 | AI-Refactoring
 
 Note: To get this plugin up to date, i've used AI (Gemini/Chat-GPT) to help me fixing some critical issues.
