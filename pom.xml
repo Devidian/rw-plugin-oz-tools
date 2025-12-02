@@ -6,7 +6,7 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>devidian</groupId>
+	<groupId>com.github.devidian</groupId>
 	<artifactId>rw-plugin-oz-tools</artifactId>
 	<!-- set by CI workflow -->
 	<version>0.9.0</version>
@@ -133,7 +133,6 @@
 			</plugins>
 		</pluginManagement>
 
-
 		<resources>
 			<resource>
 				<directory>${basedir}/src/main/resources</directory>
@@ -212,11 +211,12 @@
 				</configuration>
 			</plugin>
 
-			<!-- Dependency copying -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
-				<version>3.1.1</version>
+				<version>3.6.0</version>
+
+				<!-- Dependency copying -->
 				<executions>
 					<execution>
 						<id>copy-dependencies</id>
@@ -233,6 +233,29 @@
 						</configuration>
 					</execution>
 				</executions>
+
+				<!-- Copy jar to dist -->
+				<executions>
+					<execution>
+						<id>copy-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>${project.groupId}</groupId>
+									<artifactId>${project.artifactId}</artifactId>
+									<version>${project.version}</version>
+									<type>jar</type>
+									<destFileName>${project.name}.jar</destFileName>
+									<outputDirectory>${basedir}/dist/${project.name}</outputDirectory>
+								</artifactItem>
+							</artifactItems>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 
 			<!-- Resource copying -->
@@ -240,24 +263,6 @@
 				<artifactId>maven-resources-plugin</artifactId>
 				<version>3.3.1</version>
 				<executions>
-					<execution>
-						<id>copy-tools</id>
-						<phase>package</phase>
-						<goals>
-							<goal>copy-resources</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${basedir}/dist/${project.name}</outputDirectory>
-							<resources>
-								<resource>
-									<directory>${basedir}/target</directory>
-									<includes>
-										<include>${project.build.finalName}.jar</include>
-									</includes>
-								</resource>
-							</resources>
-						</configuration>
-					</execution>
 					<execution>
 						<id>copy-markdown</id>
 						<phase>prepare-package</phase>
@@ -351,7 +356,7 @@
 
 							<!-- Important: Inline descriptor -->
 							<descriptors>
-								<descriptor>src/assembly/tools.xml</descriptor>
+								<descriptor>src/assembly/${project.artifactId}.xml</descriptor>
 							</descriptors>
 
 							<outputDirectory>${project.basedir}/dist</outputDirectory>
