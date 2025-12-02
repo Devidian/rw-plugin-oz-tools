@@ -232,10 +232,9 @@
 							<!-- <excludeTransitive>true</excludeTransitive> -->
 						</configuration>
 					</execution>
-				</executions>
 
-				<!-- Copy jar to dist -->
-				<executions>
+					<!-- Copy jar to dist -->
+
 					<execution>
 						<id>copy-jar</id>
 						<phase>package</phase>
