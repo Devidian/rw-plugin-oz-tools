@@ -16,7 +16,7 @@ public class SQLite {
     private Database db = null;
 
     public static OZLogger logger() {
-        return OZLogger.getInstance("OZ.Tools.i18n");
+        return OZLogger.getInstance("OZ.Tools.SQLite");
     }
 
     /**

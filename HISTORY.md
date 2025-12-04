@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+- refactor: logLevel is now string and uses values (names) from log4J
+  - see `settings.default.properties` for possible values (0.9.5)
+- refactor: name of SQLite logger changed (0.9.5)
 - refactor: dont ship `settings.properties`, renamed to `settings.default.properties` (0.9.1)
   - prevent override on plugin update
 - ci: activated dependency-prs workflow (0.9.2)

@@ -139,6 +139,10 @@ public class OZLogger {
         isInShutdownMode = false;
     }
 
+    public void setLevel(String levelName){
+        logger().setLevel(Level.toLevel(levelName));
+    }
+
     public void setLevel(Level level) {
         logger().setLevel(level);
     }

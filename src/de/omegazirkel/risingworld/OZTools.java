@@ -11,6 +11,8 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.logging.log4j.Level;
+
 import de.omegazirkel.risingworld.tools.FileChangeListener;
 import de.omegazirkel.risingworld.tools.OZLogger;
 import de.omegazirkel.risingworld.tools.PluginFileWatcher;
@@ -33,7 +35,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         return OZLogger.getInstance("OZ.Tools");
     }
 
-    static int logLevel = 0;
+    static String logLevel = Level.DEBUG.name();
     static boolean reloadOnChange = false;
 
     /**
@@ -140,11 +142,13 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
                     settings.load(new InputStreamReader(in, "UTF8"));
                 }
             } else {
-                logger().warn("⚠️ Neither settings.properties nor settings.default.properties found. Using default values.");
+                logger().warn(
+                        "⚠️ Neither settings.properties nor settings.default.properties found. Using default values.");
             }
 
             // fill global values
-            logLevel = Integer.parseInt(settings.getProperty("logLevel", "0"));
+            logLevel = settings.getProperty("logLevel", Level.DEBUG.name()).toUpperCase();
+            logger().setLevel(logLevel);
             reloadOnChange = settings.getProperty("reloadOnChange", "false").contentEquals("true");
         } catch (IOException ex) {
             logger().fatal("❌ IOException on initSettings: " + ex.getMessage());
