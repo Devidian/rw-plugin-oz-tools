@@ -2,6 +2,7 @@
 
 ## [unreleased]
 
+- refactor: `OZLogger.setLevel` now returns `this`
 - refactor: logLevel is now string and uses values (names) from log4J
   - see `settings.default.properties` for possible values (0.9.5)
 - refactor: name of SQLite logger changed (0.9.5)

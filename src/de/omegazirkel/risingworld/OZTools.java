@@ -35,7 +35,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         return OZLogger.getInstance("OZ.Tools");
     }
 
-    static String logLevel = Level.DEBUG.name();
+    public static String logLevel = Level.DEBUG.name();
     static boolean reloadOnChange = false;
 
     /**
