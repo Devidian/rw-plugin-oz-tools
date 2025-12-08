@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- fix,CRITICAL: create one I18n for each Plugin (translations getting overridden issue)
+
 ## [0.10.0] - 2025-12-08 | Settings & I18n refactoring
 
 - refactor: Moved settings to PluginSettings.java (sync codebase with other plugins)

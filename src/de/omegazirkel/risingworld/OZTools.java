@@ -131,7 +131,9 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         if (s.sendPluginWelcome) {
             Player player = event.getPlayer();
             String lang = player.getSystemLanguage();
-            player.sendTextMessage(t.get("MSG_PLUGIN_WELCOME", lang));
+            player.sendTextMessage(t.get("TC_MSG_PLUGIN_WELCOME", lang)
+                    .replace("PH_PLUGIN_NAME", getDescription("name"))
+                    .replace("PH_PLUGIN_VERSION", getDescription("version")));
         }
     }
 

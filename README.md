@@ -73,7 +73,9 @@ public class NewPlugin extends Plugin{
         if (sendPluginWelcome) {
             Player player = event.getPlayer();
             String lang = player.getSystemLanguage();
-            player.sendTextMessage(t.get("MSG_PLUGIN_WELCOME", lang));
+            player.sendTextMessage(t.get("TC_MSG_PLUGIN_WELCOME", lang)
+                    .replace("PH_PLUGIN_NAME", getDescription("name"))
+                    .replace("PH_PLUGIN_VERSION", getDescription("version")));
         }
     }
 }
@@ -91,8 +93,8 @@ _/Plugins/YourPluigin/i18n/__anyotherlanguage__.properties
 ### Example File content
 
 ```bash
-MSG_PLUGIN_WELCOME=This Server uses <color=#F00000>NewPlugin</color> Plugin.\n\
-Type <color=#997d4a>/np help</color> in chat for help.
+TC_MSG_PLUGIN_WELCOME=This server is using <color=#F00000>PH_PLUGIN_NAME</color> plugin <color=#F00000>vPH_PLUGIN_VERSION</color>.
+
 ```
 
 ## Logger
