@@ -1,11 +1,10 @@
 package de.omegazirkel.risingworld.tools.db;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.OZLogger;
+import de.omegazirkel.risingworld.tools.PluginSettings;
 import net.risingworld.api.Plugin;
 import net.risingworld.api.World;
 import net.risingworld.api.database.Database;
@@ -17,6 +16,8 @@ public class SQLite {
     private Plugin plugin = null;
     private Database db = null;
 
+    private static PluginSettings s = PluginSettings.getInstance();
+
     public static OZLogger logger() {
         return OZLogger.getInstance("OZ.Tools.SQLite");
     }
@@ -27,7 +28,7 @@ public class SQLite {
      */
     public SQLite(Plugin plugin) {
         this.plugin = plugin;
-        logger().setLevel(OZTools.logLevel);
+        logger().setLevel(s.logLevel);
         initDatabase();
     }
 

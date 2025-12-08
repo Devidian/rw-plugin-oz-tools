@@ -12,6 +12,7 @@ import java.util.Properties;
 import net.risingworld.api.Plugin;
 
 public class I18n {
+    private static I18n instance = null;
     private Map<String, Properties> language = new HashMap<String, Properties>();
     private static final String defaultLanguage = "en";
 
@@ -19,12 +20,25 @@ public class I18n {
         return OZLogger.getInstance("OZ.Tools.i18n");
     }
 
-    /**
-     *
-     * @param plugin
-     */
-    public I18n(Plugin plugin) {
-        this.loadLanguageData(plugin.getPath());
+    private static PluginSettings s = PluginSettings.getInstance();
+
+    private I18n() {
+    }
+
+    public static I18n getInstance() {
+        if (instance == null) {
+            instance = new I18n();
+        }
+        return instance;
+    }
+
+    public static I18n getInstance(Plugin plugin) {
+        logger().setLevel(s.logLevel);
+        if (instance == null) {
+            instance = new I18n();
+            instance.loadLanguageData(plugin.getPath());
+        }
+        return instance;
     }
 
     /**

@@ -9,7 +9,7 @@
 	<groupId>com.github.devidian</groupId>
 	<artifactId>rw-plugin-oz-tools</artifactId>
 	<!-- set by CI workflow -->
-	<version>0.9.6</version>
+	<version>0.10.0</version>
 
 	<name>OZTools</name>
 
