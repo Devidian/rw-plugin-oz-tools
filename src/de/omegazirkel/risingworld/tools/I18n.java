@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.risingworld.api.Plugin;
+import net.risingworld.api.objects.Player;
 
 public class I18n {
     private static ConcurrentHashMap<String, I18n> instanceMap = new ConcurrentHashMap<String, I18n>();
@@ -32,6 +33,8 @@ public class I18n {
     }
 
     public static I18n getInstance(String pluginName) {
+        if (instanceMap == null)
+            new I18n();
         if (!instanceMap.containsKey(pluginName)) {
             instanceMap.put(pluginName, new I18n());
         }
@@ -104,6 +107,16 @@ public class I18n {
     public String getLanguageAvailable() {
         String[] keys = this.language.keySet().toArray(new String[0]);
         return String.join(", ", keys);
+    }
+
+    /**
+     *
+     * @param key
+     * @param player
+     * @return
+     */
+    public String get(String key, Player player) {
+        return get(key, player.getSystemLanguage());
     }
 
     /**

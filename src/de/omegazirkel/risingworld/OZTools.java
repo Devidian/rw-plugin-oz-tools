@@ -8,6 +8,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import de.omegazirkel.risingworld.tools.Colors;
 import de.omegazirkel.risingworld.tools.FileChangeListener;
 import de.omegazirkel.risingworld.tools.I18n;
 import de.omegazirkel.risingworld.tools.OZLogger;
@@ -15,10 +16,14 @@ import de.omegazirkel.risingworld.tools.PluginFileWatcher;
 import de.omegazirkel.risingworld.tools.PluginReloadDebouncer;
 import de.omegazirkel.risingworld.tools.PluginSettings;
 import de.omegazirkel.risingworld.tools.WSClientEndpoint;
+import de.omegazirkel.risingworld.tools.ui.AssetManager;
+import de.omegazirkel.risingworld.tools.ui.PluginMenuManager;
 import net.risingworld.api.Plugin;
 import net.risingworld.api.Server;
 import net.risingworld.api.events.EventMethod;
 import net.risingworld.api.events.Listener;
+import net.risingworld.api.events.player.PlayerCommandEvent;
+import net.risingworld.api.events.player.PlayerConnectEvent;
 import net.risingworld.api.events.player.PlayerSpawnEvent;
 import net.risingworld.api.objects.Player;
 
@@ -27,6 +32,7 @@ import net.risingworld.api.objects.Player;
  * @author Maik 'Devidian' Laschober
  */
 public class OZTools extends Plugin implements Listener, FileChangeListener {
+    static final String pluginCMD = "ozt";
     private PluginFileWatcher fileWatcher;
     private PluginReloadDebouncer debouncer;
     private static final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
@@ -37,16 +43,22 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
 
     private static PluginSettings s = null;
     private static I18n t = null;
+    private final static Colors c = Colors.getInstance();
+    public static String name = null;
 
     /**
      *
      */
     @Override
     public void onEnable() {
+        // for loading correct I18n in other classes
+        name = this.getDescription("name");
         s = PluginSettings.getInstance(this);
         s.initSettings();
         logger().setLevel(s.logLevel);
         t = I18n.getInstance(this);
+        AssetManager.loadDefaultIcons(this);
+
         registerEventListener(this);
         // Ensure all subsystems are out of shutdown mode for plugin reloads.
         OZLogger.resetShutdownMode();
@@ -69,7 +81,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
             this.executeDelayed(5, () -> {
                 Server.sendInputCommand("reloadplugins");
             });
-        }, 10, TimeUnit.SECONDS);
+        }, 15, TimeUnit.SECONDS);
 
         // Watcher start
         try {
@@ -130,10 +142,48 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     public void onPlayerSpawn(PlayerSpawnEvent event) {
         if (s.sendPluginWelcome) {
             Player player = event.getPlayer();
-            String lang = player.getSystemLanguage();
-            player.sendTextMessage(t.get("TC_MSG_PLUGIN_WELCOME", lang)
+            player.sendTextMessage(t.get("TC_MSG_PLUGIN_WELCOME", player)
                     .replace("PH_PLUGIN_NAME", getDescription("name"))
+                    .replace("PH_PLUGIN_CMD", pluginCMD)
                     .replace("PH_PLUGIN_VERSION", getDescription("version")));
+        }
+    }
+
+    @EventMethod
+    public void onPlayerConnect(PlayerConnectEvent event) {
+        // Player player = event.getPlayer();
+    }
+
+    @EventMethod
+    public void onPlayerCommand(PlayerCommandEvent event) {
+        String[] commandArgs = event.getCommand().split(" ");
+        if (!commandArgs[0].contentEquals("/" + pluginCMD)) {
+            event.setCancelled(true);
+            return;
+        }
+        String command = "";
+        if (commandArgs.length > 1) {
+            command = commandArgs[1];
+        }
+        Player player = event.getPlayer();
+        switch (command) {
+            case "status":
+                String statusMessage = t.get("TC_CMD_STATUS", player)
+                        .replace("PH_VERSION", c.okay + this.getDescription("version") + c.endTag)
+                        .replace("PH_LANGUAGE",
+                                c.info + player.getLanguage() + " / " + player.getSystemLanguage() + c.endTag)
+                        .replace("PH_USEDLANG", c.okay + t.getLanguageUsed(player.getSystemLanguage()) + c.endTag)
+                        .replace("PH_LANG_AVAILABLE", c.warning + t.getLanguageAvailable() + c.endTag);
+                player.sendTextMessage(c.okay + this.getName() + c.endTag + "\n " + statusMessage);
+                break;
+            case "open":
+                PluginMenuManager.showMainMenu(player);
+                break;
+            case "help":
+            case "":
+            default:
+                player.sendTextMessage(c.okay + this.getName() + c.endTag + "\n " + t.get("TC_CMD_HELP", player));
+                break;
         }
     }
 

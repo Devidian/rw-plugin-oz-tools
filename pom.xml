@@ -9,7 +9,7 @@
 	<groupId>com.github.devidian</groupId>
 	<artifactId>rw-plugin-oz-tools</artifactId>
 	<!-- set by CI workflow -->
-	<version>0.10.1</version>
+	<version>0.11.0</version>
 
 	<name>OZTools</name>
 
@@ -298,6 +298,7 @@
 							</resources>
 						</configuration>
 					</execution>
+					<!-- uncomment if /src/assets has any files -->
 					<execution>
 						<id>copy-assets</id>
 						<phase>prepare-package</phase>
@@ -316,7 +317,7 @@
 							</resources>
 						</configuration>
 					</execution>
-					<!-- uncomment if i18n has any files -->
+					<!-- uncomment if /src/i18n has any files -->
 					<execution>
 						<id>copy-i18n</id>
 						<phase>prepare-package</phase>

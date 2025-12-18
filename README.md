@@ -70,7 +70,7 @@ public class NewPlugin extends Plugin{
     // Usage example
     @EventMethod
     public void onPlayerSpawn(PlayerSpawnEvent event) {
-        if (sendPluginWelcome) {
+        if (s.sendPluginWelcome) {
             Player player = event.getPlayer();
             String lang = player.getSystemLanguage();
             player.sendTextMessage(t.get("TC_MSG_PLUGIN_WELCOME", lang)

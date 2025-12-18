@@ -2,6 +2,12 @@
 
 ## [unreleased]
 
+## [0.11.0] - 2025-12-18 | OZ UI
+
+- feat: introduce OZ UI
+  - buttons and Menu items for plugins
+  - CursorManager: manages if cursor should be visible or not (when opening child-windows and closing them)
+  - PluginMenuManager: main menu leads to other plugin menues
 - fix,CRITICAL: create one I18n for each Plugin (translations getting overridden issue)
 
 ## [0.10.0] - 2025-12-08 | Settings & I18n refactoring
