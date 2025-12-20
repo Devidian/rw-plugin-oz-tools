@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- refactor: moved onClick from `BaseButton` to `OZUIElement`
+
 ## [0.11.0] - 2025-12-18 | OZ UI
 
 - feat: introduce OZ UI

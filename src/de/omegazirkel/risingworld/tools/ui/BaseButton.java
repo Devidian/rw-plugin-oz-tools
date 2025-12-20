@@ -11,15 +11,13 @@ public abstract class BaseButton extends OZUIElement {
 
     private final UILabel label;
 
-    protected final Consumer<PlayerUIElementClickEvent> callback;
-
     // Colors for style
     protected float[] normalColor = { 0.4f, 0.4f, 0.4f, 1f };
     protected float[] hoverColor = { 0.5f, 0.5f, 0.5f, 1f };
     protected float[] disabledColor = { 0.2f, 0.2f, 0.2f, 0.5f };
 
     public BaseButton(String text, Consumer<PlayerUIElementClickEvent> callback) {
-        this.callback = callback;
+        this.clickAction = callback;
 
         // Standard Button Setup
         setSize(120, 36, false);
@@ -47,12 +45,5 @@ public abstract class BaseButton extends OZUIElement {
 
     public void setText(String text) {
         label.setText(text);
-    }
-
-    @Override
-    public void onClick(PlayerUIElementClickEvent event) {
-        if (callback != null) {
-            callback.accept(event);
-        }
     }
 }
