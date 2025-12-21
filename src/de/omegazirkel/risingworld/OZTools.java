@@ -22,10 +22,12 @@ import net.risingworld.api.Plugin;
 import net.risingworld.api.Server;
 import net.risingworld.api.events.EventMethod;
 import net.risingworld.api.events.Listener;
+import net.risingworld.api.events.player.PlayerChangeStateEvent;
 import net.risingworld.api.events.player.PlayerCommandEvent;
 import net.risingworld.api.events.player.PlayerConnectEvent;
 import net.risingworld.api.events.player.PlayerSpawnEvent;
 import net.risingworld.api.objects.Player;
+import net.risingworld.api.objects.Player.State;
 
 /**
  *
@@ -140,7 +142,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
 
     @EventMethod
     public void onPlayerSpawn(PlayerSpawnEvent event) {
-        if (s.sendPluginWelcome) {
+        if (s.enablePluginWelcomeMessage) {
             Player player = event.getPlayer();
             player.sendTextMessage(t.get("TC_MSG_PLUGIN_WELCOME", player)
                     .replace("PH_PLUGIN_NAME", getDescription("name"))
@@ -152,6 +154,25 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     @EventMethod
     public void onPlayerConnect(PlayerConnectEvent event) {
         // Player player = event.getPlayer();
+    }
+
+    @EventMethod
+    public void onPlayerChangeStateEvent(PlayerChangeStateEvent event) {
+        State fromState = event.getOldState();
+        State toState = event.getNewState();
+        Player player = event.getPlayer();
+        String translateKey = "";
+        if (s.enableSleepAnnouncement) {
+            if (fromState == State.Sleeping) {
+                translateKey = "TC_PLAYER_STATE_AWAKE";
+            }
+            if (toState == State.Sleeping) {
+                translateKey = "TC_PLAYER_STATE_SLEEPING";
+            }
+            for (Player p : Server.getAllPlayers()) {
+                p.sendTextMessage(t.get(translateKey, player).replace("PH_PLAYER_NAME", player.getName()));
+            }
+        }
     }
 
     @EventMethod

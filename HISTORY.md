@@ -2,7 +2,9 @@
 
 ## [unreleased]
 
-- refactor: moved onClick from `BaseButton` to `OZUIElement`
+- feat: small accouncement feature for players going to bed (default off) [0.11.2]
+- refactor: moved onClick from `BaseButton` to `OZUIElement` [0.11.1]
+- refactor: streamlined welcome message property [0.11.2]
 
 ## [0.11.0] - 2025-12-18 | OZ UI
 

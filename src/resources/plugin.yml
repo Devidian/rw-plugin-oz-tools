@@ -1,6 +1,6 @@
 name: "OZ - Tools"
 main: de.omegazirkel.risingworld.OZTools
-version: 0.11.1
+version: 0.11.2
 author: "Maik 'Devidian' Laschober"
 team: "Omega Zirkel"
 description: "This Plugin is providing useful stuff for other Plugins"
