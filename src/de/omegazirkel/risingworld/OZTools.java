@@ -170,7 +170,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
                 translateKey = "TC_PLAYER_STATE_SLEEPING";
             }
             for (Player p : Server.getAllPlayers()) {
-                p.sendTextMessage(t.get(translateKey, player).replace("PH_PLAYER_NAME", player.getName()));
+                p.sendTextMessage(t.get(translateKey, p).replace("PH_PLAYER_NAME", player.getName()));
             }
         }
     }
