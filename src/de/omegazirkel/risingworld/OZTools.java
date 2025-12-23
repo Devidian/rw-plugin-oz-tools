@@ -162,7 +162,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         State toState = event.getNewState();
         Player player = event.getPlayer();
         String translateKey = "";
-        if (s.enableSleepAnnouncement) {
+        if (s.enableSleepAnnouncement && (fromState == State.Sleeping || toState == State.Sleeping)) {
             if (fromState == State.Sleeping) {
                 translateKey = "TC_PLAYER_STATE_AWAKE";
             }
