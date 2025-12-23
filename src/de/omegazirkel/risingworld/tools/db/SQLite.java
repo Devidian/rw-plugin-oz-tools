@@ -1,5 +1,6 @@
 package de.omegazirkel.risingworld.tools.db;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -30,6 +31,11 @@ public class SQLite {
         this.plugin = plugin;
         logger().setLevel(s.logLevel);
         initDatabase();
+    }
+
+    public Connection getConnection(){
+        if(db == null) return null;
+        return db.getConnection();
     }
 
     private void initDatabase() {
