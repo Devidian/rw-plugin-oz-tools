@@ -1,12 +1,11 @@
 package de.omegazirkel.risingworld.tools.ui;
 
-import java.util.function.Consumer;
-
+import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.events.player.ui.PlayerUIElementClickEvent;
 
 public class OkButton extends BaseButton {
 
-    public OkButton(String text, Consumer<PlayerUIElementClickEvent> callback) {
+    public OkButton(String text, Callback<PlayerUIElementClickEvent> callback) {
         super(text, callback);
 
         setBackgroundColor(0.15f, 0.65f, 0.35f, 1f);  // green

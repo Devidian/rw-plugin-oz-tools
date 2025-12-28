@@ -2,6 +2,12 @@
 
 ## [unreleased]
 
+## [0.13.0] - 2025-12-28 | Refactor Consumer->Callback
+
+[BREAKING]
+
+- refactor: replaced Consumer with Callback (java -> rw api)
+
 ## [0.12.0] - 2025-12-24 | PlayerSettings
 
 - feat: `PlayerSettings` database to persist player-plugin-settings [0.12.0]

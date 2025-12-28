@@ -1,7 +1,6 @@
 package de.omegazirkel.risingworld.tools.ui;
 
-import java.util.function.Consumer;
-
+import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.events.player.ui.PlayerUIElementClickEvent;
 import net.risingworld.api.ui.UILabel;
 import net.risingworld.api.ui.style.Pivot;
@@ -16,7 +15,7 @@ public abstract class BaseButton extends OZUIElement {
     protected float[] hoverColor = { 0.5f, 0.5f, 0.5f, 1f };
     protected float[] disabledColor = { 0.2f, 0.2f, 0.2f, 0.5f };
 
-    public BaseButton(String text, Consumer<PlayerUIElementClickEvent> callback) {
+    public BaseButton(String text, Callback<PlayerUIElementClickEvent> callback) {
         this.clickAction = callback;
 
         // Standard Button Setup

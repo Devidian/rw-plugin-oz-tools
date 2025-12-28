@@ -1,7 +1,6 @@
 package de.omegazirkel.risingworld.tools.ui;
 
-import java.util.function.Consumer;
-
+import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.events.player.ui.PlayerUIElementClickEvent;
 import net.risingworld.api.ui.UIElement;
 
@@ -9,7 +8,7 @@ import net.risingworld.api.ui.UIElement;
  * extends UIElement with some helper methods missing from UIElement
  */
 public class OZUIElement extends UIElement {
-    protected Consumer<PlayerUIElementClickEvent> clickAction;
+    protected Callback<PlayerUIElementClickEvent> clickAction;
 
     public void setHoverBorderColor(int rgba) {
         hoverStyle.borderBottomColor.set(rgba);
@@ -25,18 +24,34 @@ public class OZUIElement extends UIElement {
         hoverStyle.borderTopWidth.set(thickness);
     }
 
+    public void setMargin(float margin) {
+        style.marginBottom.set(margin);
+        style.marginLeft.set(margin);
+        style.marginRight.set(margin);
+        style.marginTop.set(margin);
+    }
+
+    public void setPadding(float padding) {
+        style.paddingBottom.set(padding);
+        style.paddingLeft.set(padding);
+        style.paddingRight.set(padding);
+        style.paddingTop.set(padding);
+    }
+
     public void setHoverBackgroundColor(int rgba) {
         hoverStyle.backgroundColor.set(rgba);
     }
 
-    public void setClickAction(Consumer<PlayerUIElementClickEvent> clickAction) {
+    public void setClickAction(Callback<PlayerUIElementClickEvent> clickAction) {
         this.clickAction = clickAction;
     }
 
     @Override
     public void onClick(PlayerUIElementClickEvent event) {
         if (clickAction != null) {
-            clickAction.accept(event);
+            clickAction.onCall(event);
+        } else {
+            super.onClick(event);
         }
     }
 }

@@ -9,11 +9,11 @@ import net.risingworld.api.objects.Player;
 public class PluginMenuManager {
     private static List<MenuItem> menuItems = new ArrayList<>();
 
-    public static void registerPluginMenu(MenuItem menu){
+    public static void registerPluginMenu(MenuItem menu) {
         menuItems.add(menu);
     }
 
-    public static void showMainMenu(Player player){
+    public static void showMainMenu(Player player) {
         // copy menuItems locally and add close button
         List<MenuItem> menuItemsCopy = new ArrayList<>(menuItems);
         menuItemsCopy.add(MenuItem.closeMenu(player));
@@ -30,7 +30,7 @@ public class PluginMenuManager {
                 p.hideRadialMenu(false);
                 return;
             }
-            items.get(i).getAction().accept(p);
+            items.get(i).getAction().onCall(p);
         });
     }
 }

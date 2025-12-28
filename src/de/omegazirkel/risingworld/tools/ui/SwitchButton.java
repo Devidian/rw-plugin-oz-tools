@@ -1,19 +1,18 @@
 package de.omegazirkel.risingworld.tools.ui;
 
-import java.util.function.Consumer;
-
+import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.events.player.ui.PlayerUIElementClickEvent;
 import net.risingworld.api.ui.style.Pivot;
 
 public class SwitchButton extends OZUIElement {
 
     private boolean state;
-    private final Consumer<Boolean> callback;
+    private final Callback<Boolean> callback;
 
     private OZUIElement leftSide;
     private OZUIElement rightSide;
 
-    public SwitchButton(boolean initialState, Consumer<Boolean> callback) {
+    public SwitchButton(boolean initialState, Callback<Boolean> callback) {
         this.state = initialState;
         this.callback = callback;
 
@@ -60,6 +59,6 @@ public class SwitchButton extends OZUIElement {
         state = !state;
         updateState();
         if (callback != null)
-            callback.accept(state);
+            callback.onCall(state);
     }
 }

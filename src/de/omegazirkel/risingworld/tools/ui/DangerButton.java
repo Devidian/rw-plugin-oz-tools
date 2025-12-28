@@ -1,12 +1,11 @@
 package de.omegazirkel.risingworld.tools.ui;
 
-import java.util.function.Consumer;
-
+import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.events.player.ui.PlayerUIElementClickEvent;
 
 public class DangerButton extends BaseButton {
 
-    public DangerButton(String text, Consumer<PlayerUIElementClickEvent> callback) {
+    public DangerButton(String text, Callback<PlayerUIElementClickEvent> callback) {
         super(text, callback);
 
         setBackgroundColor(0.8f, 0.2f, 0.2f, 1f);

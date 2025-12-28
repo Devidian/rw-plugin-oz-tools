@@ -1,22 +1,21 @@
 package de.omegazirkel.risingworld.tools.ui;
 
-import java.util.function.Consumer;
-
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
 import net.risingworld.api.assets.TextureAsset;
+import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.objects.Player;
 
 public class MenuItem {
     private final TextureAsset icon;
     private final String label;
-    private final Consumer<Player> action;
+    private final Callback<Player> action;
 
     private static I18n t() {
         return I18n.getInstance(OZTools.name);
     };
 
-    public MenuItem(TextureAsset icon, String label, Consumer<Player> action) {
+    public MenuItem(TextureAsset icon, String label, Callback<Player> action) {
         this.icon = icon;
         this.label = label;
         this.action = action;
@@ -30,7 +29,7 @@ public class MenuItem {
         return label;
     }
 
-    public Consumer<Player> getAction() {
+    public Callback<Player> getAction() {
         return action;
     }
 
@@ -43,7 +42,7 @@ public class MenuItem {
                 });
     }
 
-    public static MenuItem backMenu(Player player, Consumer<Player> action) {
+    public static MenuItem backMenu(Player player, Callback<Player> action) {
         return new MenuItem(
                 AssetManager.getIcon("undo"),
                 t().get("TC_MENU_BACK", player),
