@@ -17,7 +17,10 @@ import de.omegazirkel.risingworld.tools.PluginReloadDebouncer;
 import de.omegazirkel.risingworld.tools.PluginSettings;
 import de.omegazirkel.risingworld.tools.WSClientEndpoint;
 import de.omegazirkel.risingworld.tools.ui.AssetManager;
+import de.omegazirkel.risingworld.tools.ui.CursorManager;
+import de.omegazirkel.risingworld.tools.ui.PlayerPluginSettingsOverlay;
 import de.omegazirkel.risingworld.tools.ui.PluginMenuManager;
+import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginSettings;
 import net.risingworld.api.Plugin;
 import net.risingworld.api.Server;
 import net.risingworld.api.events.EventMethod;
@@ -111,6 +114,9 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
             e.printStackTrace();
         }
 
+        // register plugin settings
+        PlayerPluginSettingsOverlay.registerPlayerPluginSettings(new ToolsPlayerPluginSettings());
+
         logger().info("✅ " + this.getName() + " Plugin is enabled version:" + this.getDescription("version"));
     }
 
@@ -149,6 +155,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
                     .replace("PH_PLUGIN_CMD", pluginCMD)
                     .replace("PH_PLUGIN_VERSION", getDescription("version")));
         }
+        // Playersettings below
     }
 
     @EventMethod
@@ -199,6 +206,18 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
                 break;
             case "open":
                 PluginMenuManager.showMainMenu(player);
+                break;
+            case "config":
+                PlayerPluginSettingsOverlay overlay = (PlayerPluginSettingsOverlay) player
+                        .getAttribute("tools.ui.overlay");
+                if (overlay != null) {
+                    player.removeUIElement(overlay);
+                    player.deleteAttribute("tools.ui.overlay");
+                }
+                overlay = new PlayerPluginSettingsOverlay(player);
+                CursorManager.show(player);
+                player.addUIElement(overlay);
+                player.setAttribute("tools.ui.overlay", overlay);
                 break;
             case "help":
             case "":

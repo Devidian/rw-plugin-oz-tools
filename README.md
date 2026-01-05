@@ -196,3 +196,109 @@ public class NewPlugin extends Plugin implements FileChangeListener{
 ## WebSocket
 
 ... description coming soon ...
+
+## Radial Main menu
+
+... description coming soon ...
+
+## Player-Plugin-Settings
+
+... description coming soon ...
+
+## CursorManager
+
+... description coming soon ...
+
+## PluginMenuManager
+
+You can hool your plugin into the player-plugin-settings overlay
+
+### Example code
+
+```java
+
+public class YourPlugin extends Plugin{
+
+    @Override
+	public void onEnable() {
+        // ... your stuff ...
+		// register plugin settings
+		PlayerPluginSettingsOverlay.registerPlayerPluginSettings(new YourPluginPlayerPluginSettings());
+        // ... your stuff ...
+	}
+}
+```
+
+```java
+import de.omegazirkel.risingworld.tools.ui.PlayerPluginSettings;
+
+public class YourPluginPlayerPluginSettings extends PlayerPluginSettings {
+
+    public YourPluginPlayerPluginSettings() {
+        this.pluginLabel = YourPlugin.name;
+    }
+
+    @Override
+    public BasePlayerPluginSettingsPanel createPlayerPluginSettingsUIElement(Player uiPlayer) {
+        return new YourPluginPlayerPluginSettingsPanel(uiPlayer, pluginLabel);
+    }
+
+}
+```
+
+```java
+
+import de.omegazirkel.risingworld.tools.ui.BasePlayerPluginSettingsPanel;
+
+public class YourPluginPlayerPluginSettingsPanel extends BasePlayerPluginSettingsPanel {
+
+    public YourPluginPlayerPluginSettingsPanel(Player uiPlayer, String pluginLabel) {
+        super(uiPlayer, pluginLabel);
+    }
+
+    @Override
+    protected void redrawContent() {
+        flexWrapper.removeAllChilds();
+        // TODO: implement actual settings content for YourPlugin
+    }
+
+}
+
+```
+
+Alternative implementation (shorter)
+
+```java
+
+import de.omegazirkel.risingworld.tools.ui.BasePlayerPluginSettingsPanel;
+import de.omegazirkel.risingworld.tools.ui.PlayerPluginSettings;
+import net.risingworld.api.objects.Player;
+import net.risingworld.api.ui.UIScrollView;
+import net.risingworld.api.ui.UIScrollView.ScrollViewMode;
+
+public class YourPluginPlayerPluginSettings extends PlayerPluginSettings {
+
+    public YourPluginPlayerPluginSettings() {
+        this.pluginLabel = YourPlugin.name;
+    }
+
+    @Override
+    public BasePlayerPluginSettingsPanel createPlayerPluginSettingsUIElement(Player uiPlayer) {
+        return new BasePlayerPluginSettingsPanel(uiPlayer, pluginLabel) {
+            @Override
+            protected void redrawContent() {
+                flexWrapper.removeAllChilds();
+                // TODO: implement actual settings content for YourPlugin
+            }
+
+        };
+    }
+
+}
+
+
+```
+
+## AssetManager
+
+... description coming soon ...
