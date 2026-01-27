@@ -2,6 +2,12 @@
 
 ## [unreleased]
 
+## [0.15.0] - 2026-01-27 | Refactor SQLite access
+
+- feat: new SQLite handling implemented using cached values
+  - reduces reads/writes to a minimum
+- refactor: SQLite class marked as deprecated, will be removed in a future release
+
 ## [0.14.0] - 2026-01-05 | Player-Plugin-Settings Manager
 
 - feat: new API for Plugin Settings, accessible through main radial menu

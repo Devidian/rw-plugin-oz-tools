@@ -12,6 +12,7 @@ import net.risingworld.api.database.Database;
 
 /**
  * A wrapper class for SQLite Database
+ * @deprecated
  */
 public class SQLite {
     private Plugin plugin = null;
