@@ -2,6 +2,11 @@
 
 ## [unreleased]
 
+## [0.16.0] - 2026-02-04 | AreaUtils and removed sleep announcement
+
+- feat: added AreaUtils class for some shared area methods (from LandClaim)
+- refactor: moved sleep announcement to AdminUtils plugin
+
 ## [0.15.0] - 2026-01-27 | Refactor SQLite access
 
 - feat: new SQLite handling implemented using cached values

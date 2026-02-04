@@ -164,25 +164,6 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     }
 
     @EventMethod
-    public void onPlayerChangeStateEvent(PlayerChangeStateEvent event) {
-        State fromState = event.getOldState();
-        State toState = event.getNewState();
-        Player player = event.getPlayer();
-        String translateKey = "";
-        if (s.enableSleepAnnouncement && (fromState == State.Sleeping || toState == State.Sleeping)) {
-            if (fromState == State.Sleeping) {
-                translateKey = "TC_PLAYER_STATE_AWAKE";
-            }
-            if (toState == State.Sleeping) {
-                translateKey = "TC_PLAYER_STATE_SLEEPING";
-            }
-            for (Player p : Server.getAllPlayers()) {
-                p.sendTextMessage(t.get(translateKey, p).replace("PH_PLAYER_NAME", player.getName()));
-            }
-        }
-    }
-
-    @EventMethod
     public void onPlayerCommand(PlayerCommandEvent event) {
         String[] commandArgs = event.getCommand().split(" ");
         if (!commandArgs[0].contentEquals("/" + pluginCMD)) {
