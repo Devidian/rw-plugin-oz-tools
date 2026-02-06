@@ -8,7 +8,7 @@ import net.risingworld.api.utils.Vector3f;
 import net.risingworld.api.utils.Vector3i;
 
 public class AreaUtils {
-        /**
+    /**
      * Converts a chunk coordinate into an Area
      */
     public static Area getVirtualAreaFromChunkVector(Vector3i chunkPosition) {
@@ -27,12 +27,15 @@ public class AreaUtils {
 
         Boolean negX = false;
         Boolean negZ = false;
+        Boolean negY = false;
         // check if any x/z is negative
         for (Vector3i chunk : chunks) {
             if (chunk.x < 0)
                 negX = true;
             if (chunk.z < 0)
                 negZ = true;
+            if (chunk.y < 0)
+                negY = true;
         }
 
         if (chunks.size() > 1)
@@ -61,18 +64,27 @@ public class AreaUtils {
                     if (chunk.z < end.z)
                         end.z = chunk.z;
                 }
-                // Y
-                if (chunk.y < start.y)
-                    start.y = chunk.y;
-                if (chunk.y > end.y)
-                    end.y = chunk.y;
+                if (!negY) {
+                    // Y
+                    if (chunk.y < start.y)
+                        start.y = chunk.y;
+                    if (chunk.y > end.y)
+                        end.y = chunk.y;
+                } else {
+                    if (chunk.y > start.y)
+                        start.y = chunk.y;
+                    if (chunk.y < end.y)
+                        end.y = chunk.y;
+                }
             }
         float startX = negX ? (start.x + 1) * 32 - 0.01f : (start.x * 32);
         float startZ = negZ ? (start.z + 1) * 32 - 0.01f : (start.z * 32);
+        float startY = negY ? (start.y + 1) * 64 - 0.01f : (start.y * 64);
         float endX = negX ? end.x * 32 + 0.001f : (end.x + 1) * 32 - 0.001f;
         float endZ = negZ ? end.z * 32 + 0.001f : (end.z + 1) * 32 - 0.001f;
-        Vector3f areaStart = new Vector3f(startX, start.y * 64, startZ);
-        Vector3f areaEnd = new Vector3f(endX, (end.y + 1) * 64 - 0.001f, endZ);
+        float endY = negY ? end.y * 64 + 0.001f : (end.y + 1) * 64 - 0.001f;
+        Vector3f areaStart = new Vector3f(startX, startY, startZ);
+        Vector3f areaEnd = new Vector3f(endX, endY, endZ);
         Area area = new Area(areaStart, areaEnd);
         return area;
     }

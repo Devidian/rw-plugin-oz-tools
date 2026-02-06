@@ -2,6 +2,8 @@
 
 ## [unreleased]
 
+- fix: mirror negative Y chunk position in `AreaUtils.chunksToArea`
+
 ## [0.16.0] - 2026-02-04 | AreaUtils and removed sleep announcement
 
 - feat: added AreaUtils class for some shared area methods (from LandClaim)
