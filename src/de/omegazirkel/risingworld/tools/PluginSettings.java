@@ -23,6 +23,7 @@ public class PluginSettings {
 
 	// Settings
 	public String logLevel = Level.DEBUG.name();
+	public boolean logInternal = false;
 	public boolean reloadOnChange = false;
 	public boolean enablePluginWelcomeMessage = false;
 
@@ -69,10 +70,12 @@ public class PluginSettings {
 			}
 			// fill global values
 			logLevel = settings.getProperty("logLevel", "ALL");
+			logInternal = settings.getProperty("logInternal", "false").contentEquals("true");
 			reloadOnChange = settings.getProperty("reloadOnChange", "false").contentEquals("true");
 
 			// motd settings
-			enablePluginWelcomeMessage = settings.getProperty("enablePluginWelcomeMessage", "false").contentEquals("true");
+			enablePluginWelcomeMessage = settings.getProperty("enablePluginWelcomeMessage", "false")
+					.contentEquals("true");
 
 			logger().info(plugin.getName() + " Plugin settings loaded");
 			logger().info("Sending welcome message on login is: " + String.valueOf(enablePluginWelcomeMessage));

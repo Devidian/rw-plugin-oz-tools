@@ -94,9 +94,19 @@ public class OZLogger {
     }
 
     public static OZLogger getInstance(String loggerName) {
+        PluginSettings s = OZTools.s;
+        if (s == null) {
+            System.out.println("[" + loggerName
+                    + "] 🆘 OZTools.s is null, default to internalLogOnly=false, use getInstance(String, boolean) instead.");
+        }
+        return getInstance(loggerName, s == null ? false : s.logInternal);
+    }
+
+    public static OZLogger getInstance(String loggerName, boolean internalLogOnly) {
         return INSTANCES.computeIfAbsent(loggerName, k -> {
             OZLogger logger = new OZLogger(loggerName, true); // "true" = only Map-Register
-            logger.init(); // Init separate, out of computeIfAbsent
+            if (!internalLogOnly)
+                logger.init(); // Init separate, out of computeIfAbsent
             return logger;
         });
     }
@@ -139,11 +149,13 @@ public class OZLogger {
         isInShutdownMode = false;
     }
 
-    public OZLogger setLevel(String levelName){
+    public OZLogger setLevel(String levelName) {
         return setLevel(Level.toLevel(levelName));
     }
 
     public OZLogger setLevel(Level level) {
+        if (logger() == null)
+            return this;
         logger().setLevel(level);
         return this;
     }
@@ -184,7 +196,7 @@ public class OZLogger {
     }
 
     private void fallbackLog(String message) {
-        System.out.println("[" + loggerName + "] 🆘 " + message);
+        System.out.println("[" + loggerName + "] " + message);
     }
 
     // for non simple message logs like exceptions

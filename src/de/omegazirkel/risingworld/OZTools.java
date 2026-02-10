@@ -25,12 +25,10 @@ import net.risingworld.api.Plugin;
 import net.risingworld.api.Server;
 import net.risingworld.api.events.EventMethod;
 import net.risingworld.api.events.Listener;
-import net.risingworld.api.events.player.PlayerChangeStateEvent;
 import net.risingworld.api.events.player.PlayerCommandEvent;
 import net.risingworld.api.events.player.PlayerConnectEvent;
 import net.risingworld.api.events.player.PlayerSpawnEvent;
 import net.risingworld.api.objects.Player;
-import net.risingworld.api.objects.Player.State;
 
 /**
  *
@@ -46,7 +44,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         return OZLogger.getInstance("OZ.Tools");
     }
 
-    private static PluginSettings s = null;
+    public static PluginSettings s = null;
     private static I18n t = null;
     private final static Colors c = Colors.getInstance();
     public static String name = null;

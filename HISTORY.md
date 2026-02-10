@@ -3,6 +3,8 @@
 ## [unreleased]
 
 - fix: mirror negative Y chunk position in `AreaUtils.chunksToArea`
+- refactor: added setting `logInternal` (default false)
+  - will disable seperated logfiles for plugins if `true`
 
 ## [0.16.0] - 2026-02-04 | AreaUtils and removed sleep announcement
 
