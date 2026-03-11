@@ -89,6 +89,9 @@ public class AreaUtils {
         return area;
     }
 
+    /*
+     * Check if an area (virtual area) intersects with an existing area and return the existing area or null
+     */
     public static Area isAreaIntersecting(Area area) {
         for (Area a : Server.getAllAreas()) {
             if (a != null && a.intersects(area)) {

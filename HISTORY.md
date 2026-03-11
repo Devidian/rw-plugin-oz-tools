@@ -4,6 +4,7 @@
 
 - docs: standardize agent prompts, PR checklist, and runtime smoke-test guidance
 - build: add API verification helper and stricter CI/release validation flow
+- feat: add `PlayerDatabaseHelper` for shared queries against the Rising World players database
 
 - fix: mirror negative Y chunk position in `AreaUtils.chunksToArea`
 - refactor: added setting `logInternal` (default false)
