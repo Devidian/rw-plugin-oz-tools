@@ -16,6 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import de.omegazirkel.risingworld.OZTools;
 import jakarta.websocket.ClientEndpoint;
 import jakarta.websocket.CloseReason;
 import jakarta.websocket.ContainerProvider;
@@ -38,7 +39,7 @@ public class WSClientEndpoint {
 	private ClassLoader extendedClassLoader;
 
 	private static OZLogger logger() {
-		return OZLogger.getInstance("OZ.Tools.WSCE");
+		return OZTools.logger();
 	}
 
 	public static void initLogger() {

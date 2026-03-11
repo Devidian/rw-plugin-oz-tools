@@ -13,6 +13,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
+import de.omegazirkel.risingworld.OZTools;
+
 public class PluginFileWatcher implements AutoCloseable {
     private final WatchService watchService;
     private final Map<WatchKey, Path> keyToPath = new HashMap<>();
@@ -21,7 +23,7 @@ public class PluginFileWatcher implements AutoCloseable {
     private final PluginReloadDebouncer jarDebouncer;
 
     private static OZLogger logger() {
-        return OZLogger.getInstance("OZ.Tools.PluginFileWatcher");
+        return OZTools.logger();
     }
 
     private final ExecutorService watcherThread = Executors.newSingleThreadExecutor(new ThreadFactory() {

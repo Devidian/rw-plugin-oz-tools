@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.omegazirkel.risingworld.OZTools;
 import net.risingworld.api.Plugin;
 import net.risingworld.api.database.Database;
 import net.risingworld.api.database.WorldDatabase;
@@ -17,9 +18,11 @@ import net.risingworld.api.database.WorldDatabase.Target;
 
 public final class PlayerDatabaseHelper {
 
-    private static final OZLogger LOGGER = OZLogger.getInstance("OZ.Tools.PlayerDatabaseHelper");
-
     private PlayerDatabaseHelper() {
+    }
+
+    private static OZLogger logger() {
+        return OZTools.logger();
     }
 
     public static List<Integer> findPlayersSeenSince(Plugin plugin, long cutoffEpochSeconds) {
@@ -31,7 +34,7 @@ public final class PlayerDatabaseHelper {
         try {
             return findPlayersSeenSince(playersDatabase, cutoffEpochSeconds);
         } catch (UnsupportedOperationException ex) {
-            LOGGER.warn("Players WorldDatabase query is not supported, falling back to direct SQLite access.");
+            logger().warn("Players WorldDatabase query is not supported, falling back to direct SQLite access.");
             return findPlayersSeenSinceViaSQLite(plugin, playersDatabase, cutoffEpochSeconds);
         }
     }
@@ -44,7 +47,7 @@ public final class PlayerDatabaseHelper {
         try {
             String playerIdColumn = resolvePlayerIdColumn(playersDatabase);
             if (playerIdColumn == null) {
-                LOGGER.warn("Players database table `player` has no supported player id column.");
+                logger().warn("Players database table `player` has no supported player id column.");
                 return List.of();
             }
 
@@ -58,7 +61,7 @@ public final class PlayerDatabaseHelper {
             }
             return new ArrayList<>(playerIds);
         } catch (SQLException ex) {
-            LOGGER.error("Failed to query recently seen players: " + ex.getMessage());
+            logger().error("Failed to query recently seen players: " + ex.getMessage());
             return List.of();
         }
     }
@@ -78,7 +81,7 @@ public final class PlayerDatabaseHelper {
 
             String playerIdColumn = resolvePlayerIdColumn(db.getConnection());
             if (playerIdColumn == null) {
-                LOGGER.warn("Players database table `player` has no supported player id column.");
+                logger().warn("Players database table `player` has no supported player id column.");
                 return List.of();
             }
 
@@ -94,7 +97,7 @@ public final class PlayerDatabaseHelper {
             }
             return new ArrayList<>(playerIds);
         } catch (SQLException ex) {
-            LOGGER.error("Failed to query recently seen players via SQLite fallback: " + ex.getMessage());
+            logger().error("Failed to query recently seen players via SQLite fallback: " + ex.getMessage());
             return List.of();
         }
     }
@@ -103,7 +106,6 @@ public final class PlayerDatabaseHelper {
         try (ResultSet rs = playersDatabase.executeQuery("SELECT * FROM player LIMIT 1")) {
             return resolvePlayerIdColumn(rs.getMetaData());
         }
-        return null;
     }
 
     private static String resolvePlayerIdColumn(Connection connection) throws SQLException {

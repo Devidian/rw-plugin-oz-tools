@@ -13,7 +13,7 @@ public class AssetManager {
     public static final String baseAssetIconPath = "/assets/icons/";
 
     private static OZLogger logger() {
-        return OZLogger.getInstance("OZ.Tools.AssetManager");
+        return OZTools.logger();
     }
 
     public static void loadIconFromPlugin(Plugin plugin, String key, String path) {

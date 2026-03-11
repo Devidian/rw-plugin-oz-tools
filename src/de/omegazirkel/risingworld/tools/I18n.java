@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
+import de.omegazirkel.risingworld.OZTools;
 import net.risingworld.api.Plugin;
 import net.risingworld.api.objects.Player;
 
@@ -19,7 +20,7 @@ public class I18n {
     private static final String defaultLanguage = "en";
 
     public static OZLogger logger() {
-        return OZLogger.getInstance("OZ.Tools.i18n");
+        return OZTools.logger();
     }
 
     private static PluginSettings s = PluginSettings.getInstance();

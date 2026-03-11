@@ -22,7 +22,6 @@ public class OZLogger {
     private static final Map<String, OZLogger> INSTANCES = new ConcurrentHashMap<>();
     private static final boolean DEBUG_MODE = false;
     private static final String CONFIG_FILE = "oz-log4j2.xml";
-
     private static boolean isInShutdownMode = false;
 
     private Logger logger() {

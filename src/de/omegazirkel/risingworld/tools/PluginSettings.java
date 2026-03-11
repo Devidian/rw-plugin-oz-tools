@@ -18,7 +18,7 @@ public class PluginSettings {
 	private static OZTools plugin;
 
 	private static OZLogger logger() {
-		return OZLogger.getInstance("OZ.Tools.Settings");
+		return OZTools.logger();
 	}
 
 	// Settings

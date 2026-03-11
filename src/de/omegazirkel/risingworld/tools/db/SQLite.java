@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.OZLogger;
 import de.omegazirkel.risingworld.tools.PluginSettings;
 import net.risingworld.api.Plugin;
@@ -21,7 +22,7 @@ public class SQLite {
     private static PluginSettings s = PluginSettings.getInstance();
 
     public static OZLogger logger() {
-        return OZLogger.getInstance("OZ.Tools.SQLite");
+        return OZTools.logger();
     }
 
     /**
