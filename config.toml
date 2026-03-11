@@ -1,0 +1,109 @@
+# Codex agent configuration for Rising World Unity Java plugins
+# Scope: rw-plugin-oz-* and closely related Maven plugin repositories
+
+[project]
+name = "rw-plugin-oz-tools"
+family = "rw-plugin-oz-*"
+baseline_template = "rw-plugin-maven-template"
+language = "java"
+build_tool = "maven"
+java_version = 20
+release_strategy = "github-tags"
+release_tag_pattern = "v*"
+
+[workflow]
+default_sequence = ["planner", "api-guardian", "implementer", "test-runner", "reviewer", "release-guardian"]
+prompt_templates_dir = "agent-prompts"
+
+[paths]
+source = "src"
+resources = "src/resources"
+plugin_descriptor = "src/resources/plugin.yml"
+local_api_jar = "libs/PluginAPI.jar"
+api_helper = "scripts/verify-plugin-api.sh"
+runtime_smoke = "scripts/docker-runtime-smoke.sh"
+
+[rules]
+require_api_verification = true
+forbid_unverified_api_calls = true
+minimize_external_dependencies = true
+prefer_tools_plugin_for_shared_libs = true
+preserve_tag_release_ci = true
+repository_language = "english"
+require_readme_maintenance = true
+require_history_maintenance = true
+commit_message_convention = "conventional_commits_v1"
+
+[checks]
+compile = "mvn -B -DskipTests package"
+test = "mvn -B test"
+api_symbols = [
+  "jar tf libs/PluginAPI.jar",
+  "javap -classpath libs/PluginAPI.jar <ClassName>"
+]
+search_usage = "rg \"<MethodOrClass>\" src"
+
+[docker_test]
+enabled = true
+image = "devidian/rising-world-docker:latest"
+server_root = "/appdata/rising-world/dedicated-server"
+plugins_dir = "/appdata/rising-world/dedicated-server/Plugins"
+logs_dir = "/appdata/rising-world/dedicated-server/Logs"
+notes = "Copy plugin artifacts into Plugins/<PluginName>/ and inspect logs for plugin load errors/exceptions"
+
+[agents.planner]
+objective = "Clarify task scope, constraints, risks, and execution sequence"
+prompt_template = "agent-prompts/planner.md"
+inputs = ["Issue/Request", "README", "pom.xml", "plugin.yml", "AGENTS.md", "PLANS.md"]
+outputs = ["Plan summary", "File impact list", "Risk notes", "Validation checklist", "README/HISTORY impact note", "Commit-message convention note"]
+
+[agents.api_guardian]
+objective = "Verify Rising World API usage and Java 20 compliance"
+prompt_template = "agent-prompts/api-guardian.md"
+must_do = [
+  "Validate new API calls against PluginAPI",
+  "Ensure project compiles",
+  "Reject or document uncertain API assumptions"
+]
+
+[agents.implementer]
+objective = "Deliver minimal, maintainable implementation"
+prompt_template = "agent-prompts/implementer.md"
+style = [
+  "small diffs",
+  "no unnecessary dependencies",
+  "respect existing project structure"
+]
+
+[agents.test_runner]
+objective = "Execute build, tests, and lightweight runtime checks"
+prompt_template = "agent-prompts/test-runner.md"
+commands = [
+  "mvn -B -DskipTests package",
+  "mvn -B test"
+]
+optional_commands = [
+  "docker run --rm -v <repo>:/workspace <image> ..."
+]
+
+[agents.release_guardian]
+objective = "Protect CI/release readiness"
+prompt_template = "agent-prompts/release-guardian.md"
+must_do = [
+  "Validate tag-release workflow behavior",
+  "Sanity-check artifact naming/versioning",
+  "Prevent breaking CI workflow changes"
+]
+
+[agents.reviewer]
+objective = "Final quality review before merge"
+prompt_template = "agent-prompts/reviewer.md"
+checklist = [
+  "Requirement fulfilled",
+  "API verification completed",
+  "Build/test checks reported",
+  "Documentation consistent",
+  "Rollback risk acceptable",
+  "README/HISTORY updated when required",
+  "Commit message follows Conventional Commits"
+]

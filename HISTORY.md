@@ -2,6 +2,9 @@
 
 ## [unreleased]
 
+- docs: standardize agent prompts, PR checklist, and runtime smoke-test guidance
+- build: add API verification helper and stricter CI/release validation flow
+
 - fix: mirror negative Y chunk position in `AreaUtils.chunksToArea`
 - refactor: added setting `logInternal` (default false)
   - will disable seperated logfiles for plugins if `true`
