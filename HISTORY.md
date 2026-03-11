@@ -1,10 +1,12 @@
 # Changelog
 
-## [unreleased]
+## [0.17.0] - 2026-03-11 | Players DB helper and logger cleanup
 
 - docs: standardize agent prompts, PR checklist, and runtime smoke-test guidance
 - build: add API verification helper and stricter CI/release validation flow
 - feat: add `PlayerDatabaseHelper` for shared queries against the Rising World players database
+- build: package only `README.md` and `HISTORY.md` into release artifacts
+- refactor: route internal OZTools subsystems through the main `OZ.Tools` logger
 
 - fix: mirror negative Y chunk position in `AreaUtils.chunksToArea`
 - refactor: added setting `logInternal` (default false)
