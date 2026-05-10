@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.17.1] - 2026-05-10 | PluginAPI alignment and command help fix
 
 - build: align bundled PluginAPI jar and Maven dependency version
 - fix: correct dynamic command help text and area border bounds
