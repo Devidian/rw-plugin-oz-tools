@@ -77,12 +77,13 @@ public class AreaUtils {
                         end.y = chunk.y;
                 }
             }
+        float border = 0.01f;
         float startX = negX ? (start.x + 1) * 32 - 0.01f : (start.x * 32);
         float startZ = negZ ? (start.z + 1) * 32 - 0.01f : (start.z * 32);
         float startY = negY ? (start.y + 1) * 64 - 0.01f : (start.y * 64);
-        float endX = negX ? end.x * 32 + 0.001f : (end.x + 1) * 32 - 0.001f;
-        float endZ = negZ ? end.z * 32 + 0.001f : (end.z + 1) * 32 - 0.001f;
-        float endY = negY ? end.y * 64 + 0.001f : (end.y + 1) * 64 - 0.001f;
+        float endX = negX ? end.x * 32 + border : (end.x + 1) * 32 - border;
+        float endZ = negZ ? end.z * 32 + border : (end.z + 1) * 32 - border;
+        float endY = negY ? end.y * 64 + border : (end.y + 1) * 64 - border;
         Vector3f areaStart = new Vector3f(startX, startY, startZ);
         Vector3f areaEnd = new Vector3f(endX, endY, endZ);
         Area area = new Area(areaStart, areaEnd);

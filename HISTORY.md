@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 - build: align bundled PluginAPI jar and Maven dependency version
+- fix: correct dynamic command help text and area border bounds
+- docs: correct installation path example
 
 ## [0.17.0] - 2026-03-11 | Players DB helper and logger cleanup
 

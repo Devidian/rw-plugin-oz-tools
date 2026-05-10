@@ -28,22 +28,24 @@ All librarys that were added to this plugin can be used for all plugins without 
 
 ## Installation
 
-Just extract the shared folder into your `Plugins` folder. The jar path should look like `Plugins/Tools/OZ-Tools.jar`
+Just extract the plugin into your `Plugins` folder. The jar path should look like `Plugins/OZTools/OZTools.jar`
 
 ```css
     ── RisingWorld
         ├── Plugins
-        │    ├── Tools
-        │    │    ├── assets...
+        │    ├── OZTools
+        │    │    ├── i18n
+        │    │    │    ├── de.properties
+        │    │    │    ├── en.properties
+        │    │    │    :
         │    │    ├── lib
-        │    │    │    ├── gson-2.8.6.jar
-        │    │    │    ├── javax.websocket-api-1.1.jar
-        │    │    │    └── tyrus-standalone-client-1.15.jar
+        │    │    │    ├── *.jar
+        │    │    │    :
         │    │    ├── HISTORY.md
+        │    │    ├── OZTools.jar
         │    │    ├── README.md
-        │    │    ├── OZ-Tools.jar
+        │    │    ├── settings.default.properties
         │    │    └── settings.properties
-
         :    :
 ```
 

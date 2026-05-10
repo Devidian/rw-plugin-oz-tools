@@ -201,7 +201,8 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
             case "help":
             case "":
             default:
-                player.sendTextMessage(c.okay + this.getName() + c.endTag + "\n " + t.get("TC_CMD_HELP", player));
+                player.sendTextMessage(c.okay + this.getName() + c.endTag + "\n "
+                        + t.get("TC_CMD_HELP", player).replace("PH_PLUGIN_CMD", pluginCMD));
                 break;
         }
     }
