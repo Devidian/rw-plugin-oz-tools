@@ -68,7 +68,7 @@ jobs:
             -Dfile=libs/PluginAPI.jar \
             -DgroupId=net.risingworld \
             -DartifactId=PluginAPI \
-            -Dversion=1.0.0 \
+            -Dversion=0.9.2 \
             -Dpackaging=jar
 
       - name: Check API helper
@@ -151,7 +151,7 @@ jobs:
             -Dfile=libs/PluginAPI.jar \
             -DgroupId=net.risingworld \
             -DartifactId=PluginAPI \
-            -Dversion=1.0.0 \
+            -Dversion=0.9.2 \
             -Dpackaging=jar
 
       - name: Patch versions for tag release
