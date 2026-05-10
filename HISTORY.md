@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- build: align bundled PluginAPI jar and Maven dependency version
+
 ## [0.17.0] - 2026-03-11 | Players DB helper and logger cleanup
 
 - docs: standardize agent prompts, PR checklist, and runtime smoke-test guidance
