@@ -13,7 +13,9 @@ release_tag_pattern = "v*"
 
 [workflow]
 default_sequence = ["planner", "api-guardian", "implementer", "test-runner", "reviewer", "release-guardian"]
-prompt_templates_dir = "agent-prompts"
+agents_config = ".codex/agents.toml"
+skills_dir = ".codex/skills"
+prompt_templates_dir = ".codex/skills"
 
 [paths]
 source = "src"
@@ -53,13 +55,13 @@ notes = "Copy plugin artifacts into Plugins/<PluginName>/ and inspect logs for p
 
 [agents.planner]
 objective = "Clarify task scope, constraints, risks, and execution sequence"
-prompt_template = "agent-prompts/planner.md"
+prompt_template = ".codex/skills/repository-skills.md"
 inputs = ["Issue/Request", "README", "pom.xml", "plugin.yml", "AGENTS.md", "PLANS.md"]
 outputs = ["Plan summary", "File impact list", "Risk notes", "Validation checklist", "README/HISTORY impact note", "Commit-message convention note"]
 
 [agents.api_guardian]
 objective = "Verify Rising World API usage and Java 20 compliance"
-prompt_template = "agent-prompts/api-guardian.md"
+prompt_template = ".codex/skills/repository-skills.md"
 must_do = [
   "Validate new API calls against PluginAPI",
   "Ensure project compiles",
@@ -68,7 +70,7 @@ must_do = [
 
 [agents.implementer]
 objective = "Deliver minimal, maintainable implementation"
-prompt_template = "agent-prompts/implementer.md"
+prompt_template = ".codex/skills/repository-skills.md"
 style = [
   "small diffs",
   "no unnecessary dependencies",
@@ -77,7 +79,7 @@ style = [
 
 [agents.test_runner]
 objective = "Execute build, tests, and lightweight runtime checks"
-prompt_template = "agent-prompts/test-runner.md"
+prompt_template = ".codex/skills/repository-skills.md"
 commands = [
   "mvn -B -DskipTests package",
   "mvn -B test"
@@ -88,7 +90,7 @@ optional_commands = [
 
 [agents.release_guardian]
 objective = "Protect CI/release readiness"
-prompt_template = "agent-prompts/release-guardian.md"
+prompt_template = ".codex/skills/repository-skills.md"
 must_do = [
   "Validate tag-release workflow behavior",
   "Sanity-check artifact naming/versioning",
@@ -97,7 +99,7 @@ must_do = [
 
 [agents.reviewer]
 objective = "Final quality review before merge"
-prompt_template = "agent-prompts/reviewer.md"
+prompt_template = ".codex/skills/repository-skills.md"
 checklist = [
   "Requirement fulfilled",
   "API verification completed",

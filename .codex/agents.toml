@@ -1,0 +1,97 @@
+[meta]
+repository = "rw-plugin-oz-tools"
+repository_type = "rising-world-plugin"
+standalone = true
+root_orchestration_optional = true
+
+[models]
+planner = "gpt-5.2"
+architecture_review = "gpt-5.5"
+api_guardian = "gpt-5.4"
+implementer = "gpt-5.3-codex"
+reviewer = "gpt-5.4"
+governance_review = "gpt-5.2"
+test_runner = "gpt-5.4-mini"
+release_guardian = "gpt-5.4"
+migration_review = "gpt-5.4"
+
+[agents.planner]
+task_classes = ["feature", "bugfix", "migration", "release", "refactor", "infrastructure"]
+context = ["AGENTS.md", "PLANS.md", "README.md", "HISTORY.md", "docs/active/*", "docs/roadmaps/*"]
+
+[agents.architecture-review]
+task_classes = ["feature", "refactor", "infrastructure", "migration"]
+context = ["AGENTS.md", "README.md", "pom.xml", "docs/policies/*", "src/main/java/**"]
+must_detect = [
+  "shared utility duplication",
+  "ownership drift",
+  "plugin boundary violations",
+  "unnecessary dependencies",
+  "business logic leakage into rw-plugin-oz-tools"
+]
+
+[agents.api-guardian]
+task_classes = ["feature", "bugfix", "migration"]
+context = ["pom.xml", "libs/PluginAPI.jar", "src/main/java/**", "docs/policies/*", ".codex/skills/repository-skills.md"]
+
+[agents.implementer]
+task_classes = ["feature", "bugfix", "refactor", "infrastructure"]
+context = ["AGENTS.md", "pom.xml", "src/main/java/**", "src/main/resources/**", "docs/active/*"]
+
+[agents.reviewer]
+task_classes = ["feature", "bugfix", "refactor", "migration", "infrastructure"]
+context = ["AGENTS.md", "README.md", "HISTORY.md", "pom.xml", "src/main/java/**", "docs/policies/*"]
+
+[agents.governance-review]
+task_classes = ["infrastructure", "release", "refactor"]
+context = ["AGENTS.md", "PLANS.md", "docs/policies/*", ".codex/agents.toml", ".codex/skills/*"]
+
+[agents.test-runner]
+task_classes = ["feature", "bugfix", "migration", "release"]
+context = ["pom.xml", "RUNTIME_TESTING.md", "docs/active/*", ".codex/skills/repository-skills.md"]
+
+[agents.release-guardian]
+task_classes = ["release"]
+context = [".github/workflows/*", "pom.xml", "HISTORY.md", "docs/policies/*", ".codex/skills/repository-skills.md"]
+
+[agents.migration-review]
+task_classes = ["migration", "infrastructure"]
+context = ["pom.xml", "src/main/java/**", "src/main/resources/**", "docs/active/*", "docs/policies/*"]
+
+[task_classes.feature]
+sequence = ["planner", "architecture-review", "api-guardian", "implementer", "test-runner", "reviewer"]
+required_validations = ["compile", "api-verification", "documentation-check"]
+escalation_triggers = ["new shared helper", "new dependency", "new public API", "uncertain PluginAPI method"]
+
+[task_classes.bugfix]
+sequence = ["planner", "api-guardian", "implementer", "test-runner", "reviewer"]
+required_validations = ["compile", "regression-test-or-manual-check"]
+escalation_triggers = ["behavioral compatibility risk", "uncertain API behavior"]
+
+[task_classes.migration]
+sequence = ["planner", "migration-review", "architecture-review", "implementer", "test-runner", "reviewer"]
+required_validations = ["compile", "migration-path-review", "rollback-review"]
+escalation_triggers = ["data migration", "config migration", "backward compatibility risk"]
+
+[task_classes.release]
+sequence = ["release-guardian", "test-runner", "governance-review"]
+required_validations = ["compile", "tests-if-present", "tag-release-check", "history-check"]
+escalation_triggers = ["workflow change", "artifact rename", "versioning ambiguity"]
+
+[task_classes.refactor]
+sequence = ["planner", "architecture-review", "implementer", "test-runner", "reviewer"]
+required_validations = ["compile", "behavioral-equivalence-review"]
+escalation_triggers = ["ownership drift", "public API change", "cross-plugin impact"]
+
+[task_classes.infrastructure]
+sequence = ["planner", "architecture-review", "governance-review", "implementer", "test-runner", "reviewer"]
+required_validations = ["compile", "standalone-repository-check", "template-drift-check"]
+escalation_triggers = ["shared convention change", "new tooling requirement", "root dependency risk"]
+
+[escalation]
+shared_utility_candidate = "architecture-review"
+new_dependency = "architecture-review"
+schema_or_sqlite_change = "migration-review"
+release_workflow_change = "release-guardian"
+policy_or_agent_change = "governance-review"
+root_orchestration_dependency = "governance-review"
