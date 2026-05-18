@@ -93,7 +93,7 @@ public class OZLogger {
     }
 
     public static OZLogger getInstance(String loggerName) {
-        PluginSettings s = OZTools.s;
+        PluginSettings s = OZTools.getSettings();
         if (s == null) {
             System.out.println("[" + loggerName
                     + "] 🆘 OZTools.s is null, default to internalLogOnly=false, use getInstance(String, boolean) instead.");

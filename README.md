@@ -10,6 +10,7 @@ This plugin has a set of utilities and libs used by different Plugins.
 - Standard colors
 - WebSocket Client
 - SQLite DB Initializer (per Plugin)
+- Player database lookup helper for recently seen players and best-effort player records
 
 ## External libs
 
@@ -95,7 +96,7 @@ _/Plugins/YourPluigin/i18n/__anyotherlanguage__.properties
 ### Example File content
 
 ```bash
-TC_MSG_PLUGIN_WELCOME=This server is using <color=#F00000>PH_PLUGIN_NAME</color> plugin <color=#F00000>vPH_PLUGIN_VERSION</color>.
+TC_MSG_PLUGIN_WELCOME=ℹ️ <color=#F00000>PH_PLUGIN_NAME</color> | <color=#F0F000>vPH_PLUGIN_VERSION</color> | <color=#C0C0C0>/PH_PLUGIN_CMD</color> | loaded!
 
 ```
 
@@ -225,7 +226,8 @@ public class YourPlugin extends Plugin{
 	public void onEnable() {
         // ... your stuff ...
 		// register plugin settings
-		PlayerPluginSettingsOverlay.registerPlayerPluginSettings(new YourPluginPlayerPluginSettings());
+		PlayerPluginSettingsOverlay.registerPlayerPluginSettings(
+                new YourPluginPlayerPluginSettings(getDescription("version")));
         // ... your stuff ...
 	}
 }
@@ -236,8 +238,9 @@ import de.omegazirkel.risingworld.tools.ui.PlayerPluginSettings;
 
 public class YourPluginPlayerPluginSettings extends PlayerPluginSettings {
 
-    public YourPluginPlayerPluginSettings() {
+    public YourPluginPlayerPluginSettings(String pluginVersion) {
         this.pluginLabel = YourPlugin.name;
+        this.pluginVersion = pluginVersion;
     }
 
     @Override

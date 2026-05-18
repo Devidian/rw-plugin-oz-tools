@@ -20,6 +20,7 @@ import de.omegazirkel.risingworld.tools.ui.AssetManager;
 import de.omegazirkel.risingworld.tools.ui.CursorManager;
 import de.omegazirkel.risingworld.tools.ui.PlayerPluginSettingsOverlay;
 import de.omegazirkel.risingworld.tools.ui.PluginMenuManager;
+import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginData;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginSettings;
 import net.risingworld.api.Plugin;
 import net.risingworld.api.Server;
@@ -44,7 +45,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         return OZLogger.getInstance("OZ.Tools");
     }
 
-    public static PluginSettings s = null;
+    private static PluginSettings s = null;
     private static I18n t = null;
     private final static Colors c = Colors.getInstance();
     public static String name = null;
@@ -113,7 +114,8 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         }
 
         // register plugin settings
-        PlayerPluginSettingsOverlay.registerPlayerPluginSettings(new ToolsPlayerPluginSettings());
+        PlayerPluginSettingsOverlay.registerPlayerPluginSettings(new ToolsPlayerPluginSettings(getDescription("version")));
+        PlayerPluginSettingsOverlay.registerPlayerPluginData(new ToolsPlayerPluginData(getDescription("version")));
 
         logger().info("✅ " + this.getName() + " Plugin is enabled version:" + this.getDescription("version"));
     }
@@ -210,5 +212,9 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     @Override
     public void onSettingsChanged(Path settingsPath) {
         s.initSettings(settingsPath.toString());
+    }
+
+    public static PluginSettings getSettings() {
+        return s;
     }
 }

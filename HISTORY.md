@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.18.0] - 2026-05-18 | Shared plugin data UI and lookup helpers
+
+- fix: restore colored one-line plugin welcome message
+- fix: allow shared table scroll bodies to use pixel-accurate viewport heights
+- fix: prevent shared table rows from overflowing horizontally inside scroll views
+- fix: keep player plugin settings navigation and headers from overlapping their layout bounds
+- fix: wrap long player plugin settings labels and draw complete switch-button borders
+- feat: expose best-effort player record lookups from the shared players database helper
+
 ## [0.17.1] - 2026-05-10 | PluginAPI alignment and command help fix
 
 - build: align bundled PluginAPI jar and Maven dependency version

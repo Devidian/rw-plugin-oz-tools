@@ -10,6 +10,8 @@ import net.risingworld.api.ui.style.Unit;
 
 public class TableScrollView extends OZUIElement {
 
+    private static final float HEADER_HEIGHT = 36;
+
     private OZUIElement headerContainer;
     private UIScrollView scrollView;
     private OZUIElement content;
@@ -28,7 +30,8 @@ public class TableScrollView extends OZUIElement {
 
         // Header
         headerContainer = new OZUIElement();
-        headerContainer.setSize(100, 32, true);
+        headerContainer.style.width.set(100, Unit.Percent);
+        headerContainer.style.height.set(HEADER_HEIGHT, Unit.Pixel);
         headerContainer.setPivot(Pivot.UpperLeft);
 
         TableHeaderRow headerRow = new TableHeaderRow(headers, widths);
@@ -40,14 +43,14 @@ public class TableScrollView extends OZUIElement {
         // ScrollView
         scrollView = new UIScrollView(ScrollViewMode.Vertical);
         scrollView.setPivot(Pivot.UpperLeft);
-        scrollView.setPosition(0, 32, false);
-        scrollView.setSize(100, 100 - 32, true);
+        scrollView.setPosition(0, HEADER_HEIGHT, false);
+        scrollView.setSize(100, 100, true);
 
         // Inner content where rows go
         content = new OZUIElement();
         content.setPivot(Pivot.UpperLeft);
         content.setSize(100, 0, true);
-        content.setPosition(3, 0, false);
+        content.setPosition(0, 0, false);
 
         scrollView.addChild(content);
         this.addChild(scrollView);
@@ -67,5 +70,10 @@ public class TableScrollView extends OZUIElement {
 
     public OZUIElement getRoot() {
         return this;
+    }
+
+    public void setScrollBodyHeight(float heightPixels) {
+        scrollView.style.height.set(heightPixels, Unit.Pixel);
+        style.height.set(HEADER_HEIGHT + heightPixels, Unit.Pixel);
     }
 }

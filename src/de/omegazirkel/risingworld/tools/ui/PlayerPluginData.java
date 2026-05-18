@@ -2,9 +2,9 @@ package de.omegazirkel.risingworld.tools.ui;
 
 import net.risingworld.api.objects.Player;
 
-public abstract class PlayerPluginSettings {
+public abstract class PlayerPluginData {
     public String pluginLabel;
     public String pluginVersion;
 
-    public abstract BasePlayerPluginSettingsPanel createPlayerPluginSettingsUIElement(Player uiPlayer);
+    public abstract BasePlayerPluginDataPanel createPlayerPluginDataUIElement(Player uiPlayer);
 }

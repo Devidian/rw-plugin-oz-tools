@@ -5,8 +5,9 @@ import net.risingworld.api.objects.Player;
 
 public class ToolsPlayerPluginSettings extends PlayerPluginSettings {
 
-    public ToolsPlayerPluginSettings() {
+    public ToolsPlayerPluginSettings(String pluginVersion) {
         this.pluginLabel = OZTools.name;
+        this.pluginVersion = pluginVersion;
     }
 
     @Override
