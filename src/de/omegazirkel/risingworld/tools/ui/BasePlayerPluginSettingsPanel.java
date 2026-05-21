@@ -45,7 +45,7 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         UILabel titleLabel = new UILabel(t().get("TC_SETTINGS_TITLE", uiPlayer).replace("PH_PLUGIN_NAME", title));
         titleLabel.setPivot(Pivot.UpperLeft);
         titleLabel.style.left.set(5, Unit.Percent);
-        titleLabel.style.top.set(18, Unit.Pixel);
+        titleLabel.style.top.set(0, Unit.Pixel);
         titleLabel.style.width.set(90, Unit.Percent);
         titleLabel.style.height.set(32, Unit.Pixel);
         titleLabel.setFont(Font.DefaultBold);
@@ -57,7 +57,7 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         UILabel descLabel = new UILabel(t().get("TC_SETTINGS_DESC", uiPlayer).replace("PH_PLUGIN_NAME", title));
         descLabel.setPivot(Pivot.UpperLeft);
         descLabel.style.left.set(5, Unit.Percent);
-        descLabel.style.top.set(54, Unit.Pixel);
+        descLabel.style.top.set(12, Unit.Pixel);
         descLabel.style.width.set(90, Unit.Percent);
         descLabel.style.height.set(24, Unit.Pixel);
         descLabel.setFont(Font.Default);
@@ -69,7 +69,7 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         UIScrollView content = createSettingsContent();
         content.setPivot(Pivot.UpperLeft);
         content.style.left.set(4, Unit.Percent);
-        content.style.top.set(90, Unit.Pixel);
+        content.style.top.set(50, Unit.Pixel);
         content.setSize(92, 78, true);
         content.style.borderTopWidth.set(1);
         content.style.borderTopColor.set(0x6A5228FF);

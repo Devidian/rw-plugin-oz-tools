@@ -304,6 +304,37 @@ public class YourPluginPlayerPluginSettings extends PlayerPluginSettings {
 
 ```
 
+### Admin PluginSettings tab
+
+Plugins can register admin-only `settings.properties` metadata for the shared
+`PluginSettings` tab. Tools renders the tab only for admins and only for plugins
+that register metadata. Sensitive settings must be omitted or marked sensitive;
+editable values are limited to booleans, integers, and strings.
+
+```java
+import de.omegazirkel.risingworld.tools.settings.AdminSettingsEntry;
+import de.omegazirkel.risingworld.tools.settings.AdminSettingsType;
+import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
+import de.omegazirkel.risingworld.tools.settings.SettingsFileEditor;
+import de.omegazirkel.risingworld.tools.ui.PlayerPluginSettingsOverlay;
+
+// inside onEnable(), after settings have been initialized
+PlayerPluginSettingsOverlay.registerPlayerPluginAdminSettings(
+        new PlayerPluginAdminSettings(
+                YourPlugin.name,
+                getDescription("version"),
+                () -> List.of(new AdminSettingsEntry(
+                        "enableFeature",
+                        "Enable feature",
+                        "Turns the feature on or off.",
+                        String.valueOf(settings.enableFeature),
+                        "false",
+                        AdminSettingsType.BOOLEAN,
+                        false,
+                        value -> SettingsFileEditor.writeValue(settingsPath, "enableFeature", value))),
+                () -> settings.initSettings()));
+```
+
 ## AssetManager
 
 ... description coming soon ...

@@ -3,6 +3,7 @@ package de.omegazirkel.risingworld.tools.ui;
 import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.events.player.ui.PlayerUIElementClickEvent;
 import net.risingworld.api.ui.UIElement;
+import net.risingworld.api.ui.style.Position;
 
 /**
  * extends UIElement with some helper methods missing from UIElement
@@ -36,6 +37,10 @@ public class OZUIElement extends UIElement {
         style.paddingLeft.set(padding);
         style.paddingRight.set(padding);
         style.paddingTop.set(padding);
+    }
+
+    public void setAbsolute(){
+        style.position.set(Position.Absolute);
     }
 
     public void setHoverBackgroundColor(int rgba) {

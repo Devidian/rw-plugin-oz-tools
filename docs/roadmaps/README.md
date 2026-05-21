@@ -1,5 +1,7 @@
 # Roadmaps
 
+- [Portfolio Design And Settings](portfolio-design-and-settings.md)
+
 Large implementation plans and long-lived roadmap documents live here.
 
 ## Template

@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
+import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
 import net.risingworld.api.objects.Player;
 import net.risingworld.api.ui.UIElement;
 import net.risingworld.api.ui.UILabel;
@@ -16,6 +17,7 @@ import net.risingworld.api.ui.style.Unit;
 public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     private static final String TAB_SETTINGS = "settings";
     private static final String TAB_DATA = "data";
+    private static final String TAB_PLUGIN_SETTINGS = "pluginSettings";
 
     private static I18n t() {
         return I18n.getInstance(OZTools.name);
@@ -23,6 +25,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
     private static ConcurrentHashMap<String, PlayerPluginSettings> playerPluginSettings = new ConcurrentHashMap<>();
     private static ConcurrentHashMap<String, PlayerPluginData> playerPluginData = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<String, PlayerPluginAdminSettings> playerPluginAdminSettings = new ConcurrentHashMap<>();
 
     private UIElement navSidebar;
     private UIElement tabBar;
@@ -86,6 +89,9 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         tabBar.removeAllChilds();
         if (selectedPlugin == null || !pluginLabels().contains(selectedPlugin)) {
             selectedPlugin = firstPluginLabel();
+        }
+        if (TAB_PLUGIN_SETTINGS.equals(selectedTab) && !canShowPluginSettingsTab(selectedPlugin)) {
+            selectedTab = TAB_SETTINGS;
         }
         // fill navigation bar for every playerPluginSettings
         for (String pluginLabel : pluginLabels()) {
@@ -152,11 +158,22 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
         addTabButton(TAB_SETTINGS, t().get("TC_TAB_SETTINGS", uiPlayer), 0);
         addTabButton(TAB_DATA, t().get("TC_TAB_DATA", uiPlayer), 150);
+        if (canShowPluginSettingsTab(selectedPlugin)) {
+            addTabButton(TAB_PLUGIN_SETTINGS, t().get("TC_TAB_PLUGIN_SETTINGS", uiPlayer), 300);
+        }
 
         // clear content
         content.removeAllChilds();
         // select content
-        if (TAB_DATA.equals(selectedTab)) {
+        if (TAB_PLUGIN_SETTINGS.equals(selectedTab)) {
+            PlayerPluginAdminSettings ppas = playerPluginAdminSettings.get(selectedPlugin);
+            if (ppas != null) {
+                AdminPluginSettingsPanel pluginSettingsContent = new AdminPluginSettingsPanel(uiPlayer, ppas,
+                        this::updateUI);
+                pluginSettingsContent.updateUI();
+                content.addChild(pluginSettingsContent);
+            }
+        } else if (TAB_DATA.equals(selectedTab)) {
             PlayerPluginData ppd = playerPluginData.get(selectedPlugin);
             if (ppd != null) {
                 BasePlayerPluginDataPanel dataContent = ppd.createPlayerPluginDataUIElement(uiPlayer);
@@ -185,6 +202,10 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
     public static void registerPlayerPluginData(PlayerPluginData ppd) {
         playerPluginData.put(ppd.pluginLabel, ppd);
+    }
+
+    public static void registerPlayerPluginAdminSettings(PlayerPluginAdminSettings ppas) {
+        playerPluginAdminSettings.put(ppas.pluginLabel, ppas);
     }
 
     private void addTabButton(String tab, String label, int x) {
@@ -237,6 +258,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         Set<String> labels = new TreeSet<>();
         labels.addAll(playerPluginSettings.keySet());
         labels.addAll(playerPluginData.keySet());
+        labels.addAll(playerPluginAdminSettings.keySet());
         return labels;
     }
 
@@ -254,11 +276,20 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             PlayerPluginData ppd = playerPluginData.get(pluginLabel);
             if (ppd != null) {
                 pluginVersion = ppd.pluginVersion;
+            } else {
+                PlayerPluginAdminSettings ppas = playerPluginAdminSettings.get(pluginLabel);
+                if (ppas != null) {
+                    pluginVersion = ppas.pluginVersion;
+                }
             }
         }
         if (pluginVersion == null || pluginVersion.isBlank()) {
             return "";
         }
         return "v" + pluginVersion;
+    }
+
+    private boolean canShowPluginSettingsTab(String pluginLabel) {
+        return uiPlayer.isAdmin() && pluginLabel != null && playerPluginAdminSettings.containsKey(pluginLabel);
     }
 }

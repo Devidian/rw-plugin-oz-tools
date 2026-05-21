@@ -43,11 +43,11 @@ public class SwitchButton extends OZUIElement {
     private void updateState() {
         if (state) {
             // ON state
-            leftSide.setBackgroundColor(0.0f, 0.8f, 0.0f, 1f); // green
-            rightSide.setBackgroundColor(0.3f, 0.3f, 0.3f, 1f); // grey
-        } else {
             leftSide.setBackgroundColor(0.3f, 0.3f, 0.3f, 1f); // grey
-            rightSide.setBackgroundColor(0.8f, 0.1f, 0.1f, 1f); // red
+            rightSide.setBackgroundColor(0.0f, 0.8f, 0.0f, 1f); // green
+        } else {
+            leftSide.setBackgroundColor(0.8f, 0.1f, 0.1f, 1f); // red
+            rightSide.setBackgroundColor(0.3f, 0.3f, 0.3f, 1f); // grey
         }
 
         setBorder(1);

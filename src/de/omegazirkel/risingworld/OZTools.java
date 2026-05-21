@@ -16,6 +16,7 @@ import de.omegazirkel.risingworld.tools.PluginFileWatcher;
 import de.omegazirkel.risingworld.tools.PluginReloadDebouncer;
 import de.omegazirkel.risingworld.tools.PluginSettings;
 import de.omegazirkel.risingworld.tools.WSClientEndpoint;
+import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
 import de.omegazirkel.risingworld.tools.ui.AssetManager;
 import de.omegazirkel.risingworld.tools.ui.CursorManager;
 import de.omegazirkel.risingworld.tools.ui.PlayerPluginSettingsOverlay;
@@ -116,6 +117,9 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         // register plugin settings
         PlayerPluginSettingsOverlay.registerPlayerPluginSettings(new ToolsPlayerPluginSettings(getDescription("version")));
         PlayerPluginSettingsOverlay.registerPlayerPluginData(new ToolsPlayerPluginData(getDescription("version")));
+        PlayerPluginSettingsOverlay.registerPlayerPluginAdminSettings(
+                new PlayerPluginAdminSettings(getDescription("name"), getDescription("version"),
+                        () -> s.adminSettingsEntries(), s::initSettings));
 
         logger().info("✅ " + this.getName() + " Plugin is enabled version:" + this.getDescription("version"));
     }

@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+- fix: let `BasePluginOverlay` subclasses decide when to render so tabbed overlays can initialize their own state first
+- feat: add admin-only `PluginSettings` tab registration for shared settings metadata
+- feat: add simple boolean/integer/string settings editor support through plugin-provided writers
+- feat: expose `SettingsFileEditor` helper for comment-preserving `settings.properties` value updates
+- fix: let Tools settings fallback to `settings.default.properties` values when keys are missing
+
 ## [0.18.0] - 2026-05-18 | Shared plugin data UI and lookup helpers
 
 - fix: restore colored one-line plugin welcome message
