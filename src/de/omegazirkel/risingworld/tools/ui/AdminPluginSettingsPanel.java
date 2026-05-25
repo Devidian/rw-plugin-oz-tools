@@ -1,12 +1,15 @@
 package de.omegazirkel.risingworld.tools.ui;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
 import de.omegazirkel.risingworld.tools.settings.AdminSettingsEntry;
 import de.omegazirkel.risingworld.tools.settings.AdminSettingsType;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
+import net.risingworld.api.events.player.ui.PlayerUITextFieldChangeEvent;
 import net.risingworld.api.objects.Player;
 import net.risingworld.api.ui.UILabel;
 import net.risingworld.api.ui.UIScrollView;
@@ -24,6 +27,8 @@ import net.risingworld.api.ui.style.Unit;
 import net.risingworld.api.ui.style.Wrap;
 
 public class AdminPluginSettingsPanel extends OZUIElement {
+    private static final Set<Integer> INTEGER_INPUT_IDS = new HashSet<>();
+
     private final Player uiPlayer;
     private final PlayerPluginAdminSettings adminSettings;
     private final Runnable refreshOverlay;
@@ -132,8 +137,51 @@ public class AdminPluginSettingsPanel extends OZUIElement {
             return;
         }
         for (AdminSettingsEntry entry : entries) {
-            flexWrapper.addChild(row(entry));
+            flexWrapper.addChild(entry.isGroup() ? groupRow(entry) : row(entry));
         }
+    }
+
+    private OZUIElement groupRow(AdminSettingsEntry entry) {
+        OZUIElement row = new OZUIElement();
+        row.setPivot(Pivot.UpperLeft);
+        row.style.width.set(100, Unit.Percent);
+        row.style.height.set(48, Unit.Pixel);
+        row.style.marginTop.set(8);
+        row.style.marginBottom.set(8);
+        row.setBackgroundColor(0x0F0E0ACC);
+        row.style.borderBottomWidth.set(1);
+        row.style.borderBottomColor.set(0xD7AE55AA);
+
+        UILabel label = new UILabel(settingText(entry, "LABEL", entry.getLabel()));
+        label.setPivot(Pivot.UpperLeft);
+        label.style.left.set(8, Unit.Pixel);
+        label.style.top.set(4, Unit.Pixel);
+        label.style.width.set(92, Unit.Percent);
+        label.style.height.set(22, Unit.Pixel);
+        label.setFont(Font.DefaultBold);
+        label.setFontSize(15);
+        label.setFontColor(0xF2C766FF);
+        label.setTextAlign(TextAnchor.MiddleLeft);
+        label.setTextWrap(false);
+        row.addChild(label);
+
+        String descriptionText = settingText(entry, "DESC", entry.getDescription());
+        if (!descriptionText.isBlank()) {
+            UILabel description = new UILabel(descriptionText);
+            description.style.position.set(Position.Absolute);
+            description.setPivot(Pivot.UpperLeft);
+            description.style.left.set(8, Unit.Pixel);
+            description.style.top.set(25, Unit.Pixel);
+            description.style.width.set(92, Unit.Percent);
+            description.style.height.set(18, Unit.Pixel);
+            description.setFontSize(12);
+            description.setFontColor(0xC8C0B2FF);
+            description.setTextAlign(TextAnchor.MiddleLeft);
+            description.setTextWrap(false);
+            row.addChild(description);
+        }
+
+        return row;
     }
 
     private OZUIElement row(AdminSettingsEntry entry) {
@@ -246,7 +294,32 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         input.setBackgroundColor(0x10100EE8);
         input.setBorder(1);
         input.setBorderColor(0x5E4A25FF);
+        if (entry.getType() == AdminSettingsType.INTEGER) {
+            registerIntegerInput(input);
+        }
         return input;
+    }
+
+    public static void handleTextFieldChange(PlayerUITextFieldChangeEvent event) {
+        if (event == null || event.getUITextField() == null) {
+            return;
+        }
+        synchronized (INTEGER_INPUT_IDS) {
+            if (!INTEGER_INPUT_IDS.contains(event.getUITextField().getID())) {
+                return;
+            }
+        }
+
+        String sanitizedText = integerInputText(event.getNewText());
+        if (!sanitizedText.equals(nullSafe(event.getNewText()))) {
+            event.getUITextField().setText(sanitizedText);
+        }
+    }
+
+    private static void registerIntegerInput(UITextField input) {
+        synchronized (INTEGER_INPUT_IDS) {
+            INTEGER_INPUT_IDS.add(input.getID());
+        }
     }
 
     private UILabel readOnlyValue(String text) {
@@ -347,5 +420,23 @@ public class AdminPluginSettingsPanel extends OZUIElement {
             }
         }
         return true;
+    }
+
+    private static String integerInputText(String value) {
+        String text = nullSafe(value);
+        StringBuilder sanitized = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char character = text.charAt(i);
+            if (Character.isDigit(character)) {
+                sanitized.append(character);
+            } else if (character == '-' && i == 0) {
+                sanitized.append(character);
+            }
+        }
+        return sanitized.toString();
+    }
+
+    private static String nullSafe(String value) {
+        return value == null ? "" : value;
     }
 }

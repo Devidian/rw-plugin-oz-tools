@@ -114,11 +114,14 @@ public class PluginSettings {
 
 	public List<AdminSettingsEntry> adminSettingsEntries() {
 		return Arrays.asList(
+				AdminSettingsEntry.group("logging", "Logging"),
 				entry("logLevel", "Log level", "Controls Tools logging verbosity.", AdminSettingsType.STRING),
 				entry("logInternal", "Log internal", "If true, log output is printed to the default console.",
 						AdminSettingsType.BOOLEAN),
+				AdminSettingsEntry.group("runtime", "Runtime"),
 				entry("reloadOnChange", "Reload on change", "If true, jar changes trigger delayed plugin reloads.",
 						AdminSettingsType.BOOLEAN),
+				AdminSettingsEntry.group("playerMessages", "Player messages"),
 				entry("enablePluginWelcomeMessage", "Welcome message",
 						"If true, Tools sends a welcome message when a player joins.", AdminSettingsType.BOOLEAN));
 	}

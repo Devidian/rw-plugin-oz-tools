@@ -335,6 +335,164 @@ PlayerPluginSettingsOverlay.registerPlayerPluginAdminSettings(
                 () -> settings.initSettings()));
 ```
 
+Use `AdminSettingsEntry.group(...)` to add labeled separators between related
+settings. Group labels and descriptions use the same generated i18n lookup as
+regular entries: `TC_SETTING_<KEY>_LABEL` and `TC_SETTING_<KEY>_DESC`.
+
+```java
+() -> List.of(
+        AdminSettingsEntry.group("general", "General Settings"),
+        new AdminSettingsEntry(
+                "enableFeature",
+                "Enable feature",
+                "Turns the feature on or off.",
+                String.valueOf(settings.enableFeature),
+                "false",
+                AdminSettingsType.BOOLEAN,
+                false,
+                value -> SettingsFileEditor.writeValue(settingsPath, "enableFeature", value)));
+```
+
+### Shared UI integration rules
+
+Feature plugins should register shared UI hooks during `onEnable()` after their
+settings and assets have been initialized. Unregister plugin-owned hooks during
+`onDisable()` when the API provides an unregister method. Keep registration
+content plugin-specific; reusable UI infrastructure belongs in Tools.
+
+#### Inventory overlay buttons
+
+Use `InventoryOverlayButtons` for compact actions shown below the player
+inventory. Tools sorts registered buttons by plugin name and label, so plugins
+must use stable labels and stable plugin names.
+
+```java
+import de.omegazirkel.risingworld.tools.ui.InventoryOverlayButtons;
+
+InventoryOverlayButtons.registerButton(
+        YourPlugin.name,
+        "Open",
+        "your-plugin-icon",
+        event -> openPluginUi(event.getPlayer()));
+
+// onDisable()
+InventoryOverlayButtons.unregisterButtons(YourPlugin.name);
+```
+
+Rules:
+
+- `pluginName` and `label` must not be blank.
+- `iconKey` is optional; when supplied, the icon must be loaded through
+  `AssetManager`.
+- Button callbacks must stay lightweight and should open plugin-owned UI or
+  delegate to plugin-owned services.
+
+#### Shared indicators
+
+Use `SharedIndicators` for small HUD indicators that are visible only when a
+provider says they should be visible. Tools refreshes indicators on player
+connect/spawn and when providers are registered or unregistered.
+
+```java
+import de.omegazirkel.risingworld.tools.ui.SharedIndicatorProvider;
+import de.omegazirkel.risingworld.tools.ui.SharedIndicators;
+
+SharedIndicators.registerProvider(YourPlugin.name, new SharedIndicatorProvider() {
+    @Override
+    public boolean showIndicator(Player player) {
+        return isPlayerInPluginArea(player);
+    }
+
+    @Override
+    public String getIcon(Player player) {
+        return "your-plugin-icon";
+    }
+});
+
+// onDisable()
+SharedIndicators.unregisterProvider(YourPlugin.name);
+```
+
+Rules:
+
+- Providers must not throw; Tools catches provider failures and hides the
+  failing indicator.
+- `getIcon(Player)` returns an `AssetManager` icon key, not a file path.
+- Indicators are sorted deterministically by plugin name and icon key.
+
+#### Dynamic tab overlays
+
+Use `BasePluginOverlayWithTabs` for plugin overlays with tabs. New overlays
+should prefer `setupTabContainer()` and `addTab(...)` instead of manual X
+offsets. Add only currently available tabs; hidden tabs should simply not be
+registered for that rebuild.
+
+```java
+public class YourOverlay extends BasePluginOverlayWithTabs {
+    private PluginTab active = PluginTab.OVERVIEW;
+
+    @Override
+    protected void setupTabs() {
+        setupTabContainer();
+        addTab("Overview", 150, active == PluginTab.OVERVIEW,
+                () -> switchTab(PluginTab.OVERVIEW));
+        if (canShowAdminTab(uiPlayer)) {
+            addTab("Admin", 150, active == PluginTab.ADMIN, true,
+                    () -> switchTab(PluginTab.ADMIN));
+        }
+        setupActiveTabContent();
+    }
+}
+```
+
+Rules:
+
+- Validate the active tab before rebuilding; if the active tab became hidden,
+  switch to a visible default tab.
+- Put tab-specific content in the overlay body, not in the tab container.
+- Existing overlays can still use the older `tab(text, x, y, width, action)`
+  helper until they migrate.
+
+#### Plugin Info/Status providers
+
+Use `PluginInfoStatusProviders` to expose plugin-specific RichText strings for
+the shared Info/Status panel. Register one provider per plugin and wire plugin
+buttons, menu entries, or commands to `PluginInfoStatusProviders.show(...)`.
+
+```java
+import de.omegazirkel.risingworld.tools.ui.PluginInfoStatusProvider;
+import de.omegazirkel.risingworld.tools.ui.PluginInfoStatusProviders;
+
+PluginInfoStatusProviders.registerProvider(new PluginInfoStatusProvider() {
+    @Override
+    public String getPluginName() {
+        return YourPlugin.name;
+    }
+
+    @Override
+    public String getInfo(Player player) {
+        return "<b>Your Plugin</b>\nShort player-facing description.";
+    }
+
+    @Override
+    public String getStatus(Player player) {
+        return "Enabled: true";
+    }
+});
+
+PluginInfoStatusProviders.show(player, YourPlugin.name);
+
+// onDisable()
+PluginInfoStatusProviders.unregisterProvider(YourPlugin.name);
+```
+
+Rules:
+
+- `getInfo(Player)` and `getStatus(Player)` return RichText strings only.
+- Return `""` or `null` for empty content; Tools renders both safely.
+- Provider failures are caught by Tools and rendered as empty/error-safe panel
+  content.
+
 ## AssetManager
 
 ... description coming soon ...

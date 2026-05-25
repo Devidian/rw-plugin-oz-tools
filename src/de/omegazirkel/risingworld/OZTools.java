@@ -17,10 +17,15 @@ import de.omegazirkel.risingworld.tools.PluginReloadDebouncer;
 import de.omegazirkel.risingworld.tools.PluginSettings;
 import de.omegazirkel.risingworld.tools.WSClientEndpoint;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
+import de.omegazirkel.risingworld.tools.ui.AdminPluginSettingsPanel;
 import de.omegazirkel.risingworld.tools.ui.AssetManager;
 import de.omegazirkel.risingworld.tools.ui.CursorManager;
+import de.omegazirkel.risingworld.tools.ui.InventoryOverlayPanel;
 import de.omegazirkel.risingworld.tools.ui.PlayerPluginSettingsOverlay;
+import de.omegazirkel.risingworld.tools.ui.PluginInfoStatusProviders;
 import de.omegazirkel.risingworld.tools.ui.PluginMenuManager;
+import de.omegazirkel.risingworld.tools.ui.SharedIndicatorManager;
+import de.omegazirkel.risingworld.tools.ui.ToolsPluginInfoStatusProvider;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginData;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginSettings;
 import net.risingworld.api.Plugin;
@@ -30,6 +35,8 @@ import net.risingworld.api.events.Listener;
 import net.risingworld.api.events.player.PlayerCommandEvent;
 import net.risingworld.api.events.player.PlayerConnectEvent;
 import net.risingworld.api.events.player.PlayerSpawnEvent;
+import net.risingworld.api.events.player.ui.PlayerToggleInventoryEvent;
+import net.risingworld.api.events.player.ui.PlayerUITextFieldChangeEvent;
 import net.risingworld.api.objects.Player;
 
 /**
@@ -37,13 +44,14 @@ import net.risingworld.api.objects.Player;
  * @author Maik 'Devidian' Laschober
  */
 public class OZTools extends Plugin implements Listener, FileChangeListener {
+    private static final String LOGGER_NAME = "OZ.Tools";
     static final String pluginCMD = "ozt";
     private PluginFileWatcher fileWatcher;
     private PluginReloadDebouncer debouncer;
     private static final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
 
     public static OZLogger logger() {
-        return OZLogger.getInstance("OZ.Tools");
+        return OZLogger.getInstance(LOGGER_NAME);
     }
 
     private static PluginSettings s = null;
@@ -65,10 +73,9 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         AssetManager.loadDefaultIcons(this);
 
         registerEventListener(this);
+        SharedIndicatorManager.start();
         // Ensure all subsystems are out of shutdown mode for plugin reloads.
         OZLogger.resetShutdownMode();
-
-        WSClientEndpoint.initLogger();
 
         // Register the shutdown hook only once for the entire lifetime of the JVM.
         if (shutdownHookRegistered.compareAndSet(false, true)) {
@@ -120,6 +127,8 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         PlayerPluginSettingsOverlay.registerPlayerPluginAdminSettings(
                 new PlayerPluginAdminSettings(getDescription("name"), getDescription("version"),
                         () -> s.adminSettingsEntries(), s::initSettings));
+        PluginInfoStatusProviders.registerProvider(
+                new ToolsPluginInfoStatusProvider(getDescription("name"), getDescription("version"), pluginCMD));
 
         logger().info("✅ " + this.getName() + " Plugin is enabled version:" + this.getDescription("version"));
     }
@@ -142,6 +151,9 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
             logger().info("Reload debouncer shut down.");
         }
 
+        SharedIndicatorManager.stop();
+        PluginInfoStatusProviders.unregisterProvider(getDescription("name"));
+
         // 2. Shut down all WebSocket clients
         WSClientEndpoint.shutdownAll();
 
@@ -160,11 +172,27 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
                     .replace("PH_PLUGIN_VERSION", getDescription("version")));
         }
         // Playersettings below
+        SharedIndicatorManager.refreshAllPlayers();
     }
 
     @EventMethod
     public void onPlayerConnect(PlayerConnectEvent event) {
-        // Player player = event.getPlayer();
+        SharedIndicatorManager.refreshAllPlayers();
+    }
+
+    @EventMethod
+    public void onPlayerToggleInventory(PlayerToggleInventoryEvent event) {
+        Player player = event.getPlayer();
+        if (event.isVisible() && event.getStorage() == null) {
+            InventoryOverlayPanel.show(player);
+        } else {
+            InventoryOverlayPanel.remove(player);
+        }
+    }
+
+    @EventMethod
+    public void onPlayerUITextFieldChange(PlayerUITextFieldChangeEvent event) {
+        AdminPluginSettingsPanel.handleTextFieldChange(event);
     }
 
     @EventMethod

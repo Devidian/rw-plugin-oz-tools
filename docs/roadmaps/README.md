@@ -1,5 +1,6 @@
 # Roadmaps
 
+- [Roadmap Plan 02 Shared UI And Settings](roadmap-plan-02-shared-ui-and-settings.md)
 - [Portfolio Design And Settings](portfolio-design-and-settings.md)
 
 Large implementation plans and long-lived roadmap documents live here.

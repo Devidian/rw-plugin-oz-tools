@@ -1,7 +1,9 @@
 package de.omegazirkel.risingworld.tools.ui;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
@@ -10,6 +12,8 @@ import net.risingworld.api.objects.Player;
 
 public class PluginMenuManager {
     private static List<MenuItem> menuItems = new ArrayList<>();
+    private static final Comparator<MenuItem> MENU_ITEM_ORDER = Comparator
+            .comparing((MenuItem item) -> sortKey(item.getLabel()));
 
     private static I18n t() {
         return I18n.getInstance(OZTools.name);
@@ -20,8 +24,7 @@ public class PluginMenuManager {
     }
 
     public static void showMainMenu(Player player) {
-        // copy menuItems locally and add close button
-        List<MenuItem> menuItemsCopy = new ArrayList<>(menuItems);
+        List<MenuItem> menuItemsCopy = sortedPluginMenuItems();
         menuItemsCopy.add(MenuItem.closeMenu(player));
         menuItemsCopy
                 .add(new MenuItem(AssetManager.getIcon("icon-gpt-plugin-config"), t().get("TC_MENU_SETTINGS", player),
@@ -42,6 +45,12 @@ public class PluginMenuManager {
         showMenu(player, menuItemsCopy);
     }
 
+    private static List<MenuItem> sortedPluginMenuItems() {
+        List<MenuItem> sortedItems = new ArrayList<>(menuItems);
+        sortedItems.sort(MENU_ITEM_ORDER);
+        return sortedItems;
+    }
+
     public static void showMenu(Player p, List<MenuItem> items) {
         TextureAsset[] icons = items.stream().map(MenuItem::getIcon).toArray(TextureAsset[]::new);
         String[] labels = items.stream().map(MenuItem::getLabel).toArray(String[]::new);
@@ -53,5 +62,9 @@ public class PluginMenuManager {
             }
             items.get(i).getAction().onCall(p);
         });
+    }
+
+    private static String sortKey(String value) {
+        return value == null ? "" : value.toLowerCase(Locale.ROOT);
     }
 }

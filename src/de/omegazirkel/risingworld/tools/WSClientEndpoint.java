@@ -1,14 +1,8 @@
 package de.omegazirkel.risingworld.tools;
 
-import java.io.File;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -16,18 +10,14 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import de.omegazirkel.risingworld.OZTools;
-import jakarta.websocket.ClientEndpoint;
-import jakarta.websocket.CloseReason;
-import jakarta.websocket.ContainerProvider;
-import jakarta.websocket.OnClose;
-import jakarta.websocket.OnError;
-import jakarta.websocket.OnMessage;
-import jakarta.websocket.OnOpen;
-import jakarta.websocket.Session;
-import jakarta.websocket.WebSocketContainer;
+import com.neovisionaries.ws.client.WebSocket;
+import com.neovisionaries.ws.client.WebSocketAdapter;
+import com.neovisionaries.ws.client.WebSocketException;
+import com.neovisionaries.ws.client.WebSocketFactory;
+import com.neovisionaries.ws.client.WebSocketFrame;
 
-@ClientEndpoint
+import de.omegazirkel.risingworld.OZTools;
+
 public class WSClientEndpoint {
 
 	private static final Map<String, WSClientEndpoint> INSTANCES = new ConcurrentHashMap<>();
@@ -35,20 +25,14 @@ public class WSClientEndpoint {
 	private final URI endpointUri;
 
 	private WebSocketHandler handler;
-	private WebSocketContainer container;
-	private ClassLoader extendedClassLoader;
 
 	private static OZLogger logger() {
 		return OZTools.logger();
 	}
 
-	public static void initLogger() {
-		// this is a fix for logs redirected to Discord or other log files.
-		logger();
-	}
-
-	private Session session;
+	private WebSocket socket;
 	private final AtomicBoolean isConnected = new AtomicBoolean(false);
+	private final AtomicBoolean isConnecting = new AtomicBoolean(false);
 	private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
 	private final AtomicBoolean isReconnectLoopActive = new AtomicBoolean(false);
 
@@ -125,140 +109,106 @@ public class WSClientEndpoint {
 		if (isShuttingDown.get() || isConnected.get()) {
 			return;
 		}
+		logger().debug("[WebSocket] Reconnecting to " + endpointUri);
 		connectAsync();
 	}
 
 	/** Connects without blocking the server thread */
 	private void connectAsync() {
+		if (!isConnecting.compareAndSet(false, true)) {
+			logger().debug("[WebSocket] connect already in progress for " + endpointUri);
+			return;
+		}
+		logger().debug("[WebSocket] connectAsync() to " + endpointUri);
 		CompletableFuture.runAsync(() -> {
-			// Temporarily switch the ClassLoader for this thread
-			// This allows ServiceLoader (used by ContainerProvider) to find Tyrus in the
-			// /lib folder.
-			ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 			try {
-				if (extendedClassLoader == null)
-					extendedClassLoader = getExtendedClassLoader(originalClassLoader);
-				Thread.currentThread().setContextClassLoader(extendedClassLoader);
+				WebSocket newSocket = new WebSocketFactory()
+						.setConnectionTimeout(10000)
+						.setSocketTimeout(0)
+						.createSocket(endpointUri);
+				newSocket.addListener(new WebSocketAdapter() {
+					@Override
+					public void onConnected(WebSocket websocket, Map<String, java.util.List<String>> headers) {
+						socket = websocket;
+						isConnected.set(true);
+						logger().info("🔌 WebSocket connection opened");
+						if (handler != null)
+							handler.onConnected(WSClientEndpoint.this);
+					}
 
-				container = ContainerProvider.getWebSocketContainer();
-				if (container == null) {
-					throw new IllegalStateException(
-							"Could not find a WebSocketContainer implementation. Check if Tyrus JARs are in the /lib directory.");
-				}
-				container.setDefaultMaxSessionIdleTimeout(0);
+					@Override
+					public void onTextMessage(WebSocket websocket, String message) {
+						logger().info("📩 Received: " + message);
+						if (handler != null)
+							handler.onTextMessage(message);
+					}
 
-				Session newSession = container.connectToServer(this, endpointUri);
+					@Override
+					public void onBinaryMessage(WebSocket websocket, byte[] binary) {
+						logger().info("📩 Received (binary) " + binary.length + " bytes");
+						if (handler != null)
+							handler.onBinaryMessage(ByteBuffer.wrap(binary));
+					}
 
-				this.session = newSession;
-				// onOpen will be called, which sets isConnected and logs the success
+					@Override
+					public void onConnectError(WebSocket websocket, WebSocketException exception) {
+						isConnected.set(false);
+						logger().warn("❌ WebSocket connection failed: " + exception.getMessage());
+					}
+
+					@Override
+					public void onError(WebSocket websocket, WebSocketException exception) {
+						logger().warn("⚠️ WebSocket error: " + exception.getMessage());
+					}
+
+					@Override
+					public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame,
+							WebSocketFrame clientCloseFrame, boolean closedByServer) {
+						isConnected.set(false);
+						if (socket == websocket)
+							socket = null;
+						logger().warn("🔌 WebSocket disconnected");
+						if (handler != null)
+							handler.onDisconnected();
+					}
+				});
+
+				socket = newSocket;
+				newSocket.connect();
+				logger().debug("[WebSocket] Session connected to " + endpointUri);
 
 			} catch (Exception ex) {
 				isConnected.set(false);
 				logger().warn("❌ WebSocket connection failed: " + ex.getMessage());
-				// Optional: Log the class loader hierarchy for debugging
-				// logger().debug("ClassLoader used: " +
-				// Thread.currentThread().getContextClassLoader().toString());
 			} finally {
-				// IMPORTANT: Always restore the original ClassLoader
-				Thread.currentThread().setContextClassLoader(originalClassLoader);
+				isConnecting.set(false);
 			}
 		});
-	}
-
-	/**
-	 * Creates a new ClassLoader that includes all JARs from the 'lib' directory.
-	 * 
-	 * @param parent The parent classloader.
-	 * @return A new URLClassLoader.
-	 */
-	private ClassLoader getExtendedClassLoader(ClassLoader parent) {
-		try {
-			File pluginJarFile = new File(
-					WSClientEndpoint.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-			File libDir = new File(pluginJarFile.getParentFile(), "lib");
-
-			if (!libDir.exists() || !libDir.isDirectory()) {
-				logger().warn("⚠️ 'lib' directory not found at: " + libDir.getAbsolutePath()
-						+ ". Dependencies will not be loaded.");
-				return parent; // Return original if no lib dir
-			}
-
-			File[] jarFiles = libDir.listFiles((dir, name) -> name.toLowerCase().endsWith(".jar"));
-			List<URL> urls = new ArrayList<>();
-			for (File jar : Objects.requireNonNull(jarFiles)) {
-				urls.add(jar.toURI().toURL());
-			}
-
-			return new URLClassLoader(urls.toArray(new URL[0]), parent);
-		} catch (Exception e) {
-			logger().error("❌ Failed to create extended ClassLoader: " + e.getMessage());
-			return parent; // Fallback to original
-		}
-	}
-
-	// -----------------------------------------------------------------------------------
-	// WebSocket lifecycle methods
-	// -----------------------------------------------------------------------------------
-
-	@OnOpen
-	public void onOpen(Session session) {
-		this.session = session;
-		isConnected.set(true);
-		logger().info("🔌 WebSocket connection opened");
-		if (handler != null)
-			handler.onConnected(this);
-
-	}
-
-	@OnMessage
-	public void onMessage(String message) {
-		logger().info("📩 Received: " + message);
-		// Forward to your tools logic if necessary
-		if (handler != null)
-			handler.onTextMessage(message);
-
-	}
-
-	@OnMessage
-	public void onMessage(ByteBuffer buffer) {
-		logger().info("📩 Received (binary) " + buffer.remaining() + " bytes");
-		if (handler != null)
-			handler.onBinaryMessage(buffer);
-
-	}
-
-	@OnError
-	public void onError(Throwable t) {
-		logger().warn("⚠️ WebSocket error: " + t.getMessage());
-	}
-
-	@OnClose
-	public void onClose(Session session, CloseReason reason) {
-		isConnected.set(false);
-		this.session = null;
-		logger().warn("🔌 WebSocket disconnected: " + reason);
-		if (handler != null)
-			handler.onDisconnected();
-
 	}
 
 	// -----------------------------------------------------------------------------------
 	// Public API
 	// -----------------------------------------------------------------------------------
 
+	public void init() {
+		ensureConnected();
+	}
+
 	public boolean send(String msg) {
 		ensureConnected(); // Ensure the connection logic is active
-		if (!isConnected.get() || session == null || !session.isOpen())
+		if (!isConnected.get() || socket == null || !socket.isOpen())
 			return false;
-		session.getAsyncRemote().sendText(msg);
+		socket.sendText(msg);
 		return true;
 	}
 
 	public boolean send(ByteBuffer data) {
 		ensureConnected(); // Ensure the connection logic is active
-		if (!isConnected.get() || session == null || !session.isOpen())
+		if (!isConnected.get() || socket == null || !socket.isOpen())
 			return false;
-		session.getAsyncRemote().sendBinary(data);
+		byte[] bytes = new byte[data.remaining()];
+		data.slice().get(bytes);
+		socket.sendBinary(bytes);
 		return true;
 	}
 
@@ -274,26 +224,15 @@ public class WSClientEndpoint {
 
 		scheduler.shutdownNow();
 
-		if (session != null) {
+		if (socket != null) {
 			try {
-				session.close(new CloseReason(
-						CloseReason.CloseCodes.NORMAL_CLOSURE,
-						"Plugin shutdown"));
+				socket.disconnect();
 			} catch (Exception ignored) {
 			}
 		}
 
-		// Shutdown the underlying Tyrus/Grizzly container
-		if (container instanceof org.glassfish.tyrus.client.ClientManager) {
-			try {
-				((org.glassfish.tyrus.client.ClientManager) container).shutdown();
-				logger().info("🔌 WebSocket container shut down.");
-			} catch (Exception e) {
-				logger().warn("⚠️ Error shutting down WebSocket container: " + e.getMessage());
-			}
-		}
-
 		isConnected.set(false);
+		isConnecting.set(false);
 	}
 
 	/** Cleanly shuts down all managed WebSocket client instances. */

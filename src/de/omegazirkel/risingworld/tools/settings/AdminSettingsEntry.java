@@ -9,6 +9,7 @@ public class AdminSettingsEntry {
     private final AdminSettingsType type;
     private final boolean sensitive;
     private final AdminSettingsWriter writer;
+    private final boolean group;
 
     public AdminSettingsEntry(
             String key,
@@ -19,6 +20,19 @@ public class AdminSettingsEntry {
             AdminSettingsType type,
             boolean sensitive,
             AdminSettingsWriter writer) {
+        this(key, label, description, value, defaultValue, type, sensitive, writer, false);
+    }
+
+    private AdminSettingsEntry(
+            String key,
+            String label,
+            String description,
+            String value,
+            String defaultValue,
+            AdminSettingsType type,
+            boolean sensitive,
+            AdminSettingsWriter writer,
+            boolean group) {
         this.key = key;
         this.label = label == null || label.isBlank() ? key : label;
         this.description = description == null ? "" : description;
@@ -27,6 +41,19 @@ public class AdminSettingsEntry {
         this.type = type == null ? AdminSettingsType.STRING : type;
         this.sensitive = sensitive;
         this.writer = writer;
+        this.group = group;
+    }
+
+    public static AdminSettingsEntry group(String label) {
+        return group(label, label, "");
+    }
+
+    public static AdminSettingsEntry group(String key, String label) {
+        return group(key, label, "");
+    }
+
+    public static AdminSettingsEntry group(String key, String label, String description) {
+        return new AdminSettingsEntry(key, label, description, "", "", AdminSettingsType.STRING, false, null, true);
     }
 
     public String getKey() {
@@ -64,7 +91,11 @@ public class AdminSettingsEntry {
     }
 
     public boolean isEditable() {
-        return !sensitive && writer != null;
+        return !group && !sensitive && writer != null;
+    }
+
+    public boolean isGroup() {
+        return group;
     }
 
     public boolean write(String newValue) {

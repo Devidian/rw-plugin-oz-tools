@@ -2,7 +2,19 @@
 
 ## [Unreleased]
 
+- feat: register OZ.Tools info/status content for the shared plugin panel
+- feat: group OZ.Tools admin PluginSettings metadata with English and German labels
+- refactor: keep OZ.Tools internal logging on the single main logger path
+- docs: document shared UI integration rules for feature plugins
+- feat: add shared admin settings group separator entries
+- feat: filter shared admin integer setting inputs to numeric characters
+- feat: add shared dynamic tab container helpers for plugin overlays
+- feat: sort `/ozt` main radial menu plugin entries deterministically by plugin name
+- feat: add public plugin info/status provider registration and launcher contract
 - fix: let `BasePluginOverlay` subclasses decide when to render so tabbed overlays can initialize their own state first
+- feat: add reusable centered plugin info/status panel with i18n title, close button, tabs, and scrollable content
+- feat: add shared inventory overlay indicator provider registration and compact transparent HUD panel
+- feat: add shared inventory overlay button registration and transparent flex panel
 - feat: add admin-only `PluginSettings` tab registration for shared settings metadata
 - feat: add simple boolean/integer/string settings editor support through plugin-provided writers
 - feat: expose `SettingsFileEditor` helper for comment-preserving `settings.properties` value updates
