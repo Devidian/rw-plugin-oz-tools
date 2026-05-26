@@ -1,5 +1,6 @@
 # Roadmaps
 
+- [Roadmap Plan 03 Shared UI And Wallet Bridge Support](roadmap-plan-03-shared-ui-and-wallet-bridge-support.md)
 - [Roadmap Plan 02 Shared UI And Settings](roadmap-plan-02-shared-ui-and-settings.md)
 - [Portfolio Design And Settings](portfolio-design-and-settings.md)
 

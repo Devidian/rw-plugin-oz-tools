@@ -202,11 +202,39 @@ public class NewPlugin extends Plugin implements FileChangeListener{
 
 ## Radial Main menu
 
-... description coming soon ...
+Plugins can register entries in the shared `/ozt` radial menu with
+`PluginMenuManager.registerPluginMenu(...)`. Plugin-owned child radial menus
+should use Tools-registered shared icons where appropriate. The shared
+Info/Status radial action uses the `icon-ki-info-status` icon key; plugins should
+not register duplicate copies of that icon.
+
+Tools registers these shared icon keys by default:
+
+- `icon-ki-info-status`: shared Info/Status radial-menu action icon
+- `icon-ki-placeholder`: generic placeholder for future features without a dedicated icon
+- `icon-ki-soon`: generic placeholder for future unavailable or planned features
 
 ## Player-Plugin-Settings
 
 ... description coming soon ...
+
+## Inventory overlay buttons
+
+Plugins can register compact inventory entrypoints with
+`InventoryOverlayButtons.registerButton(pluginName, label, iconKey, callback)`.
+The shared inventory panel renders icon-only buttons, sorted by plugin name and
+label. Labels remain part of the registration key and sort order but are not
+rendered in the inventory panel.
+
+Tools registers its own inventory button and opens the shared Tools Info/Status
+panel from it. The panel refreshes already-open inventories when buttons are
+registered or removed.
+
+## Shared indicators
+
+Plugins can register lightweight HUD indicators with `SharedIndicators`. Tools
+hides the shared indicator panel while the player's inventory overlay is open
+and refreshes indicators again when the inventory closes.
 
 ## CursorManager
 

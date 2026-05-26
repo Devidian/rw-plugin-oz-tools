@@ -43,6 +43,9 @@ public class AssetManager {
         loadIconFromPlugin(plugin, "exit-alt");
         loadIconFromPlugin(plugin, "undo");
         loadIconFromPlugin(plugin, "icon-gpt-plugin-config");
+        loadIconFromPlugin(plugin, "icon-ki-info-status");
+        loadIconFromPlugin(plugin, "icon-ki-placeholder");
+        loadIconFromPlugin(plugin, "icon-ki-soon");
     }
 
 }

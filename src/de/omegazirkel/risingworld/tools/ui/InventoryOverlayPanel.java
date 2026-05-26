@@ -2,19 +2,17 @@ package de.omegazirkel.risingworld.tools.ui;
 
 import java.util.List;
 
+import net.risingworld.api.Server;
 import net.risingworld.api.assets.TextureAsset;
 import net.risingworld.api.objects.Player;
-import net.risingworld.api.ui.UILabel;
 import net.risingworld.api.ui.UITarget;
 import net.risingworld.api.ui.style.Align;
 import net.risingworld.api.ui.style.DisplayStyle;
 import net.risingworld.api.ui.style.FlexDirection;
-import net.risingworld.api.ui.style.Font;
 import net.risingworld.api.ui.style.Justify;
 import net.risingworld.api.ui.style.Pivot;
 import net.risingworld.api.ui.style.Position;
 import net.risingworld.api.ui.style.ScaleMode;
-import net.risingworld.api.ui.style.TextAnchor;
 import net.risingworld.api.ui.style.Unit;
 import net.risingworld.api.ui.style.Wrap;
 
@@ -23,11 +21,11 @@ public class InventoryOverlayPanel extends OZUIElement {
 
     public static void show(Player player) {
         remove(player);
-        List<InventoryOverlayButton> buttons = InventoryOverlayButtons.sortedButtons();
+        List<MenuItem> buttons = PluginMenuManager.mainMenuItems(player);
         if (buttons.isEmpty()) {
             return;
         }
-        InventoryOverlayPanel panel = new InventoryOverlayPanel(buttons);
+        InventoryOverlayPanel panel = new InventoryOverlayPanel(player, buttons);
         player.addUIElement(panel, UITarget.Inventory);
         player.setAttribute(PLAYER_ATTRIBUTE, panel);
     }
@@ -40,7 +38,23 @@ public class InventoryOverlayPanel extends OZUIElement {
         }
     }
 
-    private InventoryOverlayPanel(List<InventoryOverlayButton> buttons) {
+    public static boolean isVisible(Player player) {
+        return player != null && player.getAttribute(PLAYER_ATTRIBUTE) instanceof InventoryOverlayPanel;
+    }
+
+    public static void refreshAllVisible() {
+        Player[] players = Server.getAllPlayers();
+        if (players == null) {
+            return;
+        }
+        for (Player player : players) {
+            if (isVisible(player)) {
+                show(player);
+            }
+        }
+    }
+
+    private InventoryOverlayPanel(Player player, List<MenuItem> buttons) {
         setPivot(Pivot.UpperCenter);
         setSize(70, 10, true);
         setPosition(50, 80, true);
@@ -65,17 +79,17 @@ public class InventoryOverlayPanel extends OZUIElement {
         container.style.paddingRight.set(4);
         container.setBackgroundColor(0, 0, 0, 0);
 
-        for (InventoryOverlayButton button : buttons) {
-            container.addChild(buttonElement(button));
+        for (MenuItem button : buttons) {
+            container.addChild(buttonElement(player, button));
         }
 
         addChild(container);
     }
 
-    private OZUIElement buttonElement(InventoryOverlayButton registration) {
+    private OZUIElement buttonElement(Player player, MenuItem registration) {
         OZUIElement button = new OZUIElement();
         button.setPivot(Pivot.UpperLeft);
-        button.style.width.set(176, Unit.Pixel);
+        button.style.width.set(38, Unit.Pixel);
         button.style.height.set(38, Unit.Pixel);
         button.style.marginLeft.set(4);
         button.style.marginRight.set(4);
@@ -89,39 +103,25 @@ public class InventoryOverlayPanel extends OZUIElement {
         button.setHoverBorderColor(0xF2C766BB);
         button.setHoverBorderWidth(1);
         button.setBorderEdgeRadius(4, false);
-        button.setClickAction(registration.getCallback());
+        button.setClickAction(event -> {
+            remove(player);
+            player.hideInventory();
+            registration.getAction().onCall(player);
+        });
 
-        int labelLeft = 10;
-        if (registration.getIconKey() != null) {
-            TextureAsset icon = AssetManager.getIcon(registration.getIconKey());
-            if (icon != null) {
-                OZUIElement iconElement = new OZUIElement();
-                iconElement.setPivot(Pivot.MiddleLeft);
-                iconElement.style.position.set(Position.Absolute);
-                iconElement.style.left.set(10, Unit.Pixel);
-                iconElement.style.top.set(50, Unit.Percent);
-                iconElement.style.width.set(20, Unit.Pixel);
-                iconElement.style.height.set(20, Unit.Pixel);
-                iconElement.style.backgroundImage.set(icon);
-                iconElement.style.backgroundImageScaleMode.set(ScaleMode.ScaleToFit);
-                button.addChild(iconElement);
-                labelLeft = 38;
-            }
+        TextureAsset icon = registration.getIcon();
+        if (icon != null) {
+            OZUIElement iconElement = new OZUIElement();
+            iconElement.setPivot(Pivot.MiddleCenter);
+            iconElement.style.position.set(Position.Absolute);
+            iconElement.style.left.set(50, Unit.Percent);
+            iconElement.style.top.set(50, Unit.Percent);
+            iconElement.style.width.set(24, Unit.Pixel);
+            iconElement.style.height.set(24, Unit.Pixel);
+            iconElement.style.backgroundImage.set(icon);
+            iconElement.style.backgroundImageScaleMode.set(ScaleMode.ScaleToFit);
+            button.addChild(iconElement);
         }
-
-        UILabel label = new UILabel(registration.getLabel());
-        label.setPivot(Pivot.UpperLeft);
-        label.style.position.set(Position.Absolute);
-        label.style.left.set(labelLeft, Unit.Pixel);
-        label.style.top.set(0, Unit.Pixel);
-        label.style.right.set(8, Unit.Pixel);
-        label.style.height.set(100, Unit.Percent);
-        label.setFont(Font.DefaultBold);
-        label.setFontSize(13);
-        label.setFontColor(0xF4F0E6FF);
-        label.setTextAlign(TextAnchor.MiddleLeft);
-        label.setTextWrap(false);
-        button.addChild(label);
 
         return button;
     }

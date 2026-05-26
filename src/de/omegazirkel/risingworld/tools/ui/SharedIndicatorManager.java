@@ -32,8 +32,16 @@ public final class SharedIndicatorManager {
             return;
         }
         for (Player player : players) {
-            SharedIndicatorPanel.refresh(player);
+            refresh(player);
         }
+    }
+
+    public static void refresh(Player player) {
+        SharedIndicatorPanel.refresh(player);
+    }
+
+    public static void hide(Player player) {
+        SharedIndicatorPanel.remove(player);
     }
 
     private static void removeAllPlayers() {

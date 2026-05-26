@@ -23,6 +23,10 @@ public class SharedIndicatorPanel extends OZUIElement {
             remove(player);
             return;
         }
+        if (InventoryOverlayPanel.isVisible(player)) {
+            remove(player);
+            return;
+        }
         remove(player);
         List<SharedIndicator> indicators = SharedIndicators.visibleIndicators(player);
         if (indicators.isEmpty()) {

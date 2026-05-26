@@ -24,8 +24,14 @@ public class PluginMenuManager {
     }
 
     public static void showMainMenu(Player player) {
-        List<MenuItem> menuItemsCopy = sortedPluginMenuItems();
+        List<MenuItem> menuItemsCopy = mainMenuItems(player);
         menuItemsCopy.add(MenuItem.closeMenu(player));
+
+        showMenu(player, menuItemsCopy);
+    }
+
+    public static List<MenuItem> mainMenuItems(Player player) {
+        List<MenuItem> menuItemsCopy = sortedPluginMenuItems();
         menuItemsCopy
                 .add(new MenuItem(AssetManager.getIcon("icon-gpt-plugin-config"), t().get("TC_MENU_SETTINGS", player),
                         (p) -> {
@@ -41,8 +47,7 @@ public class PluginMenuManager {
                             p.addUIElement(overlay);
                             p.setAttribute("tools.ui.overlay", overlay);
                         }));
-
-        showMenu(player, menuItemsCopy);
+        return menuItemsCopy;
     }
 
     private static List<MenuItem> sortedPluginMenuItems() {

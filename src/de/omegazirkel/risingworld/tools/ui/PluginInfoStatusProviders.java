@@ -47,6 +47,13 @@ public final class PluginInfoStatusProviders {
         return true;
     }
 
+    public static MenuItem menuItem(String label, String pluginName) {
+        return new MenuItem(AssetManager.getIcon("icon-ki-info-status"), label, player -> {
+            player.hideRadialMenu(true);
+            show(player, pluginName);
+        });
+    }
+
     private static PluginInfoStatusProvider findProvider(String pluginName) {
         String key = optionalProviderKey(pluginName);
         if (key == null) {

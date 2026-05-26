@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-05-26 | Shared UI and plugin menu support
+
+- change: render inventory shortcut buttons from the `/ozt` main menu actions and close inventory before launching them
+- feat: register shared info/status and placeholder icons for plugin menus
+- feat: render shared inventory plugin buttons as icon-only controls and add a Tools info/status inventory entry
+- fix: refresh already-open inventory button panels when button registrations change
+- fix: hide shared zone indicators while inventory is open and restore them when it closes
 - feat: register OZ.Tools info/status content for the shared plugin panel
 - feat: group OZ.Tools admin PluginSettings metadata with English and German labels
 - refactor: keep OZ.Tools internal logging on the single main logger path

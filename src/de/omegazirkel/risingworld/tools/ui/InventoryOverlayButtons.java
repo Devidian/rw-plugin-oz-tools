@@ -41,12 +41,14 @@ public final class InventoryOverlayButtons {
             BUTTONS.put(buttonKey(normalizedPluginName, normalizedLabel),
                     new InventoryOverlayButton(normalizedPluginName, normalizedLabel, optionalText(iconKey), callback));
         }
+        InventoryOverlayPanel.refreshAllVisible();
     }
 
     public static void unregisterButton(String pluginName, String label) {
         synchronized (BUTTONS) {
             BUTTONS.remove(buttonKey(requiredText(pluginName, "pluginName"), requiredText(label, "label")));
         }
+        InventoryOverlayPanel.refreshAllVisible();
     }
 
     public static void unregisterButtons(String pluginName) {
@@ -54,6 +56,7 @@ public final class InventoryOverlayButtons {
         synchronized (BUTTONS) {
             BUTTONS.entrySet().removeIf(entry -> entry.getValue().getPluginName().equals(normalizedPluginName));
         }
+        InventoryOverlayPanel.refreshAllVisible();
     }
 
     static List<InventoryOverlayButton> sortedButtons() {

@@ -129,7 +129,6 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
                         () -> s.adminSettingsEntries(), s::initSettings));
         PluginInfoStatusProviders.registerProvider(
                 new ToolsPluginInfoStatusProvider(getDescription("name"), getDescription("version"), pluginCMD));
-
         logger().info("✅ " + this.getName() + " Plugin is enabled version:" + this.getDescription("version"));
     }
 
@@ -153,7 +152,6 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
 
         SharedIndicatorManager.stop();
         PluginInfoStatusProviders.unregisterProvider(getDescription("name"));
-
         // 2. Shut down all WebSocket clients
         WSClientEndpoint.shutdownAll();
 
@@ -184,9 +182,11 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     public void onPlayerToggleInventory(PlayerToggleInventoryEvent event) {
         Player player = event.getPlayer();
         if (event.isVisible() && event.getStorage() == null) {
+            SharedIndicatorManager.hide(player);
             InventoryOverlayPanel.show(player);
         } else {
             InventoryOverlayPanel.remove(player);
+            SharedIndicatorManager.refresh(player);
         }
     }
 
@@ -209,13 +209,8 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         Player player = event.getPlayer();
         switch (command) {
             case "status":
-                String statusMessage = t.get("TC_CMD_STATUS", player)
-                        .replace("PH_VERSION", c.okay + this.getDescription("version") + c.endTag)
-                        .replace("PH_LANGUAGE",
-                                c.info + player.getLanguage() + " / " + player.getSystemLanguage() + c.endTag)
-                        .replace("PH_USEDLANG", c.okay + t.getLanguageUsed(player.getSystemLanguage()) + c.endTag)
-                        .replace("PH_LANG_AVAILABLE", c.warning + t.getLanguageAvailable() + c.endTag);
-                player.sendTextMessage(c.okay + this.getName() + c.endTag + "\n " + statusMessage);
+            case "info":
+                PluginInfoStatusProviders.show(player, getDescription("name"));
                 break;
             case "open":
                 PluginMenuManager.showMainMenu(player);
