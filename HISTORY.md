@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-05-26 | Player settings text wrapping
+
+- fix: let default PlayerPluginSettings labels use card-relative width and a taller wrapped text area
+
 ## [0.19.0] - 2026-05-26 | Shared UI and plugin menu support
 
 - change: render inventory shortcut buttons from the `/ozt` main menu actions and close inventory before launching them

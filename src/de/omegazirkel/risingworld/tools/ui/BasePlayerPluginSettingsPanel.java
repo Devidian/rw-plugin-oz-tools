@@ -96,7 +96,8 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         UILabel label = new UILabel(labelText);
         label.setPivot(Pivot.UpperLeft);
         label.setPosition(10, 8, false);
-        label.setSize(250, 48, false);
+        label.style.width.set(92, Unit.Percent);
+        label.style.height.set(62, Unit.Pixel);
         label.setFontSize(13);
         label.setFont(Font.DefaultBold);
         label.setFontColor(0xF4F0E6FF);
