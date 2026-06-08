@@ -3,6 +3,7 @@ package de.omegazirkel.risingworld.tools.ui;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
@@ -188,7 +189,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         OZUIElement row = new OZUIElement();
         row.setPivot(Pivot.UpperLeft);
         row.style.width.set(100, Unit.Percent);
-        row.style.height.set(74, Unit.Pixel);
+        row.style.height.set(rowHeight(entry), Unit.Pixel);
         row.style.marginBottom.set(8);
         row.setBackgroundColor(0x181713D8);
         row.setBorder(1);
@@ -234,6 +235,11 @@ public class AdminPluginSettingsPanel extends OZUIElement {
             return row;
         }
 
+        if (entry.getType() == AdminSettingsType.SELECT) {
+            row.addChild(selectDropdown(entry));
+            return row;
+        }
+
         UITextField input = input(entry);
         row.addChild(input);
         OZUIElement saveButton = actionButton(t().get("TC_PLUGIN_SETTINGS_SAVE", uiPlayer));
@@ -247,7 +253,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
                         .replace("PH_SETTING_KEY", entry.getKey()));
                 return;
             }
-            if (entry.write(value)) {
+            if (entry.write(writeValue(entry, value))) {
                 adminSettings.reload();
                 uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_SAVED", uiPlayer)
                         .replace("PH_SETTING_KEY", entry.getKey()));
@@ -259,6 +265,44 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         row.addChild(saveButton);
 
         return row;
+    }
+
+    private int rowHeight(AdminSettingsEntry entry) {
+        if (entry.getType() == AdminSettingsType.SELECT) {
+            return 224;
+        }
+        if (entry.getType() == AdminSettingsType.TEXT) {
+            return 154;
+        }
+        return 74;
+    }
+
+    private Dropdown selectDropdown(AdminSettingsEntry entry) {
+        List<DropdownOption> options = entry.getOptions().stream()
+                .map(option -> new DropdownOption(option, option))
+                .collect(Collectors.toList());
+        Dropdown dropdown = new Dropdown(options, entry.getValue(), selected -> {
+            if (!isValidValue(entry, selected)) {
+                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_INVALID", uiPlayer)
+                        .replace("PH_SETTING_KEY", entry.getKey()));
+                return;
+            }
+            if (entry.write(writeValue(entry, selected))) {
+                adminSettings.reload();
+                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_SAVED", uiPlayer)
+                        .replace("PH_SETTING_KEY", entry.getKey()));
+            } else {
+                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_SAVE_FAILED", uiPlayer)
+                        .replace("PH_SETTING_KEY", entry.getKey()));
+            }
+        });
+        dropdown.setPivot(Pivot.MiddleRight);
+        dropdown.style.position.set(Position.Absolute);
+        dropdown.style.right.set(1, Unit.Pixel);
+        dropdown.style.top.set(16, Unit.Pixel);
+        dropdown.style.width.set(25, Unit.Percent);
+        dropdown.style.height.set(34, Unit.Pixel);
+        return dropdown;
     }
 
     private SwitchButton booleanSwitch(AdminSettingsEntry entry) {
@@ -287,10 +331,12 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         input.style.right.set(50, Unit.Pixel);
         input.style.top.set(50, Unit.Percent);
         input.style.width.set(25, Unit.Percent);
-        input.style.height.set(34, Unit.Pixel);
+        input.style.height.set(entry.getType() == AdminSettingsType.TEXT ? 104 : 34, Unit.Pixel);
         input.setFontSize(13);
         input.setFontColor(0xF4F0E6FF);
-        input.setMaxCharacters(entry.getType() == AdminSettingsType.STRING ? 160 : 24);
+        input.setMaxCharacters(entry.getType() == AdminSettingsType.TEXT ? 4000
+                : entry.getType() == AdminSettingsType.STRING ? 160 : 24);
+        input.setMultiLine(entry.getType() == AdminSettingsType.TEXT);
         input.setBackgroundColor(0x10100EE8);
         input.setBorder(1);
         input.setBorderColor(0x5E4A25FF);
@@ -419,7 +465,17 @@ public class AdminPluginSettingsPanel extends OZUIElement {
                 return false;
             }
         }
+        if (entry.getType() == AdminSettingsType.SELECT) {
+            return entry.getOptions().contains(value);
+        }
         return true;
+    }
+
+    private String writeValue(AdminSettingsEntry entry, String value) {
+        if (entry.getType() != AdminSettingsType.TEXT) {
+            return value;
+        }
+        return value.replace("\r\n", "\n").replace("\r", "\n").replace("\n", "\\n");
     }
 
     private static String integerInputText(String value) {

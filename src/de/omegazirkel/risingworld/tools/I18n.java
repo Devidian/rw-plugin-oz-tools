@@ -17,6 +17,7 @@ import net.risingworld.api.objects.Player;
 public class I18n {
     private static ConcurrentHashMap<String, I18n> instanceMap = new ConcurrentHashMap<String, I18n>();
     private Map<String, Properties> language = new HashMap<String, Properties>();
+    private String loadedPluginPath;
     private static final String defaultLanguage = "en";
 
     public static OZLogger logger() {
@@ -46,8 +47,16 @@ public class I18n {
         logger().setLevel(s.logLevel);
 
         I18n instance = getInstance(plugin.getDescription("name"));
-        instance.loadLanguageData(plugin.getPath());
+        instance.loadLanguageDataOnce(plugin.getPath());
         return instance;
+    }
+
+    private synchronized void loadLanguageDataOnce(String pluginPath) {
+        if (pluginPath == null || pluginPath.isBlank() || pluginPath.equals(loadedPluginPath)) {
+            return;
+        }
+        loadLanguageData(pluginPath);
+        loadedPluginPath = pluginPath;
     }
 
     /**

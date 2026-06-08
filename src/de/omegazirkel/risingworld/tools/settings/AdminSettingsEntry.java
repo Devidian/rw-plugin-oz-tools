@@ -1,5 +1,7 @@
 package de.omegazirkel.risingworld.tools.settings;
 
+import java.util.List;
+
 public class AdminSettingsEntry {
     private final String key;
     private final String label;
@@ -10,6 +12,7 @@ public class AdminSettingsEntry {
     private final boolean sensitive;
     private final AdminSettingsWriter writer;
     private final boolean group;
+    private final List<String> options;
 
     public AdminSettingsEntry(
             String key,
@@ -20,7 +23,20 @@ public class AdminSettingsEntry {
             AdminSettingsType type,
             boolean sensitive,
             AdminSettingsWriter writer) {
-        this(key, label, description, value, defaultValue, type, sensitive, writer, false);
+        this(key, label, description, value, defaultValue, type, sensitive, writer, List.of(), false);
+    }
+
+    public AdminSettingsEntry(
+            String key,
+            String label,
+            String description,
+            String value,
+            String defaultValue,
+            AdminSettingsType type,
+            boolean sensitive,
+            AdminSettingsWriter writer,
+            List<String> options) {
+        this(key, label, description, value, defaultValue, type, sensitive, writer, options, false);
     }
 
     private AdminSettingsEntry(
@@ -32,6 +48,7 @@ public class AdminSettingsEntry {
             AdminSettingsType type,
             boolean sensitive,
             AdminSettingsWriter writer,
+            List<String> options,
             boolean group) {
         this.key = key;
         this.label = label == null || label.isBlank() ? key : label;
@@ -42,6 +59,7 @@ public class AdminSettingsEntry {
         this.sensitive = sensitive;
         this.writer = writer;
         this.group = group;
+        this.options = options == null ? List.of() : List.copyOf(options);
     }
 
     public static AdminSettingsEntry group(String label) {
@@ -53,7 +71,8 @@ public class AdminSettingsEntry {
     }
 
     public static AdminSettingsEntry group(String key, String label, String description) {
-        return new AdminSettingsEntry(key, label, description, "", "", AdminSettingsType.STRING, false, null, true);
+        return new AdminSettingsEntry(key, label, description, "", "", AdminSettingsType.STRING, false, null, List.of(),
+                true);
     }
 
     public String getKey() {
@@ -96,6 +115,10 @@ public class AdminSettingsEntry {
 
     public boolean isGroup() {
         return group;
+    }
+
+    public List<String> getOptions() {
+        return options;
     }
 
     public boolean write(String newValue) {

@@ -31,7 +31,7 @@ public class PluginMenuManager {
     }
 
     public static List<MenuItem> mainMenuItems(Player player) {
-        List<MenuItem> menuItemsCopy = sortedPluginMenuItems();
+        List<MenuItem> menuItemsCopy = visiblePluginMenuItems(player);
         menuItemsCopy
                 .add(new MenuItem(AssetManager.getIcon("icon-gpt-plugin-config"), t().get("TC_MENU_SETTINGS", player),
                         (p) -> {
@@ -39,8 +39,7 @@ public class PluginMenuManager {
                             PlayerPluginSettingsOverlay overlay = (PlayerPluginSettingsOverlay) p
                                     .getAttribute("tools.ui.overlay");
                             if (overlay != null) {
-                                p.removeUIElement(overlay);
-                                p.deleteAttribute("tools.ui.overlay");
+                                overlay.close();
                             }
                             overlay = new PlayerPluginSettingsOverlay(p);
                             CursorManager.show(p);
@@ -54,6 +53,12 @@ public class PluginMenuManager {
         List<MenuItem> sortedItems = new ArrayList<>(menuItems);
         sortedItems.sort(MENU_ITEM_ORDER);
         return sortedItems;
+    }
+
+    private static List<MenuItem> visiblePluginMenuItems(Player player) {
+        return new ArrayList<>(sortedPluginMenuItems().stream()
+                .filter(item -> item.isVisible(player))
+                .toList());
     }
 
     public static void showMenu(Player p, List<MenuItem> items) {

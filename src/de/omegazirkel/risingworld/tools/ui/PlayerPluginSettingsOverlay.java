@@ -150,8 +150,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         btnLabel.setFontColor(0xF4F0E6FF);
         btnLabel.setTextAlign(TextAnchor.MiddleCenter);
         closeButton.setClickAction(event -> {
-            uiPlayer.removeUIElement(this);
-            CursorManager.hide(uiPlayer);
+            close();
         });
         closeButton.addChild(btnLabel);
         navSidebar.addChild(closeButton);
@@ -206,6 +205,12 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
     public static void registerPlayerPluginAdminSettings(PlayerPluginAdminSettings ppas) {
         playerPluginAdminSettings.put(ppas.pluginLabel, ppas);
+    }
+
+    public void close() {
+        uiPlayer.removeUIElement(this);
+        uiPlayer.deleteAttribute("tools.ui.overlay");
+        CursorManager.hide(uiPlayer);
     }
 
     private void addTabButton(String tab, String label, int x) {

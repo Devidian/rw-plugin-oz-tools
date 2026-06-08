@@ -2,22 +2,27 @@ package de.omegazirkel.risingworld.tools.ui;
 
 import java.util.List;
 
+import de.omegazirkel.risingworld.tools.ToolsPlayerPreferences;
 import net.risingworld.api.Server;
 import net.risingworld.api.assets.TextureAsset;
 import net.risingworld.api.objects.Player;
+import net.risingworld.api.ui.UILabel;
 import net.risingworld.api.ui.UITarget;
 import net.risingworld.api.ui.style.Align;
 import net.risingworld.api.ui.style.DisplayStyle;
 import net.risingworld.api.ui.style.FlexDirection;
+import net.risingworld.api.ui.style.Font;
 import net.risingworld.api.ui.style.Justify;
 import net.risingworld.api.ui.style.Pivot;
 import net.risingworld.api.ui.style.Position;
 import net.risingworld.api.ui.style.ScaleMode;
+import net.risingworld.api.ui.style.TextAnchor;
 import net.risingworld.api.ui.style.Unit;
 import net.risingworld.api.ui.style.Wrap;
 
 public class InventoryOverlayPanel extends OZUIElement {
     private static final String PLAYER_ATTRIBUTE = "tools.ui.inventoryOverlayPanel";
+    private static final float WITDH_WITH_LABEL = 75;
 
     public static void show(Player player) {
         remove(player);
@@ -64,8 +69,8 @@ public class InventoryOverlayPanel extends OZUIElement {
         OZUIElement container = new OZUIElement();
         container.setPivot(Pivot.UpperCenter);
         container.setPosition(50, 0, true);
-        container.style.width.set(58, Unit.Percent);
-        container.style.height.set(112, Unit.Pixel);
+        container.style.width.set(70, Unit.Percent);
+        container.style.height.set(132, Unit.Pixel);
         container.style.position.set(Position.Absolute);
         container.style.display.set(DisplayStyle.Flex);
         container.style.alignContent.set(Align.FlexStart);
@@ -87,10 +92,12 @@ public class InventoryOverlayPanel extends OZUIElement {
     }
 
     private OZUIElement buttonElement(Player player, MenuItem registration) {
+        boolean showLabel = ToolsPlayerPreferences.showInventoryShortcutLabels(player);
         OZUIElement button = new OZUIElement();
         button.setPivot(Pivot.UpperLeft);
-        button.style.width.set(38, Unit.Pixel);
-        button.style.height.set(38, Unit.Pixel);
+        button.style.position.set(Position.Relative);
+        button.style.width.set(showLabel ? WITDH_WITH_LABEL : 52, Unit.Pixel);
+        button.style.height.set(showLabel ? 52 + 14 : 52, Unit.Pixel);
         button.style.marginLeft.set(4);
         button.style.marginRight.set(4);
         button.style.marginTop.set(4);
@@ -112,15 +119,35 @@ public class InventoryOverlayPanel extends OZUIElement {
         TextureAsset icon = registration.getIcon();
         if (icon != null) {
             OZUIElement iconElement = new OZUIElement();
-            iconElement.setPivot(Pivot.MiddleCenter);
+            iconElement.setPivot(showLabel ? Pivot.UpperCenter : Pivot.MiddleCenter);
             iconElement.style.position.set(Position.Absolute);
             iconElement.style.left.set(50, Unit.Percent);
-            iconElement.style.top.set(50, Unit.Percent);
-            iconElement.style.width.set(24, Unit.Pixel);
-            iconElement.style.height.set(24, Unit.Pixel);
+            if (showLabel) {
+                iconElement.style.top.set(4, Unit.Pixel);
+            } else {
+                iconElement.style.top.set(50, Unit.Percent);
+            }
+            iconElement.style.width.set(36, Unit.Pixel);
+            iconElement.style.height.set(36, Unit.Pixel);
             iconElement.style.backgroundImage.set(icon);
             iconElement.style.backgroundImageScaleMode.set(ScaleMode.ScaleToFit);
             button.addChild(iconElement);
+        }
+
+        if (showLabel) {
+            UILabel label = new UILabel(registration.getLabel());
+            label.setPivot(Pivot.UpperCenter);
+            label.style.position.set(Position.Absolute);
+            label.style.left.set(50, Unit.Percent);
+            label.style.bottom.set(1, Unit.Pixel);
+            label.style.width.set(WITDH_WITH_LABEL - 4, Unit.Pixel);
+            label.style.height.set(14, Unit.Pixel);
+            label.setFont(Font.Default);
+            label.setFontSize(9);
+            label.setFontColor(0xE8DDC6FF);
+            label.setTextAlign(TextAnchor.MiddleCenter);
+            label.setTextWrap(false);
+            button.addChild(label);
         }
 
         return button;

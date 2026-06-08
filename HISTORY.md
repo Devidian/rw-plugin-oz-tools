@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-06-08 | Shared runtime and UI controls
+
+- feat: add player-aware shortcut visibility
+- fix: make admin-settings dropdown rows reserve open-list space and add multiline text setting support
+- fix: prefer the player's current stable biome sample for region detection and ignore stone overlay samples
+- change: remove the ineffective Escape key close hook while Rising World HUD-layer overlays still open the native menu first
+- feat: add shared select/dropdown support for plugin admin settings
+- change: load i18n resources once per plugin path during enable-time initialization
+- change: remove deprecated `tools.db.SQLite` after all direct consumers migrated to `SQLiteConnectionFactory`
+- change: enlarge shared inventory shortcut icons and render compact labels
+- feat: add player setting to hide inventory shortcut labels
+- fix: keep `/ozt` menu and inventory shortcut lists mutable after player visibility filtering
+
 ## [0.20.0] - 2026-05-26 | Player settings text wrapping
 
 - fix: let default PlayerPluginSettings labels use card-relative width and a taller wrapped text area

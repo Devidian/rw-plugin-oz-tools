@@ -24,13 +24,13 @@ Supporting repositories:
 ## Work Packages
 - [x] Package 1: Derive a shared root `DESIGN.md` from current Wallet, LandClaim, GPS, and Tools UI patterns.
 - [x] Package 1a: Copy/synchronize `DESIGN.md` into each plugin repository and document the rule that root changes must be propagated.
-- [ ] Package 2: Define shared status-indicator placement rules for LandClaim area info, Shop, Marketplace, and LandClaim sale indicators.
+- [x] Package 2: Define shared status-indicator placement rules for LandClaim area info, Shop, Marketplace, and LandClaim sale indicators.
 - [x] Package 3: Introduce a reusable settings metadata model for displaying `settings.properties` keys, current values, defaults, and admin-facing descriptions.
 - [x] Package 4: Extend `PlayerPluginSettingsOverlay` with an admin-only third tab named `PluginSettings`.
 - [x] Package 5: Add a shared reload button contract that calls the owning plugin's settings reload path and refreshes the tab after reload.
 - [x] Package 6: Standardize settings-file watcher behavior so all plugins using the mechanism reload `settings.properties` consistently.
 - [x] Package 7: Add base UI components for editable settings rows where safe, plus read-only/hidden handling for sensitive or unsupported values.
-- [ ] Package 8: Document integration steps for existing and future plugins.
+- [x] Package 8: Document integration steps for existing and future plugins.
 
 ## Step 1 Result
 - Added the canonical root `DESIGN.md`.

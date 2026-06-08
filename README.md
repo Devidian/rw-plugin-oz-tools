@@ -194,7 +194,10 @@ public class NewPlugin extends Plugin implements FileChangeListener{
 
 ## SQLite helper
 
-... description coming soon ...
+Use `SQLiteConnectionFactory.open(plugin)` for world-scoped plugin SQLite access.
+The old `tools.db.SQLite` wrapper has been removed; plugin code should keep ownership
+of its domain schema and pass the shared `Connection` into `PlayerSettings` or
+plugin-local stores as needed.
 
 ## WebSocket
 
@@ -207,6 +210,13 @@ Plugins can register entries in the shared `/ozt` radial menu with
 should use Tools-registered shared icons where appropriate. The shared
 Info/Status radial action uses the `icon-ki-info-status` icon key; plugins should
 not register duplicate copies of that icon.
+
+Plan 04 shortcut visibility is player-aware and defaults to visible. Plugins can
+register a predicate with `PluginShortcutVisibility.register(pluginName,
+predicate)` and should use `PluginShortcutVisibility.playerSettingKey(pluginName)`
+as the persisted player-setting key when they expose a hide/show shortcut
+setting. The shared `/ozt` menu and inventory panel use the same visibility
+decision.
 
 Tools registers these shared icon keys by default:
 
@@ -222,9 +232,13 @@ Tools registers these shared icon keys by default:
 
 Plugins can register compact inventory entrypoints with
 `InventoryOverlayButtons.registerButton(pluginName, label, iconKey, callback)`.
-The shared inventory panel renders icon-only buttons, sorted by plugin name and
-label. Labels remain part of the registration key and sort order but are not
-rendered in the inventory panel.
+The shared inventory panel renders larger icons with compact labels, sorted by
+plugin name and label. The current Rising World UI API does not expose a native
+hover-tooltip property for custom UI elements, so labels are rendered inline
+instead of hidden hover-only text.
+
+Players can hide the compact labels from `/ozt config` in the OZTools player
+settings. Icons remain visible and keep the same ordering.
 
 Tools registers its own inventory button and opens the shared Tools Info/Status
 panel from it. The panel refreshes already-open inventories when buttons are

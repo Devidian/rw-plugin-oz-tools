@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -15,7 +17,9 @@ import de.omegazirkel.risingworld.tools.OZLogger;
 import de.omegazirkel.risingworld.tools.PluginFileWatcher;
 import de.omegazirkel.risingworld.tools.PluginReloadDebouncer;
 import de.omegazirkel.risingworld.tools.PluginSettings;
+import de.omegazirkel.risingworld.tools.PlayerSettings;
 import de.omegazirkel.risingworld.tools.WSClientEndpoint;
+import de.omegazirkel.risingworld.tools.db.SQLiteConnectionFactory;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
 import de.omegazirkel.risingworld.tools.ui.AdminPluginSettingsPanel;
 import de.omegazirkel.risingworld.tools.ui.AssetManager;
@@ -34,6 +38,7 @@ import net.risingworld.api.events.EventMethod;
 import net.risingworld.api.events.Listener;
 import net.risingworld.api.events.player.PlayerCommandEvent;
 import net.risingworld.api.events.player.PlayerConnectEvent;
+import net.risingworld.api.events.player.PlayerDisconnectEvent;
 import net.risingworld.api.events.player.PlayerSpawnEvent;
 import net.risingworld.api.events.player.ui.PlayerToggleInventoryEvent;
 import net.risingworld.api.events.player.ui.PlayerUITextFieldChangeEvent;
@@ -56,6 +61,8 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
 
     private static PluginSettings s = null;
     private static I18n t = null;
+    private static Connection sqliteCon;
+    private static PlayerSettings playerSettings;
     private final static Colors c = Colors.getInstance();
     public static String name = null;
 
@@ -71,6 +78,12 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         logger().setLevel(s.logLevel);
         t = I18n.getInstance(this);
         AssetManager.loadDefaultIcons(this);
+        try {
+            sqliteCon = SQLiteConnectionFactory.open(this);
+            playerSettings = new PlayerSettings(sqliteCon);
+        } catch (RuntimeException ex) {
+            logger().error("Failed to initialize Tools player settings database: " + ex.getMessage());
+        }
 
         registerEventListener(this);
         SharedIndicatorManager.start();
@@ -152,6 +165,15 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
 
         SharedIndicatorManager.stop();
         PluginInfoStatusProviders.unregisterProvider(getDescription("name"));
+        playerSettings = null;
+        if (sqliteCon != null) {
+            try {
+                sqliteCon.close();
+            } catch (SQLException ex) {
+                logger().warn("Failed to close Tools database connection: " + ex.getMessage());
+            }
+            sqliteCon = null;
+        }
         // 2. Shut down all WebSocket clients
         WSClientEndpoint.shutdownAll();
 
@@ -176,6 +198,10 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     @EventMethod
     public void onPlayerConnect(PlayerConnectEvent event) {
         SharedIndicatorManager.refreshAllPlayers();
+    }
+
+    @EventMethod
+    public void onPlayerDisconnect(PlayerDisconnectEvent event) {
     }
 
     @EventMethod
@@ -219,8 +245,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
                 PlayerPluginSettingsOverlay overlay = (PlayerPluginSettingsOverlay) player
                         .getAttribute("tools.ui.overlay");
                 if (overlay != null) {
-                    player.removeUIElement(overlay);
-                    player.deleteAttribute("tools.ui.overlay");
+                    overlay.close();
                 }
                 overlay = new PlayerPluginSettingsOverlay(player);
                 CursorManager.show(player);
@@ -243,5 +268,9 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
 
     public static PluginSettings getSettings() {
         return s;
+    }
+
+    public static PlayerSettings playerSettings() {
+        return playerSettings;
     }
 }
