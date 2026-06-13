@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.Consumer;
 
 import de.omegazirkel.risingworld.OZTools;
 
@@ -21,6 +22,7 @@ public class PluginFileWatcher implements AutoCloseable {
     private final List<FileChangeListener> listeners = new ArrayList<>();
     private final Map<Path, FileChangeListener> settingsFiles = new HashMap<>();
     private final PluginReloadDebouncer jarDebouncer;
+    private final Consumer<Runnable> serverThreadDispatcher;
 
     private static OZLogger logger() {
         return OZTools.logger();
@@ -35,9 +37,11 @@ public class PluginFileWatcher implements AutoCloseable {
         }
     });
 
-    public PluginFileWatcher(Path rootDir, PluginReloadDebouncer jarDebouncer) throws IOException {
+    public PluginFileWatcher(Path rootDir, PluginReloadDebouncer jarDebouncer,
+            Consumer<Runnable> serverThreadDispatcher) throws IOException {
         this.watchService = FileSystems.getDefault().newWatchService();
         this.jarDebouncer = jarDebouncer;
+        this.serverThreadDispatcher = Objects.requireNonNull(serverThreadDispatcher, "serverThreadDispatcher");
 
         // recursive register all directories
         registerAll(rootDir);
@@ -138,11 +142,7 @@ public class PluginFileWatcher implements AutoCloseable {
             jarDebouncer.jarChanged(path);
             // notify other listeners for Jar-change
             for (FileChangeListener l : listeners) {
-                try {
-                    l.onJarChanged(path);
-                } catch (Exception e) {
-                    logger().fatal("onJarChanged: " + e.getMessage());
-                }
+                dispatch(() -> l.onJarChanged(path), "onJarChanged");
             }
         }
         // check for settings.properties
@@ -150,7 +150,7 @@ public class PluginFileWatcher implements AutoCloseable {
             FileChangeListener listener = settingsFiles.get(path.toAbsolutePath());
 
             if (listener != null) {
-                listener.onSettingsChanged(path);
+                dispatch(() -> listener.onSettingsChanged(path), "onSettingsChanged");
             } else {
                 // falls Settings-Datei nicht registriert ist → ignorieren
                 logger().info("ℹ️ Unknown settings.properties changed: " + path);
@@ -159,13 +159,19 @@ public class PluginFileWatcher implements AutoCloseable {
         // other files
         else {
             for (FileChangeListener l : listeners) {
-                try {
-                    l.onOtherFileChanged(path);
-                } catch (Exception e) {
-                    logger().fatal("onOtherFileChanged: " + e.getMessage());
-                }
+                dispatch(() -> l.onOtherFileChanged(path), "onOtherFileChanged");
             }
         }
+    }
+
+    private void dispatch(Runnable task, String operation) {
+        serverThreadDispatcher.accept(() -> {
+            try {
+                task.run();
+            } catch (Exception e) {
+                logger().fatal(operation + ": " + e.getMessage());
+            }
+        });
     }
 
     @Override

@@ -201,7 +201,17 @@ plugin-local stores as needed.
 
 ## WebSocket
 
-... description coming soon ...
+`WSClientEndpoint` invokes `WebSocketHandler` callbacks on WebSocket-owned
+threads. Handlers may parse messages and perform transport work there, but must
+dispatch through `ServerThreadDispatcher` before accessing Rising World API
+objects or static game APIs. Do not retain `Player`, `Area`, world, inventory,
+or UI objects in asynchronous callbacks.
+
+`ServerThreadDispatcher` executes immediately on the server thread or delegates
+to PluginAPI `enqueue(...)` from foreign threads. It owns no additional queue,
+rejects new and already-enqueued work after `close()`, and isolates task and
+enqueue exceptions. Callback producers should pass immutable values or stable
+identifiers instead of Rising World API objects.
 
 ## Radial Main menu
 

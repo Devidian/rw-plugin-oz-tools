@@ -3,9 +3,9 @@ package de.omegazirkel.risingworld.tools;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,13 +24,13 @@ public class WSClientEndpoint {
 
 	private final URI endpointUri;
 
-	private WebSocketHandler handler;
+	private volatile WebSocketHandler handler;
 
 	private static OZLogger logger() {
 		return OZTools.logger();
 	}
 
-	private WebSocket socket;
+	private volatile WebSocket socket;
 	private final AtomicBoolean isConnected = new AtomicBoolean(false);
 	private final AtomicBoolean isConnecting = new AtomicBoolean(false);
 	private final AtomicBoolean isShuttingDown = new AtomicBoolean(false);
@@ -120,7 +120,8 @@ public class WSClientEndpoint {
 			return;
 		}
 		logger().debug("[WebSocket] connectAsync() to " + endpointUri);
-		CompletableFuture.runAsync(() -> {
+		try {
+			scheduler.execute(() -> {
 			try {
 				WebSocket newSocket = new WebSocketFactory()
 						.setConnectionTimeout(10000)
@@ -183,7 +184,13 @@ public class WSClientEndpoint {
 			} finally {
 				isConnecting.set(false);
 			}
-		});
+			});
+		} catch (RejectedExecutionException ex) {
+			isConnecting.set(false);
+			if (!isShuttingDown.get()) {
+				logger().warn("❌ WebSocket connect scheduling failed: " + ex.getMessage());
+			}
+		}
 	}
 
 	// -----------------------------------------------------------------------------------

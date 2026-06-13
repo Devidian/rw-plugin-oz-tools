@@ -5,6 +5,9 @@ import java.nio.ByteBuffer;
 /**
  * Interface for plugins that want to receive WebSocket messages.
  * Implement this in your GlobalIntercom plugin.
+ *
+ * Callbacks run on WebSocket-owned threads. Implementations must dispatch
+ * before accessing Rising World API objects or static game APIs.
  */
 public interface WebSocketHandler {
 

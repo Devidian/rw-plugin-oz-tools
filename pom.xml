@@ -8,7 +8,7 @@
 
 	<groupId>com.github.devidian</groupId>
 	<artifactId>rw-plugin-oz-tools</artifactId>
-	<version>0.21.0</version>
+	<version>0.21.1</version>
 
 	<name>OZTools</name>
 
@@ -121,10 +121,18 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
 		<sourceDirectory>src</sourceDirectory>
+		<testSourceDirectory>src-test</testSourceDirectory>
 		<directory>target</directory>
 		<finalName>${project.name}</finalName>
 
@@ -232,7 +240,7 @@
 						<configuration>
 							<outputDirectory>${basedir}/dist/${project.name}/lib</outputDirectory>
 							<excludeTypes>pom</excludeTypes>
-							<excludeScope>provided</excludeScope>
+							<includeScope>runtime</includeScope>
 							<overWriteIfNewer>true</overWriteIfNewer>
 							<!-- <excludeTransitive>true</excludeTransitive> -->
 						</configuration>

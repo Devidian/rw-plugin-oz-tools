@@ -21,6 +21,18 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
 
     protected abstract I18n t();
 
+    protected String titleText() {
+        return t().get(titleLabelKey, uiPlayer);
+    }
+
+    protected String descriptionText() {
+        return t().get(descLabelKey, uiPlayer);
+    }
+
+    protected String legendText() {
+        return t().get(legendLabelKey, uiPlayer);
+    }
+
     protected OZUIElement panel;
     protected OZUIElement body;
     
@@ -51,14 +63,14 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
     }
 
     private void setupHeader() {
-        UILabel title = new UILabel(t().get(titleLabelKey, uiPlayer));
+        UILabel title = new UILabel(titleText());
         title.setPivot(Pivot.UpperLeft);
         title.setPosition(24, 18, false);
         title.setFont(Font.DefaultBold);
         title.setFontSize(24);
         panel.addChild(title);
 
-        UILabel subtitle = new UILabel(t().get(descLabelKey, uiPlayer));
+        UILabel subtitle = new UILabel(descriptionText());
         subtitle.setPivot(Pivot.UpperLeft);
         subtitle.setPosition(24, 52, false);
         subtitle.setFont(Font.Default);
@@ -103,7 +115,7 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
     }
 
     private void setupFooter() {
-        UILabel legend = new UILabel(t().get(legendLabelKey, uiPlayer));
+        UILabel legend = new UILabel(legendText());
         legend.setPivot(Pivot.LowerLeft);
         legend.setPosition(24, PANEL_HEIGHT_PIXELS - 18, false);
         legend.setFontSize(12);

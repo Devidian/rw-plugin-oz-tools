@@ -18,6 +18,7 @@ import de.omegazirkel.risingworld.tools.PluginFileWatcher;
 import de.omegazirkel.risingworld.tools.PluginReloadDebouncer;
 import de.omegazirkel.risingworld.tools.PluginSettings;
 import de.omegazirkel.risingworld.tools.PlayerSettings;
+import de.omegazirkel.risingworld.tools.ServerThreadDispatcher;
 import de.omegazirkel.risingworld.tools.WSClientEndpoint;
 import de.omegazirkel.risingworld.tools.db.SQLiteConnectionFactory;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
@@ -53,6 +54,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     static final String pluginCMD = "ozt";
     private PluginFileWatcher fileWatcher;
     private PluginReloadDebouncer debouncer;
+    private ServerThreadDispatcher serverThreadDispatcher;
     private static final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
 
     public static OZLogger logger() {
@@ -86,9 +88,10 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         }
 
         registerEventListener(this);
-        SharedIndicatorManager.start();
         // Ensure all subsystems are out of shutdown mode for plugin reloads.
         OZLogger.resetShutdownMode();
+        serverThreadDispatcher = new ServerThreadDispatcher(this);
+        SharedIndicatorManager.start(this::isMainThread, serverThreadDispatcher::dispatch);
 
         // Register the shutdown hook only once for the entire lifetime of the JVM.
         if (shutdownHookRegistered.compareAndSet(false, true)) {
@@ -103,16 +106,15 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
                 return;
             }
             logger().info("ℹ️ Detected jar changes, reloading all plugins...");
-            this.executeDelayed(5, () -> {
-                Server.sendInputCommand("reloadplugins");
-            });
+            serverThreadDispatcher.dispatch(() ->
+                    this.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins")));
         }, 15, TimeUnit.SECONDS);
 
         // Watcher start
         try {
             // e.g. directory for plugins
             Path pluginsDir = Paths.get("Plugins");
-            fileWatcher = new PluginFileWatcher(pluginsDir, debouncer);
+            fileWatcher = new PluginFileWatcher(pluginsDir, debouncer, serverThreadDispatcher::dispatch);
 
             // Register all plugins that implement listeners
             for (Plugin plugin : this.getAllPlugins()) {
@@ -151,6 +153,10 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     @Override
     public void onDisable() {
         logger().warn("⚠️ Disabling " + this.getName() + " and shutting down services...");
+
+        if (serverThreadDispatcher != null) {
+            serverThreadDispatcher.close();
+        }
 
         // 1. Close file watcher to prevent further actions
         if (fileWatcher != null) {

@@ -1,6 +1,13 @@
 # Changelog
 
-## [Unreleased]
+## [0.21.1] - 2026-06-13 | Callback thread safety
+
+- feat: add lifecycle-bound `ServerThreadDispatcher` for foreign callback threads
+- fix: dispatch file-watcher listeners and plugin reload scheduling onto the server thread
+- fix: keep asynchronous WebSocket connect work on the lifecycle-owned scheduler
+- feat: verify PluginAPI Timer callback context at runtime and dispatch indicator refreshes when required
+- test: cover dispatcher enqueue, immediate execution, shutdown rejection, and exception isolation
+- feat: let `BasePluginOverlay` subclasses provide dynamic header and footer text
 
 ## [0.21.0] - 2026-06-08 | Shared runtime and UI controls
 
