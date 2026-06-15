@@ -37,11 +37,9 @@ public class WSClientEndpoint {
 	private final AtomicBoolean isReconnectLoopActive = new AtomicBoolean(false);
 
 	// Executor for reconnect attempts + async connect
-	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-		Thread th = new Thread(r, "WebSocket-Reconnect");
-		th.setDaemon(true);
-		return th;
-	});
+	private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
+			new DiagnosticThreadFactory("OZTools", "WebSocket reconnect", "WebSocket-Reconnect", true,
+					logger()::debug));
 
 	public WSClientEndpoint(URI uri) {
 		this.endpointUri = uri;

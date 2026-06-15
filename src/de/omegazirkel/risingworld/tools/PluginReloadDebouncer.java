@@ -5,7 +5,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class PluginReloadDebouncer {
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> { Thread t = new Thread(r, "PluginReloadDebouncer-Thread"); t.setDaemon(true); return t; });
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(
+            new DiagnosticThreadFactory("OZTools", "plugin reload debounce", "PluginReloadDebouncer-Thread", true,
+                    message -> de.omegazirkel.risingworld.OZTools.logger().debug(message)));
     private final AtomicReference<ScheduledFuture<?>> scheduledTask = new AtomicReference<>();
     private final Runnable reloadAction;
     private final long delay;

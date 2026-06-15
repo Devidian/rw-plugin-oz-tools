@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.21.2] - 2026-06-14 | Thread lifecycle diagnostics
+
+- feat: add opt-in JVM-wide thread lifecycle sampling and summaries
+- feat: add diagnostic lifecycle logging for Tools-owned threads
+
 ## [0.21.1] - 2026-06-13 | Callback thread safety
 
 - feat: add lifecycle-bound `ServerThreadDispatcher` for foreign callback threads

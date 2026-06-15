@@ -11,6 +11,7 @@ This plugin has a set of utilities and libs used by different Plugins.
 - WebSocket Client
 - SQLite DB Initializer (per Plugin)
 - Player database lookup helper for recently seen players and best-effort player records
+- Opt-in JVM thread lifecycle diagnostics and reusable diagnostic thread factory
 
 ## External libs
 
@@ -51,6 +52,15 @@ Just extract the plugin into your `Plugins` folder. The jar path should look lik
 ```
 
 ## Feature details/examples
+
+## Thread diagnostics
+
+Set `threadDiagnosticsEnabled=true` in the Tools `settings.properties` to log
+new and disappeared JVM threads every five seconds and grouped summaries every
+minute through `OZ.ThreadDiagnostics`. The setting is disabled by default.
+
+Plugins can use `DiagnosticThreadFactory` for owned workers that should log
+their owner, purpose, creation, start, and end lifecycle.
 
 ## Plugin translation (i18n)
 

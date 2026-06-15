@@ -19,6 +19,7 @@ import de.omegazirkel.risingworld.tools.PluginReloadDebouncer;
 import de.omegazirkel.risingworld.tools.PluginSettings;
 import de.omegazirkel.risingworld.tools.PlayerSettings;
 import de.omegazirkel.risingworld.tools.ServerThreadDispatcher;
+import de.omegazirkel.risingworld.tools.ThreadDiagnostics;
 import de.omegazirkel.risingworld.tools.WSClientEndpoint;
 import de.omegazirkel.risingworld.tools.db.SQLiteConnectionFactory;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
@@ -55,6 +56,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     private PluginFileWatcher fileWatcher;
     private PluginReloadDebouncer debouncer;
     private ServerThreadDispatcher serverThreadDispatcher;
+    private ThreadDiagnostics threadDiagnostics;
     private static final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
 
     public static OZLogger logger() {
@@ -73,11 +75,13 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
      */
     @Override
     public void onEnable() {
+        OZLogger.resetShutdownMode();
         // for loading correct I18n in other classes
         name = this.getDescription("name");
         s = PluginSettings.getInstance(this);
         s.initSettings();
         logger().setLevel(s.logLevel);
+        configureThreadDiagnostics();
         t = I18n.getInstance(this);
         AssetManager.loadDefaultIcons(this);
         try {
@@ -88,8 +92,6 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         }
 
         registerEventListener(this);
-        // Ensure all subsystems are out of shutdown mode for plugin reloads.
-        OZLogger.resetShutdownMode();
         serverThreadDispatcher = new ServerThreadDispatcher(this);
         SharedIndicatorManager.start(this::isMainThread, serverThreadDispatcher::dispatch);
 
@@ -156,6 +158,10 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
 
         if (serverThreadDispatcher != null) {
             serverThreadDispatcher.close();
+        }
+        if (threadDiagnostics != null) {
+            threadDiagnostics.close();
+            threadDiagnostics = null;
         }
 
         // 1. Close file watcher to prevent further actions
@@ -270,6 +276,16 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     @Override
     public void onSettingsChanged(Path settingsPath) {
         s.initSettings(settingsPath.toString());
+        configureThreadDiagnostics();
+    }
+
+    private void configureThreadDiagnostics() {
+        if (threadDiagnostics != null) {
+            threadDiagnostics.close();
+        }
+        threadDiagnostics = ThreadDiagnostics.create(s.threadDiagnosticsEnabled,
+                OZLogger.getInstance("OZ.ThreadDiagnostics")::info);
+        threadDiagnostics.start();
     }
 
     public static PluginSettings getSettings() {

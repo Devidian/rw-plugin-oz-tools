@@ -11,7 +11,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 
 import de.omegazirkel.risingworld.OZTools;
@@ -28,14 +27,8 @@ public class PluginFileWatcher implements AutoCloseable {
         return OZTools.logger();
     }
 
-    private final ExecutorService watcherThread = Executors.newSingleThreadExecutor(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, "PluginFileWatcher-Thread");
-            t.setDaemon(true);
-            return t;
-        }
-    });
+    private final ExecutorService watcherThread = Executors.newSingleThreadExecutor(new DiagnosticThreadFactory(
+            "OZTools", "plugin file watcher", "PluginFileWatcher-Thread", true, logger()::debug));
 
     public PluginFileWatcher(Path rootDir, PluginReloadDebouncer jarDebouncer,
             Consumer<Runnable> serverThreadDispatcher) throws IOException {

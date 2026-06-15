@@ -31,6 +31,7 @@ public class PluginSettings {
 	public boolean logInternal = false;
 	public boolean reloadOnChange = false;
 	public boolean enablePluginWelcomeMessage = false;
+	public boolean threadDiagnosticsEnabled = false;
 	private Path settingsFile;
 	private Properties currentSettings = new Properties();
 	private Properties defaultSettings = new Properties();
@@ -88,6 +89,9 @@ public class PluginSettings {
 					.contentEquals("true");
 			reloadOnChange = settings.getProperty("reloadOnChange", defaults.getProperty("reloadOnChange", "true"))
 					.contentEquals("true");
+			threadDiagnosticsEnabled = settings
+					.getProperty("threadDiagnosticsEnabled", defaults.getProperty("threadDiagnosticsEnabled", "false"))
+					.contentEquals("true");
 
 			// motd settings
 			enablePluginWelcomeMessage = settings
@@ -120,6 +124,9 @@ public class PluginSettings {
 						AdminSettingsType.BOOLEAN),
 				AdminSettingsEntry.group("runtime", "Runtime"),
 				entry("reloadOnChange", "Reload on change", "If true, jar changes trigger delayed plugin reloads.",
+						AdminSettingsType.BOOLEAN),
+				entry("threadDiagnosticsEnabled", "Thread diagnostics",
+						"If true, Tools samples and logs JVM-wide thread lifecycle information.",
 						AdminSettingsType.BOOLEAN),
 				AdminSettingsEntry.group("playerMessages", "Player messages"),
 				entry("enablePluginWelcomeMessage", "Welcome message",
