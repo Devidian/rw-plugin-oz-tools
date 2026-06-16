@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.22.0] - 2026-06-15 | JDA shared runtime
+
+- change: replace JavaCord with JDA 6.4.2 without voice/Opus/JNA native dependencies
+- change: update HttpClient to 5.6.1, Gson to 2.14.0, Log4j to 2.26.0, and JUnit to 4.13.2
+- feat: route JDA SLF4J 2.0.18 logging through Log4j
+- fix: pin Kotlin 2.2.21 and clear packaged runtime libraries before every package build
+- change: remove unused json-simple, HttpClient Fluent, Jakarta WebSocket, and Tyrus runtime libraries
+- change: retain nv-websocket-client 2.14 for Global Intercom
+
 ## [0.21.2] - 2026-06-14 | Thread lifecycle diagnostics
 
 - feat: add opt-in JVM-wide thread lifecycle sampling and summaries

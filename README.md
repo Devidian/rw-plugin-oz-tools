@@ -17,16 +17,18 @@ This plugin has a set of utilities and libs used by different Plugins.
 
 All librarys that were added to this plugin can be used for all plugins without shipping them included to the plugin.
 
+- JDA 6.4.2 (without voice/Opus/JNA natives)
 - GSON
-- jakarta.websocket-api
-- jakarta.websocket-client-api
-- tyrus-container-grizzly-client
+- nv-websocket-client
 - log4j-api
 - log4j-core
+- log4j-slf4j2-impl
 - httpclient5
-- httpclient5-fluent
-- json-simple
-- javacord
+
+When upgrading from a JavaCord-based release, replace the complete
+`Plugins/OZTools/lib` directory and restart the server process. Copying files
+without deleting old jars can leave Kotlin 1.x or JavaCord dependencies in the
+shared plugin classloader and prevent JDA from starting.
 
 ## Installation
 
