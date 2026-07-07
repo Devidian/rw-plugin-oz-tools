@@ -2,6 +2,7 @@ package de.omegazirkel.risingworld.tools.ui;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
+import de.omegazirkel.risingworld.tools.ToolsPlayerPreferences;
 import net.risingworld.api.callbacks.Callback;
 import net.risingworld.api.events.player.ui.PlayerUIElementClickEvent;
 import net.risingworld.api.objects.Player;
@@ -65,16 +66,62 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         descLabel.setFontColor(0xC8C0B2FF);
         descLabel.setTextAlign(TextAnchor.MiddleLeft);
         this.addChild(descLabel);
+        // Global player appearance settings apply across plugin-specific panels.
+        UIElement appearanceBar = createAppearanceBar();
+        appearanceBar.setPivot(Pivot.UpperLeft);
+        appearanceBar.style.left.set(4, Unit.Percent);
+        appearanceBar.style.top.set(48, Unit.Pixel);
+        appearanceBar.style.width.set(92, Unit.Percent);
+        appearanceBar.style.height.set(46, Unit.Pixel);
+        this.addChild(appearanceBar);
         // add content
         UIScrollView content = createSettingsContent();
         content.setPivot(Pivot.UpperLeft);
         content.style.left.set(4, Unit.Percent);
-        content.style.top.set(50, Unit.Pixel);
-        content.setSize(92, 78, true);
+        content.style.top.set(104, Unit.Pixel);
+        content.setSize(92, 68, true);
         content.style.borderTopWidth.set(1);
         content.style.borderTopColor.set(0x6A5228FF);
         this.addChild(content);
 
+    }
+
+    private UIElement createAppearanceBar() {
+        OZUIElement bar = new OZUIElement();
+        bar.setBackgroundColor(0x181713D8);
+        bar.setBorder(1);
+        bar.setBorderColor(0x7A5D2AFF);
+        bar.setPadding(6);
+
+        UILabel label = new UILabel(t().get("TC_TOOLS_SETTING_ICON_STYLE", uiPlayer));
+        label.setPivot(Pivot.MiddleLeft);
+        label.setPosition(2, 50, true);
+        label.style.width.set(45, Unit.Percent);
+        label.style.height.set(32, Unit.Pixel);
+        label.setFont(Font.DefaultBold);
+        label.setFontSize(13);
+        label.setFontColor(0xF4F0E6FF);
+        label.setTextAlign(TextAnchor.MiddleLeft);
+        bar.addChild(label);
+
+        UIElement buttons = switchButtons(
+                uiPlayer,
+                ToolsPlayerPreferences.classicIconStyle(uiPlayer),
+                event -> {
+                    String next = ToolsPlayerPreferences.classicIconStyle(uiPlayer)
+                            ? ToolsPlayerPreferences.ICON_STYLE_MODERN
+                            : ToolsPlayerPreferences.ICON_STYLE_CLASSIC;
+                    ToolsPlayerPreferences.setIconStyle(uiPlayer, next);
+                    updateUI();
+                },
+                t().get("TC_TOOLS_ICON_STYLE_MODERN", uiPlayer),
+                t().get("TC_TOOLS_ICON_STYLE_CLASSIC", uiPlayer));
+        buttons.setPivot(Pivot.MiddleRight);
+        buttons.setPosition(98, 50, true);
+        buttons.style.width.set(210, Unit.Pixel);
+        buttons.style.height.set(38, Unit.Pixel);
+        bar.addChild(buttons);
+        return bar;
     }
 
     protected OZUIElement defaultSettingsContainer() {
