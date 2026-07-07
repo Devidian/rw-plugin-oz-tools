@@ -33,7 +33,7 @@ public class PluginMenuManager {
     public static List<MenuItem> mainMenuItems(Player player) {
         List<MenuItem> menuItemsCopy = visiblePluginMenuItems(player);
         menuItemsCopy
-                .add(new MenuItem(AssetManager.getIcon("icon-gpt-plugin-config"), t().get("TC_MENU_SETTINGS", player),
+                .add(MenuItem.iconKey("icon-gpt-plugin-config", t().get("TC_MENU_SETTINGS", player),
                         (p) -> {
                             p.hideRadialMenu(true);
                             PlayerPluginSettingsOverlay overlay = (PlayerPluginSettingsOverlay) p
@@ -62,7 +62,7 @@ public class PluginMenuManager {
     }
 
     public static void showMenu(Player p, List<MenuItem> items) {
-        TextureAsset[] icons = items.stream().map(MenuItem::getIcon).toArray(TextureAsset[]::new);
+        TextureAsset[] icons = items.stream().map(item -> item.getIcon(p)).toArray(TextureAsset[]::new);
         String[] labels = items.stream().map(MenuItem::getLabel).toArray(String[]::new);
 
         p.showRadialMenu(icons, labels, null, false, i -> {

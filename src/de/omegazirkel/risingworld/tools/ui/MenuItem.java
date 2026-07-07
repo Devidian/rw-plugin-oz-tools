@@ -10,6 +10,7 @@ import net.risingworld.api.objects.Player;
 public class MenuItem {
     private final String pluginName;
     private final TextureAsset icon;
+    private final String iconKey;
     private final String label;
     private final Callback<Player> action;
     private final Predicate<Player> visibility;
@@ -19,20 +20,52 @@ public class MenuItem {
     };
 
     public MenuItem(TextureAsset icon, String label, Callback<Player> action) {
-        this(label, icon, label, action, null);
+        this(label, icon, null, label, action, null);
+    }
+
+    public MenuItem(String iconKey, String label, Callback<Player> action) {
+        this(label, null, iconKey, label, action, null);
     }
 
     public MenuItem(String pluginName, TextureAsset icon, String label, Callback<Player> action) {
-        this(pluginName, icon, label, action, null);
+        this(pluginName, icon, null, label, action, null);
+    }
+
+    public MenuItem(String pluginName, String iconKey, String label, Callback<Player> action) {
+        this(pluginName, null, iconKey, label, action, null);
     }
 
     public MenuItem(String pluginName, TextureAsset icon, String label, Callback<Player> action,
             Predicate<Player> visibility) {
+        this(pluginName, icon, null, label, action, visibility);
+    }
+
+    public MenuItem(String pluginName, String iconKey, String label, Callback<Player> action,
+            Predicate<Player> visibility) {
+        this(pluginName, null, iconKey, label, action, visibility);
+    }
+
+    private MenuItem(String pluginName, TextureAsset icon, String iconKey, String label, Callback<Player> action,
+            Predicate<Player> visibility) {
         this.pluginName = pluginName == null || pluginName.isBlank() ? label : pluginName;
         this.icon = icon;
+        this.iconKey = iconKey;
         this.label = label;
         this.action = action;
         this.visibility = visibility;
+    }
+
+    public static MenuItem iconKey(String iconKey, String label, Callback<Player> action) {
+        return new MenuItem(label, null, iconKey, label, action, null);
+    }
+
+    public static MenuItem iconKey(String pluginName, String iconKey, String label, Callback<Player> action) {
+        return new MenuItem(pluginName, null, iconKey, label, action, null);
+    }
+
+    public static MenuItem iconKey(String pluginName, String iconKey, String label, Callback<Player> action,
+            Predicate<Player> visibility) {
+        return new MenuItem(pluginName, null, iconKey, label, action, visibility);
     }
 
     public String getPluginName() {
@@ -41,6 +74,10 @@ public class MenuItem {
 
     public TextureAsset getIcon() {
         return icon;
+    }
+
+    public TextureAsset getIcon(Player player) {
+        return iconKey == null ? icon : AssetManager.getIcon(player, iconKey);
     }
 
     public String getLabel() {
@@ -66,8 +103,8 @@ public class MenuItem {
     }
 
     public static MenuItem closeMenu(Player player) {
-        return new MenuItem(
-                AssetManager.getIcon("exit-alt"),
+        return MenuItem.iconKey(
+                "exit-alt",
                 t().get("TC_MENU_CLOSE", player),
                 (p) -> {
                     p.hideRadialMenu(false);
@@ -75,8 +112,8 @@ public class MenuItem {
     }
 
     public static MenuItem backMenu(Player player, Callback<Player> action) {
-        return new MenuItem(
-                AssetManager.getIcon("undo"),
+        return MenuItem.iconKey(
+                "undo",
                 t().get("TC_MENU_BACK", player),
                 action);
     }

@@ -33,7 +33,7 @@ public class SharedIndicatorPanel extends OZUIElement {
             return;
         }
 
-        SharedIndicatorPanel panel = new SharedIndicatorPanel(indicators);
+        SharedIndicatorPanel panel = new SharedIndicatorPanel(player, indicators);
         player.addUIElement(panel, UITarget.HUD);
         player.setAttribute(PLAYER_ATTRIBUTE, panel);
     }
@@ -49,7 +49,7 @@ public class SharedIndicatorPanel extends OZUIElement {
         }
     }
 
-    private SharedIndicatorPanel(List<SharedIndicator> indicators) {
+    private SharedIndicatorPanel(Player player, List<SharedIndicator> indicators) {
         setPivot(Pivot.MiddleCenter);
         style.position.set(Position.Absolute);
         style.left.set(50, Unit.Percent);
@@ -80,7 +80,7 @@ public class SharedIndicatorPanel extends OZUIElement {
         container.setBorderEdgeRadius(4, false);
 
         for (SharedIndicator indicator : indicators) {
-            OZUIElement element = indicatorElement(indicator);
+            OZUIElement element = indicatorElement(player, indicator);
             if (element != null) {
                 container.addChild(element);
             }
@@ -89,8 +89,8 @@ public class SharedIndicatorPanel extends OZUIElement {
         addChild(container);
     }
 
-    private OZUIElement indicatorElement(SharedIndicator indicator) {
-        TextureAsset icon = AssetManager.getIcon(indicator.getIconKey());
+    private OZUIElement indicatorElement(Player player, SharedIndicator indicator) {
+        TextureAsset icon = AssetManager.getIcon(player, indicator.getIconKey());
         if (icon == null) {
             return null;
         }
