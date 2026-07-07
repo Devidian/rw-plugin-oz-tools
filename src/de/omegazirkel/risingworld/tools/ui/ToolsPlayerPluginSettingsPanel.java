@@ -29,6 +29,22 @@ public class ToolsPlayerPluginSettingsPanel extends BasePlayerPluginSettingsPane
             redrawContent();
         }));
         flexWrapper.addChild(labels);
+
+        OZUIElement iconStyle = defaultSettingsContainer();
+        iconStyle.addChild(defaultSettingsLabel(t().get("TC_TOOLS_SETTING_ICON_STYLE", uiPlayer)));
+        iconStyle.addChild(switchButtons(
+                uiPlayer,
+                ToolsPlayerPreferences.classicIconStyle(uiPlayer),
+                event -> {
+                    String next = ToolsPlayerPreferences.classicIconStyle(uiPlayer)
+                            ? ToolsPlayerPreferences.ICON_STYLE_MODERN
+                            : ToolsPlayerPreferences.ICON_STYLE_CLASSIC;
+                    ToolsPlayerPreferences.setIconStyle(uiPlayer, next);
+                    redrawContent();
+                },
+                t().get("TC_TOOLS_ICON_STYLE_MODERN", uiPlayer),
+                t().get("TC_TOOLS_ICON_STYLE_CLASSIC", uiPlayer)));
+        flexWrapper.addChild(iconStyle);
     }
 
 }
