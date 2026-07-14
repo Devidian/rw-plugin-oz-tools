@@ -20,6 +20,7 @@ public class ToolsPlayerPluginSettingsPanel extends BasePlayerPluginSettingsPane
     @Override
     protected void redrawContent() {
         flexWrapper.removeAllChilds();
+        flexWrapper.addChild(createIconStyleSettings());
         OZUIElement labels = defaultSettingsContainer();
         labels.addChild(defaultSettingsLabel(t().get("TC_TOOLS_SETTING_INVENTORY_LABELS", uiPlayer)));
         labels.addChild(switchButtons(uiPlayer, ToolsPlayerPreferences.showInventoryShortcutLabels(uiPlayer), event -> {

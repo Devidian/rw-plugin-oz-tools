@@ -104,7 +104,7 @@ public class MenuItem {
 
     public static MenuItem closeMenu(Player player) {
         return MenuItem.iconKey(
-                "exit-alt",
+                "menu-exit",
                 t().get("TC_MENU_CLOSE", player),
                 (p) -> {
                     p.hideRadialMenu(false);

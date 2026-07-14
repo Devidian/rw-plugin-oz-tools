@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.22.1] - 2026-07-14 | Icon set and shared UI polish
+
+- fix: resolve player-selected shortcut icons in the inventory overlay
+- fix: render the icon-style selector with the same settings-card layout as the other player options
+- fix: place the global icon-style selector inside the Tools settings grid
+- change: rename shared menu and status icon keys to their final semantic names
+- change: expose the Modern/Classic icon selector only in OZTools settings
+- change: own the shared debug and tools icons in OZTools
+
 ## [0.22.0] - 2026-06-15 | JDA shared runtime
 
 - change: replace JavaCord with JDA 6.4.2 without voice/Opus/JNA native dependencies

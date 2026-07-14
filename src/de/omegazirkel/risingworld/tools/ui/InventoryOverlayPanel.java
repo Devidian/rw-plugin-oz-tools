@@ -116,7 +116,10 @@ public class InventoryOverlayPanel extends OZUIElement {
             registration.getAction().onCall(player);
         });
 
-        TextureAsset icon = registration.getIcon();
+        // Resolve icon-key registrations for the current player. Calling the
+        // keyless accessor here made all plugin shortcuts render without an
+        // icon even though the radial menu resolved them correctly.
+        TextureAsset icon = registration.getIcon(player);
         if (icon != null) {
             OZUIElement iconElement = new OZUIElement();
             iconElement.setPivot(showLabel ? Pivot.UpperCenter : Pivot.MiddleCenter);

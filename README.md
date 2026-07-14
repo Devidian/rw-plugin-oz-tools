@@ -230,7 +230,7 @@ identifiers instead of Rising World API objects.
 Plugins can register entries in the shared `/ozt` radial menu with
 `PluginMenuManager.registerPluginMenu(...)`. Plugin-owned child radial menus
 should use Tools-registered shared icons where appropriate. The shared
-Info/Status radial action uses the `icon-ki-info-status` icon key; plugins should
+Info/Status radial action uses the `info-status` icon key; plugins should
 not register duplicate copies of that icon.
 
 Plan 04 shortcut visibility is player-aware and defaults to visible. Plugins can
@@ -242,9 +242,9 @@ decision.
 
 Tools registers these shared icon keys by default:
 
-- `icon-ki-info-status`: shared Info/Status radial-menu action icon
-- `icon-ki-placeholder`: generic placeholder for future features without a dedicated icon
-- `icon-ki-soon`: generic placeholder for future unavailable or planned features
+- `info-status`: shared Info/Status radial-menu action icon
+- `placeholder`: generic placeholder for future features without a dedicated icon
+- `soon`: generic placeholder for future unavailable or planned features
 
 ## Player-Plugin-Settings
 

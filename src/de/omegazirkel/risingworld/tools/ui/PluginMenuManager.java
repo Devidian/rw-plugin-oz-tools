@@ -33,7 +33,7 @@ public class PluginMenuManager {
     public static List<MenuItem> mainMenuItems(Player player) {
         List<MenuItem> menuItemsCopy = visiblePluginMenuItems(player);
         menuItemsCopy
-                .add(MenuItem.iconKey("icon-gpt-plugin-config", t().get("TC_MENU_SETTINGS", player),
+                .add(MenuItem.iconKey("menu-plugin-config", t().get("TC_MENU_SETTINGS", player),
                         (p) -> {
                             p.hideRadialMenu(true);
                             PlayerPluginSettingsOverlay overlay = (PlayerPluginSettingsOverlay) p

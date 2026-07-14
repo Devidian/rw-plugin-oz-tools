@@ -46,7 +46,7 @@ Keep registration APIs intact. If icon-only layout causes runtime issues, restor
 
 ## Progress Notes
 - Phase 1 complete: `InventoryOverlayPanel` now renders stable icon-only 38 px buttons. Labels remain registration metadata and sort keys.
-- Phase 2 complete: Tools now loads `icon-ki-info-status`, `icon-ki-placeholder`, and `icon-ki-soon` through `AssetManager.loadDefaultIcons`.
+- Phase 2 complete: Tools now loads `info-status`, `placeholder`, and `soon` through `AssetManager.loadDefaultIcons`.
 - Phase 3 complete: Tools registers its own inventory button and opens the shared Tools Info/Status panel from that entry.
 - Phase 4 complete: inventory panels refresh when button registrations change, so already-open inventories can pick up late registrations.
 - Phase 5 complete: shared indicators are removed while inventory is open and refreshed when inventory closes.

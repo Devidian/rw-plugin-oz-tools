@@ -48,7 +48,7 @@ public final class PluginInfoStatusProviders {
     }
 
     public static MenuItem menuItem(String label, String pluginName) {
-        return MenuItem.iconKey("icon-ki-info-status", label, player -> {
+        return MenuItem.iconKey("info-status", label, player -> {
             player.hideRadialMenu(true);
             show(player, pluginName);
         });
