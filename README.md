@@ -10,7 +10,7 @@ This plugin has a set of utilities and libs used by different Plugins.
 - Standard colors
 - WebSocket Client
 - SQLite DB Initializer (per Plugin)
-- Player database lookup helper for recently seen players and best-effort player records
+- Player database lookup helper for recently seen players, persisted exact-name lookup, and best-effort player records
 - Opt-in JVM thread lifecycle diagnostics and reusable diagnostic thread factory
 
 ## External libs

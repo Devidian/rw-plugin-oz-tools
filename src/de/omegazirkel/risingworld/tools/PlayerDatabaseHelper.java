@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Set;
 
 import de.omegazirkel.risingworld.OZTools;
@@ -66,6 +67,80 @@ public final class PlayerDatabaseHelper {
         } catch (UnsupportedOperationException ex) {
             logger().warn("Players WorldDatabase query is not supported, falling back to direct SQLite access.");
             return findPlayersByDbIdsViaSQLite(plugin, playersDatabase, playerDbIds);
+        }
+    }
+
+    /** Resolves a persisted player name without requiring the player to be online. */
+    public static Optional<PlayerRecord> findPlayerByExactName(Plugin plugin, String playerName) {
+        if (plugin == null || playerName == null || playerName.isBlank()) {
+            return Optional.empty();
+        }
+        WorldDatabase playersDatabase = plugin.getWorldDatabase(Target.Players);
+        try {
+            return findPlayerByExactName(playersDatabase, playerName.trim());
+        } catch (UnsupportedOperationException ex) {
+            logger().warn("Players WorldDatabase query is not supported, falling back to direct SQLite access.");
+            return findPlayerByExactNameViaSQLite(plugin, playersDatabase, playerName.trim());
+        }
+    }
+
+    private static Optional<PlayerRecord> findPlayerByExactName(WorldDatabase playersDatabase, String playerName) {
+        if (playersDatabase == null) {
+            return Optional.empty();
+        }
+        try (ResultSet probe = playersDatabase.executeQuery("SELECT * FROM player LIMIT 1")) {
+            ResultSetMetaData metaData = probe.getMetaData();
+            String playerIdColumn = resolvePlayerIdColumn(metaData);
+            String nameColumn = resolveFirstColumn(metaData, "name", "playername", "username");
+            if (playerIdColumn == null || nameColumn == null) {
+                return Optional.empty();
+            }
+            String lastSeenColumn = resolveFirstColumn(metaData, "lastseen", "last_seen", "lastonline");
+            String playTimeColumn = resolveFirstColumn(metaData, "playtime", "totalplaytime", "total_playtime");
+            String escaped = playerName.replace("'", "''");
+            try (ResultSet result = playersDatabase.executeQuery("SELECT * FROM player WHERE LOWER(" + nameColumn
+                    + ") = LOWER('" + escaped + "') LIMIT 1")) {
+                Map<Integer, PlayerRecord> records = readPlayerRecords(result, playerIdColumn, nameColumn,
+                        lastSeenColumn, playTimeColumn);
+                return records.values().stream().findFirst();
+            }
+        } catch (SQLException ex) {
+            logger().error("Failed to find player by name: " + ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private static Optional<PlayerRecord> findPlayerByExactNameViaSQLite(Plugin plugin, WorldDatabase playersDatabase,
+            String playerName) {
+        if (playersDatabase == null || playersDatabase.getPath() == null || playersDatabase.getPath().isBlank()) {
+            return Optional.empty();
+        }
+        try (Database db = plugin.getSQLiteConnection(playersDatabase.getPath())) {
+            if (db == null) {
+                return Optional.empty();
+            }
+            try (PreparedStatement probe = db.getConnection().prepareStatement("SELECT * FROM player LIMIT 1");
+                    ResultSet probeResult = probe.executeQuery()) {
+                ResultSetMetaData metaData = probeResult.getMetaData();
+                String playerIdColumn = resolvePlayerIdColumn(metaData);
+                String nameColumn = resolveFirstColumn(metaData, "name", "playername", "username");
+                if (playerIdColumn == null || nameColumn == null) {
+                    return Optional.empty();
+                }
+                String lastSeenColumn = resolveFirstColumn(metaData, "lastseen", "last_seen", "lastonline");
+                String playTimeColumn = resolveFirstColumn(metaData, "playtime", "totalplaytime", "total_playtime");
+                try (PreparedStatement statement = db.getConnection().prepareStatement(
+                        "SELECT * FROM player WHERE LOWER(" + nameColumn + ") = LOWER(?) LIMIT 1")) {
+                    statement.setString(1, playerName);
+                    try (ResultSet result = statement.executeQuery()) {
+                        return readPlayerRecords(result, playerIdColumn, nameColumn, lastSeenColumn, playTimeColumn)
+                                .values().stream().findFirst();
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            logger().error("Failed to find player by name via SQLite fallback: " + ex.getMessage());
+            return Optional.empty();
         }
     }
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.22.2] - 2026-07-17 | Offline player lookup
+
+- feat: add exact persisted-player name lookup for feature plugins that must address offline players
+
 ## [0.22.1] - 2026-07-14 | Icon set and shared UI polish
 
 - fix: resolve player-selected shortcut icons in the inventory overlay

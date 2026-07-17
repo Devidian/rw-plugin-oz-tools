@@ -1,4 +1,4 @@
-# Bugs 05 Thread Runtime Validation
+# Bugs 05 Thread Runtime Validation (Closed 2026-07-15)
 
 ## Objective
 Finish runtime verification of the shared server-thread dispatch and PluginAPI
@@ -22,7 +22,7 @@ Supporting repositories/plugins: all Tools consumers
 - [x] Verify dispatcher lifecycle and exception isolation with unit tests
 - [x] Runtime-assert `Plugin.isMainThread()` inside representative PluginAPI
   timer callbacks
-- [ ] Exercise settings-file reload and plugin reload shutdown behavior
+- [x] Exercise settings-file reload and plugin reload shutdown behavior
 
 ## Affected Repositories/Plugins
 - `rw-plugin-oz-tools`
@@ -39,4 +39,4 @@ game API access from watcher or network callback threads.
 - [x] Add one-time PluginAPI Timer callback-context logging and safe dispatch
 - [x] Document foreign-callback rules
 - [x] Add focused dispatcher tests
-- [ ] Complete development-server runtime validation
+- [x] Complete development-server runtime validation
