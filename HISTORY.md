@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.22.8] - 2026-07-20 | Decimal admin settings
+
+- feat: allow plugins to expose validated decimal values in the in-game admin settings UI
+
 ## [0.22.7] - 2026-07-20 | Preserve local plugin files
 
 - fix: retain local files that are not part of an update package while replacing plugin files

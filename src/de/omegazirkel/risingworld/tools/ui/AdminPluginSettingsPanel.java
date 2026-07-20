@@ -465,6 +465,13 @@ public class AdminPluginSettingsPanel extends OZUIElement {
                 return false;
             }
         }
+        if (entry.getType() == AdminSettingsType.DECIMAL) {
+            try {
+                return Double.isFinite(Double.parseDouble(value));
+            } catch (NumberFormatException ex) {
+                return false;
+            }
+        }
         if (entry.getType() == AdminSettingsType.SELECT) {
             return entry.getOptions().contains(value);
         }
