@@ -450,7 +450,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         return key == null ? "" : key.trim().replaceAll("[^A-Za-z0-9]+", "_").toUpperCase();
     }
 
-    private boolean isValidValue(AdminSettingsEntry entry, String value) {
+    static boolean isValidValue(AdminSettingsEntry entry, String value) {
         if (value == null) {
             return false;
         }
