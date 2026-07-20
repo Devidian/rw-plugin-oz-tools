@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.22.6] - 2026-07-20 | Safe Shop updates
+
+- fix: retain JSON-based admin shop definitions and zone files during plugin updates
+
 ## [0.22.5] - 2026-07-20 | Safe plugin updates
 
 - fix: retain each plugin's settings and SQLite player data when installing an update

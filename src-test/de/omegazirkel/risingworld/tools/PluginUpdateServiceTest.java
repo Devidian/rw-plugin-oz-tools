@@ -58,6 +58,7 @@ public class PluginUpdateServiceTest {
         Files.writeString(installed.resolve("settings.properties"), "configured=true");
         Files.writeString(installed.resolve("players.db"), "database");
         Files.writeString(installed.resolve("players.db-wal"), "wal");
+        Files.writeString(installed.resolve("shop-zones.json"), "shops");
         Files.writeString(installed.resolve("readme.txt"), "do-not-copy");
 
         PluginUpdateService.preserveLocalData(installed, replacement);
@@ -65,6 +66,7 @@ public class PluginUpdateServiceTest {
         assertEquals("configured=true", Files.readString(replacement.resolve("settings.properties")));
         assertEquals("database", Files.readString(replacement.resolve("players.db")));
         assertEquals("wal", Files.readString(replacement.resolve("players.db-wal")));
+        assertEquals("shops", Files.readString(replacement.resolve("shop-zones.json")));
         assertEquals(false, Files.exists(replacement.resolve("readme.txt")));
     }
 }

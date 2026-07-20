@@ -165,7 +165,7 @@ public final class PluginUpdateService implements AutoCloseable {
         try (var paths = Files.walk(installedPlugin)) {
             for (Path file : paths.filter(Files::isRegularFile).toList()) {
                 String name = file.getFileName().toString();
-                if (!name.equals("settings.properties") && !name.endsWith(".db")
+                if (!name.equals("settings.properties") && !name.endsWith(".json") && !name.endsWith(".db")
                         && !name.endsWith(".db-wal") && !name.endsWith(".db-shm")) continue;
                 Path destination = replacementPlugin.resolve(installedPlugin.relativize(file));
                 Files.createDirectories(destination.getParent());
