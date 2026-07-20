@@ -164,6 +164,10 @@ jobs:
           test "${TAG_VERSION}" = "${POM_VERSION}"
           test "${TAG_VERSION}" = "${PLUGIN_VERSION}"
 
+      - name: Verify mandatory release notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: test -s "release-notes/${GITHUB_REF_NAME#v}.md"
+
       - name: Show configured version
         run: |
           echo "POM version lines:"
@@ -262,6 +266,7 @@ jobs:
         with:
           name: "${{ github.event.repository.name }} ${{ needs.build.outputs.version }}"
           tag_name: "${{ github.ref_name }}"
+          body_path: "release-notes/${{ needs.build.outputs.version }}.md"
           files: |
             dist/*.zip
         env:
