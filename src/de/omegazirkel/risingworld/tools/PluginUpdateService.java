@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.sql.Connection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -30,7 +31,9 @@ import net.risingworld.api.Plugin;
  * the same allow-list decision as checking and is only exposed to admins. */
 public final class PluginUpdateService implements AutoCloseable {
     public enum State { UNKNOWN, CURRENT, UPDATE_AVAILABLE, NOT_INSTALLED, INSTALLING, ERROR }
-    public record Result(String installedVersion, String latestVersion, String releaseUrl, State state) { }
+    public record Result(String installedVersion, String latestVersion, String releaseUrl, String releaseNotes,
+            State state, long checkedAtEpochMillis) { }
+    private record ReleaseInfo(String version, String url, String notes) { }
     private record CatalogEntry(String repository, String directory) { }
     private static final Map<String, CatalogEntry> CATALOG = Map.ofEntries(
             Map.entry("OZ - Tools", new CatalogEntry("Devidian/rw-plugin-oz-tools", "OZTools")),
@@ -54,18 +57,31 @@ public final class PluginUpdateService implements AutoCloseable {
             message -> OZTools.logger().debug(message)));
     private volatile Map<String, Result> results = Map.of();
     private final AtomicBoolean checkQueued = new AtomicBoolean();
+    private final PluginUpdateStore store;
 
-    public PluginUpdateService(OZTools tools) { this.tools = tools; }
+    public PluginUpdateService(OZTools tools, Connection connection) {
+        this.tools = tools;
+        this.store = new PluginUpdateStore(connection);
+        this.results = Collections.unmodifiableMap(store.load());
+    }
 
     public Map<String, Result> results() { return results; }
 
-    public void checkAsync() { checkAsync(null, null); }
+    /** Records a successfully staged package as current before its plugin reload starts. */
+    public void markInstalledLatest(String pluginName) {
+        Result result = results.get(pluginName);
+        if (result == null) return;
+        updateResult(pluginName, new Result(result.latestVersion(), result.latestVersion(), result.releaseUrl(),
+                result.releaseNotes(), State.CURRENT, result.checkedAtEpochMillis()));
+    }
 
-    public void checkAsync(Consumer<String> checkedPlugin, Consumer<Boolean> completed) {
+    public void checkAsync() { checkAsync(null, null, null); }
+
+    public void checkAsync(Consumer<String> checkedPlugin, Consumer<String> resultUpdated, Consumer<Boolean> completed) {
         if (!checkQueued.compareAndSet(false, true)) return;
         executor.execute(() -> {
             try {
-                checkInstalled(checkedPlugin, completed);
+                checkInstalled(checkedPlugin, resultUpdated, completed);
             } finally {
                 checkQueued.set(false);
             }
@@ -78,7 +94,7 @@ public final class PluginUpdateService implements AutoCloseable {
         Result previous = results.get(pluginName);
         if (previous != null) {
             updateResult(pluginName, new Result(previous.installedVersion(), previous.latestVersion(), previous.releaseUrl(),
-                    State.INSTALLING));
+                    previous.releaseNotes(), State.INSTALLING, previous.checkedAtEpochMillis()));
         }
         executor.execute(() -> installLatest(pluginName, onSuccess, onFailure, previous));
     }
@@ -89,13 +105,18 @@ public final class PluginUpdateService implements AutoCloseable {
             if (pluginName.equals(candidate.getDescription("name"))) { plugin = candidate; break; }
         }
         CatalogEntry catalog = CATALOG.get(pluginName);
-        if (plugin == null && catalog == null) { OZTools.logger().warn("Plugin installation rejected: unknown plugin: " + pluginName); return; }
+        if (plugin == null && catalog == null) {
+            failInstallation(pluginName, previous, onFailure, "unknown-plugin");
+            return;
+        }
         String repository = plugin == null ? catalog.repository() : repositoryFrom(plugin.getDescription("website"));
+        if (repository == null && catalog != null) repository = catalog.repository();
         if (repository == null || (!PluginSettings.getInstance().allowExternalPluginRepositories && !repository.startsWith("Devidian/"))) {
-            OZTools.logger().warn("Plugin installation rejected: untrusted release source for " + pluginName); return;
+            failInstallation(pluginName, previous, onFailure, "untrusted-release-source");
+            return;
         }
         try {
-            String assetUrl = selectZipAsset(release(repository));
+            String assetUrl = selectZipAsset(releaseJson(repository));
             Path target = plugin == null ? Path.of(tools.getPath()).toAbsolutePath().normalize().getParent().resolve(catalog.directory())
                     : Path.of(plugin.getPath()).toAbsolutePath().normalize();
             Path parent = target.getParent();
@@ -133,6 +154,12 @@ public final class PluginUpdateService implements AutoCloseable {
         }
     }
 
+    private void failInstallation(String pluginName, Result previous, Consumer<String> onFailure, String reason) {
+        if (previous != null) updateResult(pluginName, previous);
+        OZTools.logger().warn("Plugin installation rejected: " + reason + " for " + pluginName);
+        if (onFailure != null) onFailure.accept(reason);
+    }
+
     static String selectZipAsset(JsonObject release) throws IOException {
         if (release == null || !release.has("assets") || !release.get("assets").isJsonArray()) {
             throw new IOException("Release contains no assets");
@@ -150,14 +177,19 @@ public final class PluginUpdateService implements AutoCloseable {
         Map<String, Result> updated = new LinkedHashMap<>(results);
         updated.put(pluginName, result);
         results = Collections.unmodifiableMap(updated);
+        store.save(pluginName, result);
     }
 
-    private JsonObject release(String repository) throws Exception {
+    private ReleaseInfo release(String repository) throws Exception {
         HttpRequest request = HttpRequest.newBuilder(URI.create(GITHUB_API_PREFIX + repository + "/releases/latest"))
                 .timeout(Duration.ofSeconds(12)).header("Accept", "application/vnd.github+json").GET().build();
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) throw new IOException("GitHub HTTP " + response.statusCode());
-        return JsonParser.parseString(response.body()).getAsJsonObject();
+        JsonObject release = JsonParser.parseString(response.body()).getAsJsonObject();
+        if (!release.has("tag_name") || !release.has("html_url")) throw new IOException("Incomplete GitHub release metadata");
+        return new ReleaseInfo(release.get("tag_name").getAsString().replaceFirst("^[vV]", ""),
+                release.get("html_url").getAsString(), release.has("body") && !release.get("body").isJsonNull()
+                        ? release.get("body").getAsString() : "");
     }
 
     private void download(String url, Path file) throws Exception {
@@ -187,39 +219,91 @@ public final class PluginUpdateService implements AutoCloseable {
         try (var paths = Files.walk(path)) { paths.sorted(java.util.Comparator.reverseOrder()).forEach(p -> { try { Files.deleteIfExists(p); } catch (IOException ex) { throw new java.io.UncheckedIOException(ex); } }); }
     }
 
-    private void checkInstalled(Consumer<String> checkedPlugin, Consumer<Boolean> completed) {
-        Map<String, Result> checked = new LinkedHashMap<>();
+    public void checkPluginAsync(String pluginName, Consumer<Result> completed) {
+        if (pluginName == null || pluginName.isBlank()) return;
+        executor.execute(() -> {
+            Map<String, Result> checked = new LinkedHashMap<>(results);
+            CheckSource source = checkSource(pluginName);
+            if (source == null) return;
+            checkRepository(pluginName, source.repository(), source.installedVersion(), source.notInstalled(), checked,
+                    null, name -> { if (completed != null) completed.accept(results.get(name)); }, true);
+        });
+    }
+
+    private void checkInstalled(Consumer<String> checkedPlugin, Consumer<String> resultUpdated, Consumer<Boolean> completed) {
+        Map<String, Result> checked = new LinkedHashMap<>(results);
         Map<String, Plugin> installed = new LinkedHashMap<>();
         for (Plugin plugin : tools.getAllPlugins()) installed.put(plugin.getDescription("name"), plugin);
-        for (String name : CATALOG.keySet()) if (!installed.containsKey(name)) checked.put(name, new Result("N/A", "", "", State.NOT_INSTALLED));
         boolean firstRequest = true;
+        for (Map.Entry<String, CatalogEntry> catalogEntry : CATALOG.entrySet()) {
+            String name = catalogEntry.getKey();
+            Plugin plugin = installed.remove(name);
+            String repository = plugin == null ? catalogEntry.getValue().repository() : repositoryFrom(plugin.getDescription("website"));
+            if (repository == null) repository = catalogEntry.getValue().repository();
+            String installedVersion = plugin == null ? "N/A" : plugin.getDescription("version");
+            if (repository == null) {
+                publishResult(name, new Result(installedVersion, "", "", "", State.ERROR, System.currentTimeMillis()), checked, resultUpdated);
+                continue;
+            }
+            firstRequest = checkRepository(name, repository, installedVersion, plugin == null, checked, checkedPlugin, resultUpdated, firstRequest);
+        }
         for (Plugin plugin : installed.values()) {
-            String website = plugin.getDescription("website");
-            String repository = repositoryFrom(website);
+            String repository = repositoryFrom(plugin.getDescription("website"));
             if (repository == null || (!PluginSettings.getInstance().allowExternalPluginRepositories
                     && !repository.startsWith("Devidian/"))) continue;
-            String installedVersion = plugin.getDescription("version");
-            try {
-                if (!firstRequest) pauseBetweenChecks();
-                firstRequest = false;
-                if (checkedPlugin != null) checkedPlugin.accept(plugin.getDescription("name"));
-                HttpRequest request = HttpRequest.newBuilder(URI.create(GITHUB_API_PREFIX + repository + "/releases/latest"))
-                        .timeout(Duration.ofSeconds(12)).header("Accept", "application/vnd.github+json").GET().build();
-                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-                if (response.statusCode() != 200) throw new IOException("GitHub HTTP " + response.statusCode());
-                JsonObject release = JsonParser.parseString(response.body()).getAsJsonObject();
-                String latest = release.get("tag_name").getAsString().replaceFirst("^[vV]", "");
-                String url = release.get("html_url").getAsString();
-                checked.put(plugin.getDescription("name"), new Result(installedVersion, latest, url,
-                        compare(latest, installedVersion) > 0 ? State.UPDATE_AVAILABLE : State.CURRENT));
-            } catch (Exception ex) {
-                checked.put(plugin.getDescription("name"), new Result(installedVersion, "", "", State.ERROR));
-                OZTools.logger().warn("Plugin update check failed for " + plugin.getDescription("name") + ": " + ex.getMessage());
-            }
+            firstRequest = checkRepository(plugin.getDescription("name"), repository, plugin.getDescription("version"), false,
+                    checked, checkedPlugin, resultUpdated, firstRequest);
         }
         results = Collections.unmodifiableMap(checked);
         if (completed != null) completed.accept(checked.values().stream()
                 .anyMatch(result -> result.state() == State.UPDATE_AVAILABLE));
+    }
+
+    private boolean checkRepository(String name, String repository, String installedVersion, boolean notInstalled,
+            Map<String, Result> checked, Consumer<String> checkedPlugin, Consumer<String> resultUpdated, boolean firstRequest) {
+        if (!PluginSettings.getInstance().allowExternalPluginRepositories && !repository.startsWith("Devidian/")) {
+            return firstRequest;
+        }
+        try {
+            if (!firstRequest) pauseBetweenChecks();
+            if (checkedPlugin != null) checkedPlugin.accept(name);
+            ReleaseInfo release = release(repository);
+            publishResult(name, new Result(installedVersion, release.version(), release.url(), release.notes(),
+                    notInstalled ? State.NOT_INSTALLED
+                            : compare(release.version(), installedVersion) > 0 ? State.UPDATE_AVAILABLE : State.CURRENT,
+                    System.currentTimeMillis()), checked, resultUpdated);
+        } catch (Exception ex) {
+            publishResult(name, new Result(installedVersion, "", "", "", State.ERROR, System.currentTimeMillis()), checked, resultUpdated);
+            OZTools.logger().warn("Plugin update check failed for " + name + ": " + ex.getMessage());
+        }
+        return false;
+    }
+
+    private void publishResult(String name, Result result, Map<String, Result> checked, Consumer<String> resultUpdated) {
+        checked.put(name, result);
+        updateResult(name, result);
+        if (resultUpdated != null) resultUpdated.accept(name);
+    }
+
+    private record CheckSource(String repository, String installedVersion, boolean notInstalled) { }
+    private CheckSource checkSource(String name) {
+        CatalogEntry catalog = CATALOG.get(name);
+        for (Plugin plugin : tools.getAllPlugins()) {
+            if (name.equals(plugin.getDescription("name"))) {
+                String repository = repositoryFrom(plugin.getDescription("website"));
+                if (repository == null && catalog != null) repository = catalog.repository();
+                return repository == null ? null : new CheckSource(repository, plugin.getDescription("version"), false);
+            }
+        }
+        return catalog == null ? null : new CheckSource(catalog.repository(), "N/A", true);
+    }
+
+    private JsonObject releaseJson(String repository) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder(URI.create(GITHUB_API_PREFIX + repository + "/releases/latest"))
+                .timeout(Duration.ofSeconds(12)).header("Accept", "application/vnd.github+json").GET().build();
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() != 200) throw new IOException("GitHub HTTP " + response.statusCode());
+        return JsonParser.parseString(response.body()).getAsJsonObject();
     }
 
     private void pauseBetweenChecks() {

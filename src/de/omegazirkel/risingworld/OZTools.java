@@ -78,11 +78,26 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_CHECK_STARTED", player));
         service.checkAsync(pluginName -> tools.serverThreadDispatcher.dispatch(() -> player.sendTextMessage(
                 t.get("TC_PLUGIN_UPDATE_CHECK_PLUGIN", player).replace("PH_PLUGIN_NAME", pluginName))),
+                ignored -> tools.serverThreadDispatcher.dispatch(() -> {
+                    if (onCompleted != null) onCompleted.run();
+                }),
                 updatesAvailable -> tools.serverThreadDispatcher.dispatch(() -> {
                     player.sendTextMessage(t.get(updatesAvailable ? "TC_PLUGIN_UPDATE_CHECK_UPDATES_AVAILABLE"
                             : "TC_PLUGIN_UPDATE_CHECK_NONE", player));
                     if (onCompleted != null) onCompleted.run();
                 }));
+    }
+
+    public static void checkPluginUpdate(String pluginName, Player player, Runnable onCompleted) {
+        PluginUpdateService service = activePluginUpdateService;
+        OZTools tools = activeTools;
+        if (service == null || tools == null || player == null || !player.isAdmin()) return;
+        player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_CHECK_PLUGIN", player).replace("PH_PLUGIN_NAME", pluginName));
+        service.checkPluginAsync(pluginName, ignored -> tools.serverThreadDispatcher.dispatch(() -> {
+            player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_CHECK_PLUGIN_COMPLETED", player)
+                    .replace("PH_PLUGIN_NAME", pluginName));
+            if (onCompleted != null) onCompleted.run();
+        }));
     }
 
     public static PluginUpdateService.Result pluginUpdateResult(String pluginName) {
@@ -104,10 +119,12 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         service.installLatestAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() ->
                 {
                     if (player != null) player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_COMPLETED", player));
+                    service.markInstalledLatest(pluginName);
                     if (onStateChanged != null) onStateChanged.run();
                     tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
-                }), ignored -> tools.serverThreadDispatcher.dispatch(() -> {
-                    if (player != null) player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_FAILED", player));
+                }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
+                    if (player != null) player.sendTextMessage(t.get("untrusted-release-source".equals(reason)
+                            ? "TC_PLUGIN_UPDATE_INSTALL_FAILED_UNTRUSTED_SOURCE" : "TC_PLUGIN_UPDATE_INSTALL_FAILED", player));
                     if (onStateChanged != null) onStateChanged.run();
                 }));
         if (onStateChanged != null) onStateChanged.run();
@@ -149,7 +166,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         registerEventListener(this);
         serverThreadDispatcher = new ServerThreadDispatcher(this);
         SharedIndicatorManager.start(this::isMainThread, serverThreadDispatcher::dispatch);
-        pluginUpdateService = new PluginUpdateService(this);
+        pluginUpdateService = new PluginUpdateService(this, sqliteCon);
         activePluginUpdateService = pluginUpdateService;
         activeTools = this;
         if (s.automaticPluginUpdateCheck) {

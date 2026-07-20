@@ -25,6 +25,12 @@ Affected repositories/plugins:
 No feature-plugin business logic moves into Tools. No new external library is
 planned; Java's HTTP client and archive APIs are preferred.
 
+## Release rule
+
+Every plugin release must include player-facing GitHub release notes. The notes
+are mandatory because OZ Tools displays them before an administrator can start
+an update; empty or placeholder notes are not a valid release.
+
 ## Decisions required before implementation
 
 - [x] Use the maintained OZ catalogue for update checks and installation; allow
@@ -46,6 +52,10 @@ planned; Java's HTTP client and archive APIs are preferred.
       unchanged for unchecked/unknown.
 - [x] Add the administrator-only update action and release notes to the
       selected plugin page, reusing a single confirmation-dialog component.
+- [x] Query supported but absent OZ plugins during a manual check and show their
+      latest release metadata in the catalogue.
+- [x] Persist per-plugin release checks and refresh sidebar state after each
+      completed GitHub request; provide a targeted check from release notes.
 - [x] Download to a staging directory, validate the archive and expected plugin
       artifact, extract flat into the target plugin directory, remove the
       archive, and request a debounced plugin reload.
@@ -73,6 +83,9 @@ or deploys a known release.
 - [x] `mvn -B -Dmaven.repo.local=/tmp/oz-tools-release-m2 -DskipTests package`
 - [x] Runtime-check manual admin check, current/update state, GitHub rate-limit
       handling, successful update/reload, disabled update action during install,
-      and administrator feedback. Confirmed on 2026-07-20.
-- [ ] Failed staging with the old plugin retained (no reproducible failure was
-      observed in the current runtime test).
+      immediate version-state refresh after installation, and administrator
+      feedback. Confirmed on 2026-07-20 using OZ GPS 0.7.2.
+- [deferred] Failed staging with the old plugin retained. This needs a dedicated
+      compatible public test plugin and is deferred until external plugin
+      repository support is used in practice; it is not an active OZ-plugin
+      delivery task.

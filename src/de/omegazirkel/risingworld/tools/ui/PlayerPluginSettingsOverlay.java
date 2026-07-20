@@ -3,6 +3,9 @@ package de.omegazirkel.risingworld.tools.ui;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
@@ -11,6 +14,9 @@ import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
 import net.risingworld.api.objects.Player;
 import net.risingworld.api.ui.UIElement;
 import net.risingworld.api.ui.UILabel;
+import net.risingworld.api.ui.UIScrollView;
+import net.risingworld.api.ui.UIScrollView.ScrollViewMode;
+import net.risingworld.api.ui.style.Font;
 import net.risingworld.api.ui.style.Pivot;
 import net.risingworld.api.ui.style.Position;
 import net.risingworld.api.ui.style.TextAnchor;
@@ -19,6 +25,7 @@ import net.risingworld.api.ui.style.Unit;
 public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     private static final String TAB_SETTINGS = "settings";
     private static final String TAB_DATA = "data";
+    private static final String TAB_RELEASE_NOTES = "releaseNotes";
     private static final String TAB_PLUGIN_SETTINGS = "pluginSettings";
 
     private static I18n t() {
@@ -95,6 +102,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         if (TAB_PLUGIN_SETTINGS.equals(selectedTab) && !canShowPluginSettingsTab(selectedPlugin)) {
             selectedTab = TAB_SETTINGS;
         }
+        if (TAB_RELEASE_NOTES.equals(selectedTab) && !canShowReleaseNotesTab(selectedPlugin)) selectedTab = TAB_SETTINGS;
         // fill navigation bar for every playerPluginSettings
         for (String pluginLabel : pluginLabels()) {
             OZUIElement navButton = new OZUIElement();
@@ -128,6 +136,9 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             versionLabel.setTextAlign(TextAnchor.MiddleRight);
             navButton.setClickAction(event -> {
                 selectedPlugin = pluginLabel;
+                if (!playerPluginSettings.containsKey(pluginLabel) && canShowReleaseNotesTab(pluginLabel)) {
+                    selectedTab = TAB_RELEASE_NOTES;
+                }
                 updateUI();
             });
             navButton.addChild(btnLabel);
@@ -151,24 +162,6 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             checkUpdatesButton.setBorderColor(0x8A6A2DFF);
             checkUpdatesButton.setHoverBorderColor(0xD7AE55FF);
             navSidebar.addChild(checkUpdatesButton);
-            if (updateAvailable(selectedPlugin) || installAvailable(selectedPlugin) || installing(selectedPlugin)) {
-                DangerButton updateButton = ButtonFactory.danger(installing(selectedPlugin) ? "Aktualisierung läuft..."
-                        : installAvailable(selectedPlugin) ? "Installieren" : "Update",
-                        event -> showUpdateConfirmation());
-                updateButton.setPivot(Pivot.LowerLeft);
-                updateButton.style.position.set(Position.Absolute);
-                updateButton.style.left.set(0, Unit.Pixel);
-                updateButton.style.width.set(100, Unit.Percent);
-                updateButton.style.height.set(38, Unit.Pixel);
-                updateButton.setPosition(0, 91.4f, true);
-                updateButton.setBackgroundColor(0x7A3018E8);
-                updateButton.setHoverBackgroundColor(0xA84722FF);
-                updateButton.setBorder(1);
-                updateButton.setBorderColor(0xD7AE55FF);
-                updateButton.setHoverBorderColor(0xF2C766FF);
-                if (installing(selectedPlugin)) updateButton.setClickable(false);
-                navSidebar.addChild(updateButton);
-            }
         }
         // add close button at the bottom
         OZUIElement closeButton = new OZUIElement();
@@ -197,14 +190,19 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
         addTabButton(TAB_SETTINGS, t().get("TC_TAB_SETTINGS", uiPlayer), 0);
         addTabButton(TAB_DATA, t().get("TC_TAB_DATA", uiPlayer), 150);
+        if (canShowReleaseNotesTab(selectedPlugin)) {
+            addTabButton(TAB_RELEASE_NOTES, t().get("TC_TAB_RELEASE_NOTES", uiPlayer), 300);
+        }
         if (canShowPluginSettingsTab(selectedPlugin)) {
-            addTabButton(TAB_PLUGIN_SETTINGS, t().get("TC_TAB_PLUGIN_SETTINGS", uiPlayer), 300);
+            addTabButton(TAB_PLUGIN_SETTINGS, t().get("TC_TAB_PLUGIN_SETTINGS", uiPlayer), 450);
         }
 
         // clear content
         content.removeAllChilds();
         // select content
-        if (TAB_PLUGIN_SETTINGS.equals(selectedTab)) {
+        if (TAB_RELEASE_NOTES.equals(selectedTab)) {
+            content.addChild(releaseNotesContent(selectedPlugin));
+        } else if (TAB_PLUGIN_SETTINGS.equals(selectedTab)) {
             PlayerPluginAdminSettings ppas = playerPluginAdminSettings.get(selectedPlugin);
             if (ppas != null) {
                 AdminPluginSettingsPanel pluginSettingsContent = new AdminPluginSettingsPanel(uiPlayer, ppas,
@@ -299,6 +297,100 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         return label;
     }
 
+    private UIElement releaseNotesContent(String pluginLabel) {
+        PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
+        UIElement panel = new UIElement();
+        panel.setPivot(Pivot.UpperLeft);
+        panel.setSize(100, 100, true);
+
+        UILabel title = new UILabel(t().get("TC_PLUGIN_UPDATE_RELEASE_NOTES_TITLE", uiPlayer));
+        title.setPivot(Pivot.UpperLeft);
+        title.style.left.set(5, Unit.Percent);
+        title.style.top.set(0, Unit.Pixel);
+        title.style.width.set(90, Unit.Percent);
+        title.style.height.set(32, Unit.Pixel);
+        title.setFont(Font.DefaultBold);
+        title.setFontSize(18);
+        title.setFontColor(0xF4F0E6FF);
+        panel.addChild(title);
+
+        UILabel subtitle = new UILabel(t().get("TC_PLUGIN_UPDATE_RELEASE_NOTES_SUBTITLE", uiPlayer)
+                .replace("PH_PLUGIN_NAME", pluginLabel)
+                .replace("PH_LATEST_VERSION", result == null || result.latestVersion().isBlank() ? "?" : result.latestVersion()));
+        subtitle.setPivot(Pivot.UpperLeft);
+        subtitle.style.left.set(5, Unit.Percent);
+        subtitle.style.top.set(12, Unit.Pixel);
+        subtitle.style.width.set(90, Unit.Percent);
+        subtitle.style.height.set(24, Unit.Pixel);
+        subtitle.setFontSize(14);
+        subtitle.setFontColor(0xC8C0B2FF);
+        panel.addChild(subtitle);
+
+        UIScrollView scroll = new UIScrollView(ScrollViewMode.Vertical);
+        scroll.setPivot(Pivot.UpperLeft);
+        scroll.style.left.set(4, Unit.Percent);
+        scroll.style.top.set(50, Unit.Pixel);
+        scroll.setSize(92, 68, true);
+        scroll.style.borderTopWidth.set(1);
+        scroll.style.borderTopColor.set(0x6A5228FF);
+        scroll.style.paddingTop.set(12);
+        scroll.style.paddingLeft.set(12);
+        scroll.style.paddingRight.set(12);
+        panel.addChild(scroll);
+
+        String notes = result == null || result.releaseNotes().isBlank()
+                ? t().get("TC_PLUGIN_UPDATE_RELEASE_NOTES_EMPTY", uiPlayer) : result.releaseNotes();
+        UILabel notesLabel = new UILabel(notes.length() > 1800 ? notes.substring(0, 1800) + "..." : notes);
+        notesLabel.setPivot(Pivot.UpperLeft);
+        notesLabel.setPosition(0, 0, false);
+        notesLabel.setSize(100, 220, true);
+        notesLabel.setFontSize(13);
+        notesLabel.setTextWrap(true);
+        notesLabel.setFontColor(0xE0D8C8FF);
+        scroll.addChild(notesLabel);
+
+        InfoButton checkPlugin = ButtonFactory.info(t().get("TC_PLUGIN_UPDATE_CHECK_PLUGIN_ACTION", uiPlayer),
+                event -> OZTools.checkPluginUpdate(pluginLabel, uiPlayer, this::updateUI));
+        checkPlugin.setPivot(Pivot.LowerLeft);
+        checkPlugin.setPosition(5, 94, true);
+        checkPlugin.setSize(220, 34, false);
+        checkPlugin.setBackgroundColor(0x201B13D8);
+        checkPlugin.setHoverBackgroundColor(0x342915E8);
+        checkPlugin.setBorder(1);
+        checkPlugin.setBorderColor(0x8A6A2DFF);
+        checkPlugin.setHoverBorderColor(0xD7AE55FF);
+        panel.addChild(checkPlugin);
+
+        if (updateAvailable(pluginLabel) || installAvailable(pluginLabel) || installing(pluginLabel)) {
+            DangerButton updateButton = ButtonFactory.danger(installing(pluginLabel) ? "Aktualisierung läuft..."
+                    : installAvailable(pluginLabel) ? "Installieren" : "Update", event -> showUpdateConfirmation());
+            updateButton.setPivot(Pivot.LowerLeft);
+            updateButton.setPosition(0, 94, true);
+            updateButton.style.left.set(290, Unit.Pixel);
+            updateButton.setSize(180, 34, false);
+            updateButton.setBackgroundColor(0x7A3018E8);
+            updateButton.setHoverBackgroundColor(0xA84722FF);
+            updateButton.setBorder(1);
+            updateButton.setBorderColor(0xD7AE55FF);
+            updateButton.setHoverBorderColor(0xF2C766FF);
+            if (installing(pluginLabel)) updateButton.setClickable(false);
+            panel.addChild(updateButton);
+        }
+
+        UILabel checkedAt = new UILabel(t().get("TC_PLUGIN_UPDATE_LAST_CHECKED", uiPlayer)
+                .replace("PH_CHECKED_AT", result == null || result.checkedAtEpochMillis() <= 0 ? "-"
+                        : DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.systemDefault())
+                                .format(Instant.ofEpochMilli(result.checkedAtEpochMillis()))));
+        checkedAt.setPivot(Pivot.LowerRight);
+        checkedAt.setPosition(95, 94, true);
+        checkedAt.setSize(300, 24, false);
+        checkedAt.setFontSize(12);
+        checkedAt.setFontColor(0xC8C0B2FF);
+        checkedAt.setTextAlign(TextAnchor.MiddleRight);
+        panel.addChild(checkedAt);
+        return panel;
+    }
+
     private Set<String> pluginLabels() {
         Set<String> labels = new TreeSet<>();
         labels.addAll(playerPluginSettings.keySet());
@@ -357,6 +449,10 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     private boolean installing(String pluginLabel) {
         PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
         return result != null && result.state() == PluginUpdateService.State.INSTALLING;
+    }
+
+    private boolean canShowReleaseNotesTab(String pluginLabel) {
+        return uiPlayer.isAdmin() && pluginLabel != null;
     }
 
     private void showUpdateConfirmation() {

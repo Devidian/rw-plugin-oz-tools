@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.22.4] - 2026-07-20 | Update management completion
+
+- fix: refresh installed version state immediately after a successful plugin update
+- fix: restore the update action and show a localized warning when an update fails
+- fix: use the maintained OZ release source when installed plugin metadata is missing
+- change: show persistent release notes, targeted checks, and the most recent check time
+
 ## [0.22.3] - 2026-07-20 | Plugin update management
 
 - feat: add opt-in delayed public GitHub update checks with OZ-only default trust policy
