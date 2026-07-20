@@ -1,9 +1,9 @@
 name: "OZ - Tools"
 main: de.omegazirkel.risingworld.OZTools
-version: 0.22.2
+version: 0.22.3
 author: "Maik 'Devidian' Laschober"
 team: "Omega Zirkel"
 description: "This Plugin is providing useful stuff for other Plugins"
 license: N/A
-website: N/A
+website: https://api.github.com/repos/Devidian/rw-plugin-oz-tools/releases/latest
 loadorder: -999

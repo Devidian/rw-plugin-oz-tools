@@ -6,11 +6,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
+import de.omegazirkel.risingworld.tools.PluginUpdateService;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
 import net.risingworld.api.objects.Player;
 import net.risingworld.api.ui.UIElement;
 import net.risingworld.api.ui.UILabel;
 import net.risingworld.api.ui.style.Pivot;
+import net.risingworld.api.ui.style.Position;
 import net.risingworld.api.ui.style.TextAnchor;
 import net.risingworld.api.ui.style.Unit;
 
@@ -122,7 +124,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             versionLabel.setPosition(96, 50, true);
             versionLabel.setSize(32, 22, true);
             versionLabel.setFontSize(12);
-            versionLabel.setFontColor(0xF2C766FF);
+            versionLabel.setFontColor(versionColor(pluginLabel));
             versionLabel.setTextAlign(TextAnchor.MiddleRight);
             navButton.setClickAction(event -> {
                 selectedPlugin = pluginLabel;
@@ -132,10 +134,48 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             navButton.addChild(versionLabel);
             navSidebar.addChild(navButton);
         }
+        if (uiPlayer.isAdmin()) {
+            InfoButton checkUpdatesButton = ButtonFactory.info("Auf Updates prüfen",
+                    event -> OZTools.checkPluginUpdates(uiPlayer, this::updateUI));
+            checkUpdatesButton.setPivot(Pivot.LowerLeft);
+            checkUpdatesButton.style.position.set(Position.Absolute);
+            checkUpdatesButton.style.left.set(0, Unit.Pixel);
+            checkUpdatesButton.style.width.set(100, Unit.Percent);
+            checkUpdatesButton.style.height.set(38, Unit.Pixel);
+            // Relative vertical positions keep the footer usable even though this
+            // UI implementation ignores CSS bottom offsets for overlay children.
+            checkUpdatesButton.setPosition(0, 95.7f, true);
+            checkUpdatesButton.setBackgroundColor(0x201B13D8);
+            checkUpdatesButton.setHoverBackgroundColor(0x342915E8);
+            checkUpdatesButton.setBorder(1);
+            checkUpdatesButton.setBorderColor(0x8A6A2DFF);
+            checkUpdatesButton.setHoverBorderColor(0xD7AE55FF);
+            navSidebar.addChild(checkUpdatesButton);
+            if (updateAvailable(selectedPlugin) || installAvailable(selectedPlugin) || installing(selectedPlugin)) {
+                DangerButton updateButton = ButtonFactory.danger(installing(selectedPlugin) ? "Aktualisierung läuft..."
+                        : installAvailable(selectedPlugin) ? "Installieren" : "Update",
+                        event -> showUpdateConfirmation());
+                updateButton.setPivot(Pivot.LowerLeft);
+                updateButton.style.position.set(Position.Absolute);
+                updateButton.style.left.set(0, Unit.Pixel);
+                updateButton.style.width.set(100, Unit.Percent);
+                updateButton.style.height.set(38, Unit.Pixel);
+                updateButton.setPosition(0, 91.4f, true);
+                updateButton.setBackgroundColor(0x7A3018E8);
+                updateButton.setHoverBackgroundColor(0xA84722FF);
+                updateButton.setBorder(1);
+                updateButton.setBorderColor(0xD7AE55FF);
+                updateButton.setHoverBorderColor(0xF2C766FF);
+                if (installing(selectedPlugin)) updateButton.setClickable(false);
+                navSidebar.addChild(updateButton);
+            }
+        }
         // add close button at the bottom
         OZUIElement closeButton = new OZUIElement();
         closeButton.setClickable(true);
         closeButton.setPivot(Pivot.LowerLeft);
+        closeButton.style.position.set(Position.Absolute);
+        closeButton.style.left.set(0, Unit.Pixel);
         closeButton.style.width.set(100, Unit.Percent);
         closeButton.style.height.set(38, Unit.Pixel);
         closeButton.setPosition(0, 100, true);
@@ -264,6 +304,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         labels.addAll(playerPluginSettings.keySet());
         labels.addAll(playerPluginData.keySet());
         labels.addAll(playerPluginAdminSettings.keySet());
+        labels.addAll(PluginUpdateService.managedPluginNames());
         return labels;
     }
 
@@ -289,9 +330,78 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             }
         }
         if (pluginVersion == null || pluginVersion.isBlank()) {
-            return "";
+            PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
+            return result != null && result.state() == PluginUpdateService.State.NOT_INSTALLED ? "N/A" : "";
         }
         return "v" + pluginVersion;
+    }
+
+    private int versionColor(String pluginLabel) {
+        PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
+        if (result == null) return 0xF2C766FF;
+        if (result.state() == PluginUpdateService.State.CURRENT) return 0x4FC36AFF;
+        if (result.state() == PluginUpdateService.State.UPDATE_AVAILABLE) return 0xE05252FF;
+        return 0xF2C766FF;
+    }
+
+    private boolean updateAvailable(String pluginLabel) {
+        PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
+        return result != null && result.state() == PluginUpdateService.State.UPDATE_AVAILABLE;
+    }
+
+    private boolean installAvailable(String pluginLabel) {
+        PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
+        return result != null && result.state() == PluginUpdateService.State.NOT_INSTALLED;
+    }
+
+    private boolean installing(String pluginLabel) {
+        PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
+        return result != null && result.state() == PluginUpdateService.State.INSTALLING;
+    }
+
+    private void showUpdateConfirmation() {
+        if (!uiPlayer.isAdmin() || (!updateAvailable(selectedPlugin) && !installAvailable(selectedPlugin))) return;
+        PluginUpdateService.Result result = OZTools.pluginUpdateResult(selectedPlugin);
+        boolean install = installAvailable(selectedPlugin);
+        OZUIElement dialog = new OZUIElement();
+        dialog.setPivot(Pivot.MiddleCenter);
+        dialog.setPosition(50, 50, true);
+        dialog.setSize(420, 210, false);
+        dialog.setBackgroundColor(0x10100EF8);
+        dialog.setBorder(1);
+        dialog.setBorderColor(0xD7AE55FF);
+        addChild(dialog);
+
+        UILabel title = new UILabel(install ? "Plugin installieren" : "Plugin-Update installieren");
+        title.setPivot(Pivot.UpperLeft);
+        title.setPosition(20, 18, false);
+        title.setSize(380, 28, false);
+        title.setFontSize(18);
+        title.setFontColor(0xF4F0E6FF);
+        dialog.addChild(title);
+        UILabel message = new UILabel(install ? selectedPlugin + " wird installiert. Anschließend werden die Plugins neu geladen."
+                : selectedPlugin + " wird von v" + result.installedVersion() + " auf v" + result.latestVersion()
+                        + " aktualisiert. Anschließend werden die Plugins neu geladen.");
+        message.setPivot(Pivot.UpperLeft);
+        message.setPosition(20, 58, false);
+        message.setSize(380, 68, false);
+        message.setFontSize(13);
+        message.setTextWrap(true);
+        message.setFontColor(0xE0D8C8FF);
+        dialog.addChild(message);
+        OZUIElement cancel = ButtonFactory.cancel("Abbrechen", event -> removeChild(dialog));
+        cancel.setPivot(Pivot.UpperLeft);
+        cancel.setPosition(24, 154, false);
+        cancel.setSize(140, 32, false);
+        dialog.addChild(cancel);
+        OZUIElement confirm = ButtonFactory.danger(install ? "Installieren" : "Update installieren", event -> {
+            removeChild(dialog);
+            OZTools.installPluginUpdate(selectedPlugin, uiPlayer, this::updateUI);
+        });
+        confirm.setPivot(Pivot.UpperRight);
+        confirm.setPosition(396, 154, false);
+        confirm.setSize(170, 32, false);
+        dialog.addChild(confirm);
     }
 
     private boolean canShowPluginSettingsTab(String pluginLabel) {

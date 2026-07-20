@@ -17,6 +17,7 @@ import de.omegazirkel.risingworld.tools.OZLogger;
 import de.omegazirkel.risingworld.tools.PluginFileWatcher;
 import de.omegazirkel.risingworld.tools.PluginReloadDebouncer;
 import de.omegazirkel.risingworld.tools.PluginSettings;
+import de.omegazirkel.risingworld.tools.PluginUpdateService;
 import de.omegazirkel.risingworld.tools.PlayerSettings;
 import de.omegazirkel.risingworld.tools.ServerThreadDispatcher;
 import de.omegazirkel.risingworld.tools.ThreadDiagnostics;
@@ -57,6 +58,60 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     private PluginReloadDebouncer debouncer;
     private ServerThreadDispatcher serverThreadDispatcher;
     private ThreadDiagnostics threadDiagnostics;
+    private PluginUpdateService pluginUpdateService;
+    private static volatile PluginUpdateService activePluginUpdateService;
+    private static volatile OZTools activeTools;
+
+    public static void checkPluginUpdates() {
+        PluginUpdateService service = activePluginUpdateService;
+        if (service != null) service.checkAsync();
+    }
+
+    public static void checkPluginUpdates(Player player) {
+        checkPluginUpdates(player, null);
+    }
+
+    public static void checkPluginUpdates(Player player, Runnable onCompleted) {
+        PluginUpdateService service = activePluginUpdateService;
+        OZTools tools = activeTools;
+        if (service == null || tools == null || player == null || !player.isAdmin()) return;
+        player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_CHECK_STARTED", player));
+        service.checkAsync(pluginName -> tools.serverThreadDispatcher.dispatch(() -> player.sendTextMessage(
+                t.get("TC_PLUGIN_UPDATE_CHECK_PLUGIN", player).replace("PH_PLUGIN_NAME", pluginName))),
+                updatesAvailable -> tools.serverThreadDispatcher.dispatch(() -> {
+                    player.sendTextMessage(t.get(updatesAvailable ? "TC_PLUGIN_UPDATE_CHECK_UPDATES_AVAILABLE"
+                            : "TC_PLUGIN_UPDATE_CHECK_NONE", player));
+                    if (onCompleted != null) onCompleted.run();
+                }));
+    }
+
+    public static PluginUpdateService.Result pluginUpdateResult(String pluginName) {
+        PluginUpdateService service = activePluginUpdateService;
+        return service == null ? null : service.results().get(pluginName);
+    }
+
+    public static void installPluginUpdate(String pluginName, Player player, Runnable onStateChanged) {
+        PluginUpdateService service = activePluginUpdateService;
+        OZTools tools = activeTools;
+        if (service == null || tools == null) return;
+        PluginUpdateService.Result result = pluginUpdateResult(pluginName);
+        if (player != null && player.isAdmin() && result != null) {
+            player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_STARTED", player)
+                    .replace("PH_PLUGIN_NAME", pluginName)
+                    .replace("PH_INSTALLED_VERSION", result.installedVersion())
+                    .replace("PH_LATEST_VERSION", result.latestVersion()));
+        }
+        service.installLatestAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() ->
+                {
+                    if (player != null) player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_COMPLETED", player));
+                    if (onStateChanged != null) onStateChanged.run();
+                    tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
+                }), ignored -> tools.serverThreadDispatcher.dispatch(() -> {
+                    if (player != null) player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_FAILED", player));
+                    if (onStateChanged != null) onStateChanged.run();
+                }));
+        if (onStateChanged != null) onStateChanged.run();
+    }
     private static final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
 
     public static OZLogger logger() {
@@ -94,6 +149,12 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         registerEventListener(this);
         serverThreadDispatcher = new ServerThreadDispatcher(this);
         SharedIndicatorManager.start(this::isMainThread, serverThreadDispatcher::dispatch);
+        pluginUpdateService = new PluginUpdateService(this);
+        activePluginUpdateService = pluginUpdateService;
+        activeTools = this;
+        if (s.automaticPluginUpdateCheck) {
+            executeDelayed(Math.max(1, s.pluginUpdateCheckDelaySeconds), pluginUpdateService::checkAsync);
+        }
 
         // Register the shutdown hook only once for the entire lifetime of the JVM.
         if (shutdownHookRegistered.compareAndSet(false, true)) {
@@ -162,6 +223,12 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         if (threadDiagnostics != null) {
             threadDiagnostics.close();
             threadDiagnostics = null;
+        }
+        if (pluginUpdateService != null) {
+            pluginUpdateService.close();
+            pluginUpdateService = null;
+            activePluginUpdateService = null;
+            activeTools = null;
         }
 
         // 1. Close file watcher to prevent further actions

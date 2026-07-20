@@ -32,6 +32,10 @@ public class PluginSettings {
 	public boolean reloadOnChange = false;
 	public boolean enablePluginWelcomeMessage = false;
 	public boolean threadDiagnosticsEnabled = false;
+	public boolean automaticPluginUpdateCheck = false;
+	public int pluginUpdateCheckDelaySeconds = 30;
+	public int pluginUpdateCheckDelayBetweenPluginsSeconds = 3;
+	public boolean allowExternalPluginRepositories = false;
 	private Path settingsFile;
 	private Properties currentSettings = new Properties();
 	private Properties defaultSettings = new Properties();
@@ -92,6 +96,15 @@ public class PluginSettings {
 			threadDiagnosticsEnabled = settings
 					.getProperty("threadDiagnosticsEnabled", defaults.getProperty("threadDiagnosticsEnabled", "false"))
 					.contentEquals("true");
+			automaticPluginUpdateCheck = settings.getProperty("automaticPluginUpdateCheck",
+					defaults.getProperty("automaticPluginUpdateCheck", "false")).contentEquals("true");
+			allowExternalPluginRepositories = settings.getProperty("allowExternalPluginRepositories",
+					defaults.getProperty("allowExternalPluginRepositories", "false")).contentEquals("true");
+			pluginUpdateCheckDelaySeconds = Integer.parseInt(settings.getProperty("pluginUpdateCheckDelaySeconds",
+					defaults.getProperty("pluginUpdateCheckDelaySeconds", "30")));
+			pluginUpdateCheckDelayBetweenPluginsSeconds = Math.max(0, Integer.parseInt(settings.getProperty(
+					"pluginUpdateCheckDelayBetweenPluginsSeconds", defaults.getProperty(
+							"pluginUpdateCheckDelayBetweenPluginsSeconds", "3"))));
 
 			// motd settings
 			enablePluginWelcomeMessage = settings
@@ -128,6 +141,12 @@ public class PluginSettings {
 				entry("threadDiagnosticsEnabled", "Thread diagnostics",
 						"If true, Tools samples and logs JVM-wide thread lifecycle information.",
 						AdminSettingsType.BOOLEAN),
+				AdminSettingsEntry.group("pluginUpdates", "Plugin updates"),
+				entry("automaticPluginUpdateCheck", "Automatic update check", "Checks public GitHub releases after startup.", AdminSettingsType.BOOLEAN),
+				entry("pluginUpdateCheckDelaySeconds", "Update-check delay", "Delay in seconds after startup.", AdminSettingsType.INTEGER),
+				entry("pluginUpdateCheckDelayBetweenPluginsSeconds", "Update-check interval",
+						"Delay in seconds between public GitHub requests.", AdminSettingsType.INTEGER),
+				entry("allowExternalPluginRepositories", "Allow external repositories", "Allow public non-OZ GitHub repositories.", AdminSettingsType.BOOLEAN),
 				AdminSettingsEntry.group("playerMessages", "Player messages"),
 				entry("enablePluginWelcomeMessage", "Welcome message",
 						"If true, Tools sends a welcome message when a player joins.", AdminSettingsType.BOOLEAN));

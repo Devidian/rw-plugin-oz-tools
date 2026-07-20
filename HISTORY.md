@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.22.3] - 2026-07-20 | Plugin update management
+
+- feat: add opt-in delayed public GitHub update checks with OZ-only default trust policy
+- feat: show current and available plugin versions in the shared settings overlay
+- feat: add confirmed administrator update installation with staging and rollback
+- fix: follow GitHub release asset redirects and serialize release checks with a configurable delay
+- fix: keep the update action disabled while installation is in progress and report failed updates to administrators
+- test: cover GitHub repository parsing, version comparisons, and release ZIP selection
+
 ## [0.22.2] - 2026-07-17 | Offline player lookup
 
 - feat: add exact persisted-player name lookup for feature plugins that must address offline players
