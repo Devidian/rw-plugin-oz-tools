@@ -5,6 +5,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.junit.Test;
 
@@ -47,5 +49,22 @@ public class PluginUpdateServiceTest {
         } catch (IOException expected) {
             assertEquals("No ZIP release asset", expected.getMessage());
         }
+    }
+
+    @Test
+    public void preservesSettingsAndSqliteFilesDuringReplacement() throws Exception {
+        Path installed = Files.createTempDirectory("installed-plugin");
+        Path replacement = Files.createTempDirectory("replacement-plugin");
+        Files.writeString(installed.resolve("settings.properties"), "configured=true");
+        Files.writeString(installed.resolve("players.db"), "database");
+        Files.writeString(installed.resolve("players.db-wal"), "wal");
+        Files.writeString(installed.resolve("readme.txt"), "do-not-copy");
+
+        PluginUpdateService.preserveLocalData(installed, replacement);
+
+        assertEquals("configured=true", Files.readString(replacement.resolve("settings.properties")));
+        assertEquals("database", Files.readString(replacement.resolve("players.db")));
+        assertEquals("wal", Files.readString(replacement.resolve("players.db-wal")));
+        assertEquals(false, Files.exists(replacement.resolve("readme.txt")));
     }
 }

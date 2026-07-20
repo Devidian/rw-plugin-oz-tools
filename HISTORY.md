@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.22.5] - 2026-07-20 | Safe plugin updates
+
+- fix: retain each plugin's settings and SQLite player data when installing an update
+
 ## [0.22.4] - 2026-07-20 | Update management completion
 
 - fix: refresh installed version state immediately after a successful plugin update

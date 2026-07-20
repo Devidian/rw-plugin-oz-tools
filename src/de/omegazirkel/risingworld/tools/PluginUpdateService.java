@@ -135,6 +135,7 @@ public final class PluginUpdateService implements AutoCloseable {
                         throw new IOException("Release contains no plugin JAR");
                     }
                 }
+                if (Files.exists(target)) preserveLocalData(target, source);
                 Path backup = parent.resolve(target.getFileName() + ".oz-backup");
                 if (Files.exists(backup)) deleteTree(backup);
                 if (Files.exists(target)) Files.move(target, backup, StandardCopyOption.ATOMIC_MOVE);
@@ -158,6 +159,19 @@ public final class PluginUpdateService implements AutoCloseable {
         if (previous != null) updateResult(pluginName, previous);
         OZTools.logger().warn("Plugin installation rejected: " + reason + " for " + pluginName);
         if (onFailure != null) onFailure.accept(reason);
+    }
+
+    static void preserveLocalData(Path installedPlugin, Path replacementPlugin) throws IOException {
+        try (var paths = Files.walk(installedPlugin)) {
+            for (Path file : paths.filter(Files::isRegularFile).toList()) {
+                String name = file.getFileName().toString();
+                if (!name.equals("settings.properties") && !name.endsWith(".db")
+                        && !name.endsWith(".db-wal") && !name.endsWith(".db-shm")) continue;
+                Path destination = replacementPlugin.resolve(installedPlugin.relativize(file));
+                Files.createDirectories(destination.getParent());
+                Files.copy(file, destination, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+            }
+        }
     }
 
     static String selectZipAsset(JsonObject release) throws IOException {
