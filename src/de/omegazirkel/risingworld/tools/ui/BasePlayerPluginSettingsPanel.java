@@ -157,55 +157,20 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         buttonContainer.style.alignContent.set(Align.Center);
         buttonContainer.style.justifyContent.set(Justify.Center);
         // buttons
-        OZUIElement buttonA = new OZUIElement(); // off
-        OZUIElement buttonB = new OZUIElement(); // on
-        UILabel buttonALabel = new UILabel(labelA);
-        UILabel buttonBLabel = new UILabel(labelB);
+        AdvancedButton buttonA = AdvancedButtonFactory.custom(new AdvancedButtonState(
+                AdvancedBaseButton.State.DEFAULT, 0x7A5D2AFF,
+                isEnabled ? 0x2C1717FF : 0x5A2424FF, isEnabled ? 0xD8D0C0FF : 0xF2C766FF,
+                0xD7AE55FF, isEnabled ? 0x482020FF : 0x743030FF, labelA, onSwitch));
+        AdvancedButton buttonB = AdvancedButtonFactory.custom(new AdvancedButtonState(
+                AdvancedBaseButton.State.DEFAULT, 0x7A5D2AFF,
+                isEnabled ? 0x1D4D2AFF : 0x182F20FF, isEnabled ? 0xF2C766FF : 0xD8D0C0FF,
+                0xD7AE55FF, isEnabled ? 0x286B39FF : 0x244D30FF, labelB, onSwitch));
+        buttonA.setPivot(Pivot.UpperLeft);
+        buttonB.setPivot(Pivot.UpperLeft);
         buttonA.setSize(82, 28, false);
         buttonB.setSize(82, 28, false);
         buttonA.setMargin(2);
         buttonB.setMargin(2);
-        buttonA.setClickable(true);
-        buttonB.setClickable(true);
-        buttonA.setClickAction(onSwitch);
-        buttonB.setClickAction(onSwitch);
-        buttonA.style.borderBottomWidth.set(1);
-        buttonA.style.borderTopWidth.set(1);
-        buttonA.style.borderLeftWidth.set(1);
-        buttonA.style.borderRightWidth.set(1);
-        buttonB.style.borderBottomWidth.set(1);
-        buttonB.style.borderTopWidth.set(1);
-        buttonB.style.borderRightWidth.set(1);
-        buttonB.style.borderLeftWidth.set(1);
-        buttonA.setBorderColor(0x7A5D2AFF);
-        buttonB.setBorderColor(0x7A5D2AFF);
-        buttonA.setHoverBorderColor(0xD7AE55FF);
-        buttonB.setHoverBorderColor(0xD7AE55FF);
-        if (isEnabled) {
-            buttonA.setBackgroundColor(0x2C1717FF);
-            buttonA.setHoverBackgroundColor(0x482020FF);
-            buttonALabel.setFontColor(0xD8D0C0FF);
-            buttonB.setBackgroundColor(0x1D4D2AFF);
-            buttonB.setHoverBackgroundColor(0x286B39FF);
-            buttonBLabel.setFontColor(0xF2C766FF);
-        } else {
-            buttonA.setBackgroundColor(0x5A2424FF);
-            buttonA.setHoverBackgroundColor(0x743030FF);
-            buttonALabel.setFontColor(0xF2C766FF);
-            buttonB.setBackgroundColor(0x182F20FF);
-            buttonB.setHoverBackgroundColor(0x244D30FF);
-            buttonBLabel.setFontColor(0xD8D0C0FF);
-        }
-        buttonALabel.setFontSize(13);
-        buttonBLabel.setFontSize(13);
-        buttonALabel.setTextAlign(TextAnchor.MiddleCenter);
-        buttonBLabel.setTextAlign(TextAnchor.MiddleCenter);
-        buttonALabel.setPivot(Pivot.MiddleCenter);
-        buttonBLabel.setPivot(Pivot.MiddleCenter);
-        buttonALabel.setPosition(50, 50, true);
-        buttonBLabel.setPosition(50, 50, true);
-        buttonA.addChild(buttonALabel);
-        buttonB.addChild(buttonBLabel);
         buttonContainer.addChild(buttonA);
         buttonContainer.addChild(buttonB);
 

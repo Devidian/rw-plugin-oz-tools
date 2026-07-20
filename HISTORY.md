@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.23.0] - 2026-07-20 | Advanced buttons
+
+- refactor: add state-driven advanced buttons with stable layout containers to
+  prevent hover glitches after enable/disable transitions
+- change: use the Plugin Manager button style as the shared default and retire
+  blue info styling from OZ Tools UI usage
+
 ## [0.22.8] - 2026-07-20 | Decimal admin settings
 
 - feat: allow plugins to expose validated decimal values in the in-game admin settings UI

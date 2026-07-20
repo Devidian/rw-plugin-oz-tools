@@ -95,17 +95,15 @@ public abstract class BasePluginOverlayWithTabs extends BasePluginOverlay {
     }
 
     protected OZUIElement tab(String text, float width, Runnable action) {
-        OZUIElement tab = new OZUIElement();
-        tab.setPivot(Pivot.UpperLeft);
-        tab.setSize(width, 38, false);
-        tab.setBorder(1);
-        tab.setBorderEdgeRadius(4, false);
-        tab.setClickable(true);
-        tab.setClickAction(event -> {
+        AdvancedButton tab = AdvancedButtonFactory.defaultButton("", event -> {
             if (action != null) {
                 action.run();
             }
         });
+        tab.setPivot(Pivot.UpperLeft);
+        tab.setSize(width, 38, false);
+        tab.setBorder(1);
+        tab.setBorderEdgeRadius(4, false);
 
         UILabel label = new UILabel(text);
         label.setPivot(Pivot.MiddleCenter);

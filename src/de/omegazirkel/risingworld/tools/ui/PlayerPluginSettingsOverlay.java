@@ -105,8 +105,11 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         if (TAB_RELEASE_NOTES.equals(selectedTab) && !canShowReleaseNotesTab(selectedPlugin)) selectedTab = TAB_SETTINGS;
         // fill navigation bar for every playerPluginSettings
         for (String pluginLabel : pluginLabels()) {
-            OZUIElement navButton = new OZUIElement();
-            navButton.setClickable(true);
+            AdvancedButton navButton = AdvancedButtonFactory.custom(new AdvancedButtonState(
+                    AdvancedBaseButton.State.DEFAULT,
+                    pluginLabel.equals(selectedPlugin) ? 0xD7AE55FF : 0x5E4A25FF,
+                    pluginLabel.equals(selectedPlugin) ? 0x3A2D18D8 : 0x181713C8,
+                    0xF4F0E6FF, 0xD7AE55FF, 0x2A2419E8, "", null));
             navButton.setPivot(Pivot.UpperLeft);
             navButton.style.width.set(100, Unit.Percent);
             navButton.style.height.set(38, Unit.Pixel);
@@ -146,7 +149,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             navSidebar.addChild(navButton);
         }
         if (uiPlayer.isAdmin()) {
-            InfoButton checkUpdatesButton = ButtonFactory.info("Auf Updates prüfen",
+            AdvancedButton checkUpdatesButton = AdvancedButtonFactory.defaultButton("Auf Updates prüfen",
                     event -> OZTools.checkPluginUpdates(uiPlayer, this::updateUI));
             checkUpdatesButton.setPivot(Pivot.LowerLeft);
             checkUpdatesButton.style.position.set(Position.Absolute);
@@ -164,8 +167,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             navSidebar.addChild(checkUpdatesButton);
         }
         // add close button at the bottom
-        OZUIElement closeButton = new OZUIElement();
-        closeButton.setClickable(true);
+        AdvancedButton closeButton = AdvancedButtonFactory.defaultButton("", event -> close());
         closeButton.setPivot(Pivot.LowerLeft);
         closeButton.style.position.set(Position.Absolute);
         closeButton.style.left.set(0, Unit.Pixel);
@@ -182,9 +184,6 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         btnLabel.setPosition(50, 50, true);
         btnLabel.setFontColor(0xF4F0E6FF);
         btnLabel.setTextAlign(TextAnchor.MiddleCenter);
-        closeButton.setClickAction(event -> {
-            close();
-        });
         closeButton.addChild(btnLabel);
         navSidebar.addChild(closeButton);
 
@@ -253,8 +252,13 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
     private void addTabButton(String tab, String label, int x) {
         boolean active = tab.equals(selectedTab);
-        OZUIElement tabButton = new OZUIElement();
-        tabButton.setClickable(true);
+        AdvancedButton tabButton = AdvancedButtonFactory.custom(new AdvancedButtonState(
+                AdvancedBaseButton.State.DEFAULT, active ? 0xD7AE55FF : 0x5E4A25FF,
+                active ? 0x3A2D18D8 : 0x181713C8, active ? 0xF2C766FF : 0xF4F0E6FF,
+                0xD7AE55FF, 0x2A2419E8, "", event -> {
+                    selectedTab = tab;
+                    updateUI();
+                }));
         tabButton.setPivot(Pivot.UpperLeft);
         tabButton.setPosition(x, 0, false);
         tabButton.setSize(140, 34, false);
@@ -269,10 +273,6 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         tabLabel.setFontSize(13);
         tabLabel.setFontColor(active ? 0xF2C766FF : 0xF4F0E6FF);
         tabLabel.setTextAlign(TextAnchor.MiddleCenter);
-        tabButton.setClickAction(event -> {
-            selectedTab = tab;
-            updateUI();
-        });
         tabButton.addChild(tabLabel);
         tabBar.addChild(tabButton);
     }
@@ -349,7 +349,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         notesLabel.setFontColor(0xE0D8C8FF);
         scroll.addChild(notesLabel);
 
-        InfoButton checkPlugin = ButtonFactory.info(t().get("TC_PLUGIN_UPDATE_CHECK_PLUGIN_ACTION", uiPlayer),
+        AdvancedButton checkPlugin = AdvancedButtonFactory.defaultButton(t().get("TC_PLUGIN_UPDATE_CHECK_PLUGIN_ACTION", uiPlayer),
                 event -> OZTools.checkPluginUpdate(pluginLabel, uiPlayer, this::updateUI));
         checkPlugin.setPivot(Pivot.LowerLeft);
         checkPlugin.setPosition(5, 94, true);
@@ -362,7 +362,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         panel.addChild(checkPlugin);
 
         if (updateAvailable(pluginLabel) || installAvailable(pluginLabel) || installing(pluginLabel)) {
-            DangerButton updateButton = ButtonFactory.danger(installing(pluginLabel) ? "Aktualisierung läuft..."
+            AdvancedButton updateButton = AdvancedButtonFactory.danger(installing(pluginLabel) ? "Aktualisierung läuft..."
                     : installAvailable(pluginLabel) ? "Installieren" : "Update", event -> showUpdateConfirmation());
             updateButton.setPivot(Pivot.LowerLeft);
             updateButton.setPosition(0, 94, true);
@@ -485,12 +485,12 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         message.setTextWrap(true);
         message.setFontColor(0xE0D8C8FF);
         dialog.addChild(message);
-        OZUIElement cancel = ButtonFactory.cancel("Abbrechen", event -> removeChild(dialog));
+        AdvancedButton cancel = AdvancedButtonFactory.cancel("Abbrechen", event -> removeChild(dialog));
         cancel.setPivot(Pivot.UpperLeft);
         cancel.setPosition(24, 154, false);
         cancel.setSize(140, 32, false);
         dialog.addChild(cancel);
-        OZUIElement confirm = ButtonFactory.danger(install ? "Installieren" : "Update installieren", event -> {
+        AdvancedButton confirm = AdvancedButtonFactory.danger(install ? "Installieren" : "Update installieren", event -> {
             removeChild(dialog);
             OZTools.installPluginUpdate(selectedPlugin, uiPlayer, this::updateUI);
         });

@@ -17,7 +17,7 @@ public class Dropdown extends UIElement {
     private final List<DropdownOption> options;
     private final DropdownCallback callback;
 
-    private final BaseButton headerButton;
+    private final AdvancedButton headerButton;
     private final UIScrollView dropdownList;
 
     private DropdownOption selectedOption;
@@ -32,7 +32,7 @@ public class Dropdown extends UIElement {
         style.height.set(30, Unit.Pixel);
 
         // Header
-        headerButton = new CancelButton("Select...", (PlayerUIElementClickEvent event) -> toggle());
+        headerButton = AdvancedButtonFactory.cancel("Select...", (PlayerUIElementClickEvent event) -> toggle());
         headerButton.setSize(100, 100, true);
         headerButton.setPivot(Pivot.UpperLeft);
 
@@ -59,7 +59,7 @@ public class Dropdown extends UIElement {
         for (int i = 0; i < options.size(); i++) {
             DropdownOption option = options.get(i);
 
-            CancelButton btn = new CancelButton(option.getLabel(), (PlayerUIElementClickEvent event) -> {
+            AdvancedButton btn = AdvancedButtonFactory.cancel(option.getLabel(), (PlayerUIElementClickEvent event) -> {
                 select(option);
             });
             btn.setPosition(0, i * ROW_HEIGHT, false);

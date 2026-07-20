@@ -131,7 +131,7 @@ public class PluginInfoStatusPanel extends OverlayBackPanel {
         title.setTextWrap(false);
         panel.addChild(title);
 
-        OZUIElement closeButton = new OZUIElement();
+        AdvancedButton closeButton = AdvancedButtonFactory.defaultButton("X", event -> close());
         closeButton.setPivot(Pivot.UpperRight);
         closeButton.style.position.set(Position.Absolute);
         closeButton.style.right.set(10, Unit.Pixel);
@@ -143,8 +143,6 @@ public class PluginInfoStatusPanel extends OverlayBackPanel {
         closeButton.setBorderEdgeRadius(4, false);
         closeButton.setBackgroundColor(0.12f, 0.10f, 0.08f, 0.9f);
         closeButton.setHoverBackgroundColor(0x611F1AF2);
-        closeButton.setClickable(true);
-        closeButton.setClickAction(event -> close());
         UILabel closeLabel = new UILabel("X");
         closeLabel.setPivot(Pivot.MiddleCenter);
         closeLabel.setPosition(50, 50, true);
@@ -164,7 +162,13 @@ public class PluginInfoStatusPanel extends OverlayBackPanel {
 
     private OZUIElement tab(String label, float x, Tab tab) {
         boolean active = activeTab == tab;
-        OZUIElement tabButton = new OZUIElement();
+        AdvancedButton tabButton = AdvancedButtonFactory.custom(new AdvancedButtonState(
+                AdvancedBaseButton.State.DEFAULT, active ? 0xD7AE55FF : 0x5E4A25FF,
+                active ? 0x3A2D18D8 : 0x181713C8, active ? 0xF2C766FF : 0xF4F0E6FF,
+                0xD7AE55FF, 0x2A2419E8, "", event -> {
+                    activeTab = tab;
+                    rebuild();
+                }));
         tabButton.setPivot(Pivot.UpperLeft);
         tabButton.style.position.set(Position.Absolute);
         tabButton.style.left.set(x, Unit.Pixel);
@@ -176,11 +180,6 @@ public class PluginInfoStatusPanel extends OverlayBackPanel {
         tabButton.setBorderColor(active ? 0xD7AE55FF : 0x5E4A25FF);
         tabButton.setHoverBorderColor(0xD7AE55FF);
         tabButton.setBorderEdgeRadius(4, false);
-        tabButton.setClickable(true);
-        tabButton.setClickAction(event -> {
-            activeTab = tab;
-            rebuild();
-        });
 
         UILabel tabLabel = new UILabel(label);
         tabLabel.setPivot(Pivot.MiddleCenter);

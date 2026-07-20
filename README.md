@@ -8,6 +8,7 @@ This plugin has a set of utilities and libs used by different Plugins.
 - Logger for console output
 - Plugin-Change-Watcher for watching file changes in the Plugin folder
 - Standard colors
+- State-driven advanced UI buttons with stable hover behavior
 - WebSocket Client
 - SQLite DB Initializer (per Plugin)
 - Player database lookup helper for recently seen players, persisted exact-name lookup, and best-effort player records

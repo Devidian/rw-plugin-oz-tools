@@ -8,7 +8,7 @@
 
 	<groupId>com.github.devidian</groupId>
 	<artifactId>rw-plugin-oz-tools</artifactId>
-	<version>0.22.8</version>
+	<version>0.23.0</version>
 
 	<name>OZTools</name>
 
@@ -119,7 +119,7 @@
 	<build>
 		<sourceDirectory>src</sourceDirectory>
 		<testSourceDirectory>src-test</testSourceDirectory>
-		<directory>target</directory>
+		<directory>${oztools.build.directory}</directory>
 		<finalName>${project.name}</finalName>
 
 		<pluginManagement>
@@ -389,6 +389,8 @@
 	</build>
 
 	<properties>
+		<!-- Allows isolated development builds when a previous container build owns target/. -->
+		<oztools.build.directory>target</oztools.build.directory>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>20</maven.compiler.source>
 		<maven.compiler.target>20</maven.compiler.target>

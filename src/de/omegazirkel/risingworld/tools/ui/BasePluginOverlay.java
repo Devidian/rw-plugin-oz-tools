@@ -77,7 +77,7 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
         subtitle.setFontSize(12);
         panel.addChild(subtitle);
 
-        OZUIElement closeButton = new OZUIElement();
+        AdvancedButton closeButton = AdvancedButtonFactory.defaultButton("X", event -> close());
         closeButton.setPivot(Pivot.UpperRight);
         closeButton.style.position.set(Position.Absolute);
         closeButton.style.right.set(0, Unit.Pixel);
@@ -88,8 +88,6 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
         closeButton.setBorderEdgeRadius(4, false);
         closeButton.setBackgroundColor(0.12f, 0.10f, 0.08f, 0.9f);
         closeButton.setHoverBackgroundColor(0x611F1AF2);
-        closeButton.setClickable(true);
-        closeButton.setClickAction(event -> close());
         UILabel closeLabel = new UILabel("X");
         closeLabel.setPivot(Pivot.MiddleCenter);
         closeLabel.setPosition(50, 50, true);

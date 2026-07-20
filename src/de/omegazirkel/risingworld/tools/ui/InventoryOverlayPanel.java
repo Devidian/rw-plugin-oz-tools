@@ -91,9 +91,15 @@ public class InventoryOverlayPanel extends OZUIElement {
         addChild(container);
     }
 
-    private OZUIElement buttonElement(Player player, MenuItem registration) {
+    private AdvancedButton buttonElement(Player player, MenuItem registration) {
         boolean showLabel = ToolsPlayerPreferences.showInventoryShortcutLabels(player);
-        OZUIElement button = new OZUIElement();
+        AdvancedButton button = AdvancedButtonFactory.custom(new AdvancedButtonState(
+                AdvancedBaseButton.State.DEFAULT, 0xD7AE5577, 0x141414AA, 0xE8DDC6FF,
+                0xF2C766BB, 0x2A2419DD, "", event -> {
+                    remove(player);
+                    player.hideInventory();
+                    registration.getAction().onCall(player);
+                }));
         button.setPivot(Pivot.UpperLeft);
         button.style.position.set(Position.Relative);
         button.style.width.set(showLabel ? WITDH_WITH_LABEL : 52, Unit.Pixel);
@@ -102,19 +108,8 @@ public class InventoryOverlayPanel extends OZUIElement {
         button.style.marginRight.set(4);
         button.style.marginTop.set(4);
         button.style.marginBottom.set(4);
-        button.setClickable(true);
-        button.setBackgroundColor(0x141414AA);
-        button.setHoverBackgroundColor(0x2A2419DD);
-        button.setBorder(1);
-        button.setBorderColor(0xD7AE5577);
-        button.setHoverBorderColor(0xF2C766BB);
         button.setHoverBorderWidth(1);
         button.setBorderEdgeRadius(4, false);
-        button.setClickAction(event -> {
-            remove(player);
-            player.hideInventory();
-            registration.getAction().onCall(player);
-        });
 
         // Resolve icon-key registrations for the current player. Calling the
         // keyless accessor here made all plugin shortcuts render without an

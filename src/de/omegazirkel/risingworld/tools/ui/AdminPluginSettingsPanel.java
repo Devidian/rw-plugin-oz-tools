@@ -384,23 +384,8 @@ public class AdminPluginSettingsPanel extends OZUIElement {
     }
 
     private OZUIElement actionButton(String label) {
-        OZUIElement button = new OZUIElement();
+        AdvancedButton button = AdvancedButtonFactory.defaultButton(label, null);
         button.setSize(92, 32, false);
-        button.setClickable(true);
-        button.setBackgroundColor(0x3A2D18D8);
-        button.setHoverBackgroundColor(0x2A2419E8);
-        button.setBorder(1);
-        button.setBorderColor(0xD7AE55FF);
-        button.setHoverBorderColor(0xF2C766FF);
-
-        UILabel buttonLabel = new UILabel(label);
-        buttonLabel.setPivot(Pivot.MiddleCenter);
-        buttonLabel.setPosition(50, 50, true);
-        buttonLabel.setSize(100, 100, true);
-        buttonLabel.setFontSize(13);
-        buttonLabel.setFontColor(0xF4F0E6FF);
-        buttonLabel.setTextAlign(TextAnchor.MiddleCenter);
-        button.addChild(buttonLabel);
         return button;
     }
 
