@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.22.7] - 2026-07-20 | Preserve local plugin files
+
+- fix: retain local files that are not part of an update package while replacing plugin files
+
 ## [0.22.6] - 2026-07-20 | Safe Shop updates
 
 - fix: retain JSON-based admin shop definitions and zone files during plugin updates
