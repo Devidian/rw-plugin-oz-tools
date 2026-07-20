@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
+import java.util.List;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -128,6 +129,49 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
                     if (onStateChanged != null) onStateChanged.run();
                 }));
         if (onStateChanged != null) onStateChanged.run();
+    }
+
+    /** Installs confirmed releases one after another and reloads only after the
+     * complete batch has been staged successfully. */
+    public static void installPluginUpdates(List<String> pluginNames, Player player, Runnable onStateChanged) {
+        PluginUpdateService service = activePluginUpdateService;
+        OZTools tools = activeTools;
+        if (service == null || tools == null || player == null || !player.isAdmin() || pluginNames == null) return;
+        List<String> pending = pluginNames.stream()
+                .filter(name -> {
+                    PluginUpdateService.Result result = pluginUpdateResult(name);
+                    return result != null && (result.state() == PluginUpdateService.State.UPDATE_AVAILABLE
+                            || result.state() == PluginUpdateService.State.NOT_INSTALLED);
+                }).toList();
+        if (pending.isEmpty()) return;
+        installPluginUpdatesNext(service, tools, pending, 0, player, onStateChanged);
+    }
+
+    private static void installPluginUpdatesNext(PluginUpdateService service, OZTools tools, List<String> pending,
+            int index, Player player, Runnable onStateChanged) {
+        if (index >= pending.size()) {
+            player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_COMPLETED", player));
+            if (onStateChanged != null) onStateChanged.run();
+            tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
+            return;
+        }
+        String pluginName = pending.get(index);
+        PluginUpdateService.Result result = pluginUpdateResult(pluginName);
+        if (result != null) {
+            player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_STARTED", player)
+                    .replace("PH_PLUGIN_NAME", pluginName)
+                    .replace("PH_INSTALLED_VERSION", result.installedVersion())
+                    .replace("PH_LATEST_VERSION", result.latestVersion()));
+        }
+        service.installLatestAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() -> {
+            service.markInstalledLatest(pluginName);
+            if (onStateChanged != null) onStateChanged.run();
+            installPluginUpdatesNext(service, tools, pending, index + 1, player, onStateChanged);
+        }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
+            player.sendTextMessage(t.get("untrusted-release-source".equals(reason)
+                    ? "TC_PLUGIN_UPDATE_INSTALL_FAILED_UNTRUSTED_SOURCE" : "TC_PLUGIN_UPDATE_INSTALL_FAILED", player));
+            if (onStateChanged != null) onStateChanged.run();
+        }));
     }
     private static final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
 

@@ -49,7 +49,9 @@ public class TableScrollView extends OZUIElement {
         // Inner content where rows go
         content = new OZUIElement();
         content.setPivot(Pivot.UpperLeft);
-        content.setSize(100, 0, true);
+        // Keep the scroll content narrower than the viewport so the client does
+        // not expose a horizontal scrollbar for percent-width table rows.
+        content.setSize(99, 0, true);
         content.setPosition(0, 0, false);
 
         scrollView.addChild(content);

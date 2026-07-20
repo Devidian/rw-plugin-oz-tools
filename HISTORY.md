@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.1] - 2026-07-20 | Batch update usability
+
+- feat: install multiple pending plugin updates serially with one reload after completion
+- fix: make the combined release-notes confirmation vertically scrollable and align its update action with individual updates
+- fix: prevent horizontal table scrollbars caused by percent-width table content
+
 ## [0.23.0] - 2026-07-20 | Advanced buttons
 
 - refactor: add state-driven advanced buttons with stable layout containers to

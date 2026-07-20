@@ -1,5 +1,7 @@
 package de.omegazirkel.risingworld.tools.ui;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -149,6 +151,23 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             navSidebar.addChild(navButton);
         }
         if (uiPlayer.isAdmin()) {
+            List<String> pendingUpdates = pendingUpdates();
+            if (pendingUpdates.size() >= 2) {
+                AdvancedButton updateAllButton = AdvancedButtonFactory.danger("Alle aktualisieren", event ->
+                        showAllUpdatesConfirmation(pendingUpdates));
+                updateAllButton.setPivot(Pivot.LowerLeft);
+                updateAllButton.style.position.set(Position.Absolute);
+                updateAllButton.style.left.set(0, Unit.Pixel);
+                updateAllButton.style.width.set(100, Unit.Percent);
+                updateAllButton.style.height.set(38, Unit.Pixel);
+                updateAllButton.setPosition(0, 91.2f, true);
+                updateAllButton.setBackgroundColor(0x7A3018E8);
+                updateAllButton.setHoverBackgroundColor(0xA84722FF);
+                updateAllButton.setBorder(1);
+                updateAllButton.setBorderColor(0xD7AE55FF);
+                updateAllButton.setHoverBorderColor(0xF2C766FF);
+                navSidebar.addChild(updateAllButton);
+            }
             AdvancedButton checkUpdatesButton = AdvancedButtonFactory.defaultButton("Auf Updates prüfen",
                     event -> OZTools.checkPluginUpdates(uiPlayer, this::updateUI));
             checkUpdatesButton.setPivot(Pivot.LowerLeft);
@@ -497,6 +516,86 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         confirm.setPivot(Pivot.UpperRight);
         confirm.setPosition(396, 154, false);
         confirm.setSize(170, 32, false);
+        dialog.addChild(confirm);
+    }
+
+    private List<String> pendingUpdates() {
+        List<String> pending = new ArrayList<>();
+        for (String pluginLabel : pluginLabels()) {
+            if (updateAvailable(pluginLabel) || installAvailable(pluginLabel)) {
+                pending.add(pluginLabel);
+            }
+        }
+        return pending;
+    }
+
+    private void showAllUpdatesConfirmation(List<String> pluginLabels) {
+        if (!uiPlayer.isAdmin() || pluginLabels == null || pluginLabels.size() < 2) return;
+        OZUIElement dialog = new OZUIElement();
+        dialog.setPivot(Pivot.MiddleCenter);
+        dialog.setPosition(50, 50, true);
+        dialog.setSize(560, 370, false);
+        dialog.setBackgroundColor(0x10100EF8);
+        dialog.setBorder(1);
+        dialog.setBorderColor(0xD7AE55FF);
+        addChild(dialog);
+
+        UILabel title = new UILabel("Alle Plugin-Updates installieren");
+        title.setPivot(Pivot.UpperLeft);
+        title.setPosition(20, 18, false);
+        title.setSize(520, 28, false);
+        title.setFontSize(18);
+        title.setFontColor(0xF4F0E6FF);
+        dialog.addChild(title);
+
+        UILabel message = new UILabel(pluginLabels.size()
+                + " Plugins werden nacheinander aktualisiert. Die Plugins werden erst danach einmal neu geladen.");
+        message.setPivot(Pivot.UpperLeft);
+        message.setPosition(20, 50, false);
+        message.setSize(520, 34, false);
+        message.setFontSize(13);
+        message.setTextWrap(true);
+        message.setFontColor(0xE0D8C8FF);
+        dialog.addChild(message);
+
+        UIScrollView notes = new UIScrollView(ScrollViewMode.Vertical);
+        notes.setPivot(Pivot.UpperLeft);
+        notes.setPosition(20, 92, false);
+        notes.setSize(520, 208, false);
+        StringBuilder text = new StringBuilder();
+        for (String pluginLabel : pluginLabels) {
+            PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
+            text.append(pluginLabel).append(" — ")
+                    .append(result == null ? "" : "v" + result.installedVersion() + " → v" + result.latestVersion())
+                    .append("\n");
+            if (result != null && !result.releaseNotes().isBlank()) text.append(result.releaseNotes()).append("\n");
+            text.append("\n");
+        }
+        String releaseNotes = text.toString().trim();
+        UILabel noteText = new UILabel(releaseNotes);
+        noteText.setPivot(Pivot.UpperLeft);
+        noteText.setPosition(0, 0, false);
+        noteText.style.width.set(100, Unit.Percent);
+        int visualLines = Math.max(1, releaseNotes.split("\\R", -1).length + (releaseNotes.length() / 62));
+        noteText.style.height.set(Math.max(208, visualLines * 16 + 20), Unit.Pixel);
+        noteText.setFontSize(12);
+        noteText.setTextWrap(true);
+        noteText.setFontColor(0xE0D8C8FF);
+        notes.addChild(noteText);
+        dialog.addChild(notes);
+
+        AdvancedButton cancel = AdvancedButtonFactory.cancel("Abbrechen", event -> removeChild(dialog));
+        cancel.setPivot(Pivot.UpperLeft);
+        cancel.setPosition(24, 322, false);
+        cancel.setSize(150, 32, false);
+        dialog.addChild(cancel);
+        AdvancedButton confirm = AdvancedButtonFactory.danger("Alle aktualisieren", event -> {
+            removeChild(dialog);
+            OZTools.installPluginUpdates(pluginLabels, uiPlayer, this::updateUI);
+        });
+        confirm.setPivot(Pivot.UpperRight);
+        confirm.setPosition(536, 322, false);
+        confirm.setSize(190, 32, false);
         dialog.addChild(confirm);
     }
 
