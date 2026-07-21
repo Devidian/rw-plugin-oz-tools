@@ -3,6 +3,7 @@ package de.omegazirkel.risingworld.tools;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
@@ -81,5 +82,12 @@ public class PluginUpdateServiceTest {
         PluginUpdateService.deleteTree(staging);
 
         assertFalse(Files.exists(staging));
+    }
+
+    @Test
+    public void excludesTemporaryUpdateDirectoriesFromWatching() {
+        assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/.oz-update-123/content/OZGPS")));
+        assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS.oz-backup/settings.properties")));
+        assertFalse(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS/settings.properties")));
     }
 }

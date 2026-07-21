@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.23.4] - 2026-07-21 | Windows plugin updates
+
+- fix: exclude temporary update and backup directories from the plugin file watcher to avoid Windows sharing violations during plugin replacement
+
 ## [0.23.3] - 2026-07-21 | Plugin update diagnostics
 
 - fix: preserve the original plugin-installation error when Windows cannot immediately remove the temporary staging directory

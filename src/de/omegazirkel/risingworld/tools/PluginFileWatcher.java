@@ -55,6 +55,7 @@ public class PluginFileWatcher implements AutoCloseable {
         Files.walkFileTree(start, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                if (isTransientUpdatePath(dir)) return FileVisitResult.SKIP_SUBTREE;
                 register(dir);
                 return FileVisitResult.CONTINUE;
             }
@@ -62,6 +63,7 @@ public class PluginFileWatcher implements AutoCloseable {
     }
 
     private void register(Path dir) throws IOException {
+        if (isTransientUpdatePath(dir)) return;
         WatchKey key = dir.register(watchService,
                 StandardWatchEventKinds.ENTRY_CREATE,
                 StandardWatchEventKinds.ENTRY_MODIFY,
@@ -91,6 +93,7 @@ public class PluginFileWatcher implements AutoCloseable {
                     WatchEvent<Path> ev = (WatchEvent<Path>) event;
                     Path name = ev.context();
                     Path child = dir.resolve(name);
+                    if (isTransientUpdatePath(child)) continue;
 
                     // if directory was registered re-register recursive
                     if (kind == StandardWatchEventKinds.ENTRY_CREATE) {
@@ -165,6 +168,15 @@ public class PluginFileWatcher implements AutoCloseable {
                 logger().fatal(operation + ": " + e.getMessage());
             }
         });
+    }
+
+    static boolean isTransientUpdatePath(Path path) {
+        if (path == null) return false;
+        for (Path segment : path) {
+            String name = segment.toString().toLowerCase(Locale.ROOT);
+            if (name.startsWith(".oz-update-") || name.endsWith(".oz-backup")) return true;
+        }
+        return false;
     }
 
     @Override
