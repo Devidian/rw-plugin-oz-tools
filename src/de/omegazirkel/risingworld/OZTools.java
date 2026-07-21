@@ -22,6 +22,7 @@ import de.omegazirkel.risingworld.tools.PluginUpdateService;
 import de.omegazirkel.risingworld.tools.PlayerSettings;
 import de.omegazirkel.risingworld.tools.ServerThreadDispatcher;
 import de.omegazirkel.risingworld.tools.ThreadDiagnostics;
+import de.omegazirkel.risingworld.tools.ToolsPlayerPreferences;
 import de.omegazirkel.risingworld.tools.WSClientEndpoint;
 import de.omegazirkel.risingworld.tools.db.SQLiteConnectionFactory;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
@@ -36,6 +37,7 @@ import de.omegazirkel.risingworld.tools.ui.SharedIndicatorManager;
 import de.omegazirkel.risingworld.tools.ui.ToolsPluginInfoStatusProvider;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginData;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginSettings;
+import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginSettingsPanel;
 import net.risingworld.api.Plugin;
 import net.risingworld.api.Server;
 import net.risingworld.api.events.EventMethod;
@@ -104,6 +106,11 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     public static PluginUpdateService.Result pluginUpdateResult(String pluginName) {
         PluginUpdateService service = activePluginUpdateService;
         return service == null ? null : service.results().get(pluginName);
+    }
+
+    /** Resolves the configured player language for all OZ plugin translations. */
+    public static String getPlayerLanguage(Player player) {
+        return ToolsPlayerPreferences.language(player);
     }
 
     public static void installPluginUpdate(String pluginName, Player player, Runnable onStateChanged) {
@@ -358,6 +365,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
     @EventMethod
     public void onPlayerUITextFieldChange(PlayerUITextFieldChangeEvent event) {
         AdminPluginSettingsPanel.handleTextFieldChange(event);
+        ToolsPlayerPluginSettingsPanel.handleTextFieldChange(event);
     }
 
     @EventMethod

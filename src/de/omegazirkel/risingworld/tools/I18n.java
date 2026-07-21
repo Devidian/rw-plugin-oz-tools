@@ -126,7 +126,7 @@ public class I18n {
      * @return
      */
     public String get(String key, Player player) {
-        return get(key, player.getSystemLanguage());
+        return get(key, OZTools.getPlayerLanguage(player));
     }
 
     /**

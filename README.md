@@ -71,12 +71,13 @@ their owner, purpose, creation, start, and end lifecycle.
 
 ## Plugin translation (i18n)
 
-This feature can be used to translate your plugin based on the current users language. Every player will see the plugin in his system language as long as the translation file exists.
+This feature can be used to translate your plugin based on the current user's configured language. Players can choose their system language, Rising World's game language, or a custom language code in the OZ Tools settings.
 
 ### Integration
 
 ```java
 import de.omegazirkel.risingworld.tools.I18n;
+import de.omegazirkel.risingworld.OZTools;
 
 public class NewPlugin extends Plugin{
 
@@ -92,7 +93,7 @@ public class NewPlugin extends Plugin{
     public void onPlayerSpawn(PlayerSpawnEvent event) {
         if (s.sendPluginWelcome) {
             Player player = event.getPlayer();
-            String lang = player.getSystemLanguage();
+            String lang = OZTools.getPlayerLanguage(player);
             player.sendTextMessage(t.get("TC_MSG_PLUGIN_WELCOME", lang)
                     .replace("PH_PLUGIN_NAME", getDescription("name"))
                     .replace("PH_PLUGIN_VERSION", getDescription("version")));
@@ -100,6 +101,8 @@ public class NewPlugin extends Plugin{
     }
 }
 ```
+
+Use `OZTools.getPlayerLanguage(player)` whenever a plugin needs the language code directly. `I18n#get(key, player)` resolves the same preference automatically.
 
 ### Translation files
 

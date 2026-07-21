@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.23.5] - 2026-07-21 | Player language preferences
+
+- feat: let players choose system, game, or custom language codes through OZ Tools
+- feat: expose `OZTools.getPlayerLanguage(player)` as the shared language resolver for OZ plugins
+
 ## [0.23.4] - 2026-07-21 | Windows plugin updates
 
 - fix: exclude temporary update and backup directories from the plugin file watcher to avoid Windows sharing violations during plugin replacement

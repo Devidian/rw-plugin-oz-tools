@@ -90,4 +90,14 @@ public class PluginUpdateServiceTest {
         assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS.oz-backup/settings.properties")));
         assertFalse(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS/settings.properties")));
     }
+
+    @Test
+    public void normalizesConfiguredPlayerLanguageValues() {
+        assertEquals(ToolsPlayerPreferences.LANGUAGE_SOURCE_SYSTEM,
+                ToolsPlayerPreferences.normalizeLanguageSource("unexpected"));
+        assertEquals(ToolsPlayerPreferences.LANGUAGE_SOURCE_GAME,
+                ToolsPlayerPreferences.normalizeLanguageSource("GAME"));
+        assertEquals("de", ToolsPlayerPreferences.normalizeLanguageCode("de-DE"));
+        assertEquals("en", ToolsPlayerPreferences.normalizeLanguageCode("123"));
+    }
 }

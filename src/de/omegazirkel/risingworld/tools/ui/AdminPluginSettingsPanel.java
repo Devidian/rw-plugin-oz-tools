@@ -418,7 +418,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         if (textOrKey == null || textOrKey.isBlank()) {
             return "";
         }
-        return pluginI18n().get(textOrKey, uiPlayer.getSystemLanguage());
+        return pluginI18n().get(textOrKey, uiPlayer);
     }
 
     private String settingText(AdminSettingsEntry entry, String suffix, String fallback) {
