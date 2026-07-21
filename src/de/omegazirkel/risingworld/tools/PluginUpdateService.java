@@ -147,7 +147,14 @@ public final class PluginUpdateService implements AutoCloseable {
                     if (Files.exists(backup)) Files.move(backup, target, StandardCopyOption.ATOMIC_MOVE);
                     throw swapFailure;
                 }
-            } finally { deleteTree(staging); }
+            } finally {
+                try {
+                    deleteTree(staging);
+                } catch (IOException cleanupFailure) {
+                    OZTools.logger().warn("Could not clean plugin update staging directory " + staging + ": "
+                            + cleanupFailure.getMessage());
+                }
+            }
         } catch (Exception ex) {
             if (previous != null) updateResult(pluginName, previous);
             OZTools.logger().error("Plugin installation failed for " + pluginName + ": " + ex.getMessage());
@@ -230,9 +237,13 @@ public final class PluginUpdateService implements AutoCloseable {
             return list.size() == 1 && Files.isDirectory(list.get(0)) ? list.get(0) : content;
         }
     }
-    private static void deleteTree(Path path) throws IOException {
+    static void deleteTree(Path path) throws IOException {
         if (path == null || !Files.exists(path)) return;
-        try (var paths = Files.walk(path)) { paths.sorted(java.util.Comparator.reverseOrder()).forEach(p -> { try { Files.deleteIfExists(p); } catch (IOException ex) { throw new java.io.UncheckedIOException(ex); } }); }
+        try (var paths = Files.walk(path)) {
+            for (Path entry : paths.sorted(java.util.Comparator.reverseOrder()).toList()) {
+                Files.deleteIfExists(entry);
+            }
+        }
     }
 
     public void checkPluginAsync(String pluginName, Consumer<Result> completed) {

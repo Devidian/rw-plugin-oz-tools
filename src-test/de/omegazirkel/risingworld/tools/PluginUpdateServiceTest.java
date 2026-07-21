@@ -1,6 +1,7 @@
 package de.omegazirkel.risingworld.tools;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
@@ -68,5 +69,17 @@ public class PluginUpdateServiceTest {
         assertEquals("wal", Files.readString(replacement.resolve("players.db-wal")));
         assertEquals("shops", Files.readString(replacement.resolve("shop-zones.json")));
         assertEquals("do-not-copy", Files.readString(replacement.resolve("readme.txt")));
+    }
+
+    @Test
+    public void deletesNestedStagingTree() throws Exception {
+        Path staging = Files.createTempDirectory("oz-update-");
+        Path nestedFile = staging.resolve("content/OZAdminUtils/plugin.jar");
+        Files.createDirectories(nestedFile.getParent());
+        Files.writeString(nestedFile, "plugin");
+
+        PluginUpdateService.deleteTree(staging);
+
+        assertFalse(Files.exists(staging));
     }
 }

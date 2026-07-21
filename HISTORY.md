@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.23.3] - 2026-07-21 | Plugin update diagnostics
+
+- fix: preserve the original plugin-installation error when Windows cannot immediately remove the temporary staging directory
+
 ## [0.23.2] - 2026-07-21 | Batch update selection
 
 - fix: exclude OZ catalogue plugins that are not installed from the combined update action
