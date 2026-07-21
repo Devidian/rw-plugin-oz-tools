@@ -522,7 +522,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     private List<String> pendingUpdates() {
         List<String> pending = new ArrayList<>();
         for (String pluginLabel : pluginLabels()) {
-            if (updateAvailable(pluginLabel) || installAvailable(pluginLabel)) {
+            if (updateAvailable(pluginLabel)) {
                 pending.add(pluginLabel);
             }
         }

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.23.2] - 2026-07-21 | Batch update selection
+
+- fix: exclude OZ catalogue plugins that are not installed from the combined update action
+
 ## [0.23.1] - 2026-07-20 | Batch update usability
 
 - feat: install multiple pending plugin updates serially with one reload after completion

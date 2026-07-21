@@ -140,8 +140,7 @@ public class OZTools extends Plugin implements Listener, FileChangeListener {
         List<String> pending = pluginNames.stream()
                 .filter(name -> {
                     PluginUpdateService.Result result = pluginUpdateResult(name);
-                    return result != null && (result.state() == PluginUpdateService.State.UPDATE_AVAILABLE
-                            || result.state() == PluginUpdateService.State.NOT_INSTALLED);
+                    return result != null && result.state() == PluginUpdateService.State.UPDATE_AVAILABLE;
                 }).toList();
         if (pending.isEmpty()) return;
         installPluginUpdatesNext(service, tools, pending, 0, player, onStateChanged);
