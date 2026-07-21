@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.23.6] - 2026-07-21 | Update UI translations
+
+- fix: translate all player-facing plugin update actions and confirmations
+
 ## [0.23.5] - 2026-07-21 | Player language preferences
 
 - feat: let players choose system, game, or custom language codes through OZ Tools

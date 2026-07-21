@@ -153,7 +153,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         if (uiPlayer.isAdmin()) {
             List<String> pendingUpdates = pendingUpdates();
             if (pendingUpdates.size() >= 2) {
-                AdvancedButton updateAllButton = AdvancedButtonFactory.danger("Alle aktualisieren", event ->
+                AdvancedButton updateAllButton = AdvancedButtonFactory.danger(t().get("TC_PLUGIN_UPDATE_ALL_ACTION", uiPlayer), event ->
                         showAllUpdatesConfirmation(pendingUpdates));
                 updateAllButton.setPivot(Pivot.LowerLeft);
                 updateAllButton.style.position.set(Position.Absolute);
@@ -168,7 +168,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
                 updateAllButton.setHoverBorderColor(0xF2C766FF);
                 navSidebar.addChild(updateAllButton);
             }
-            AdvancedButton checkUpdatesButton = AdvancedButtonFactory.defaultButton("Auf Updates prüfen",
+            AdvancedButton checkUpdatesButton = AdvancedButtonFactory.defaultButton(t().get("TC_PLUGIN_UPDATE_CHECK_ACTION", uiPlayer),
                     event -> OZTools.checkPluginUpdates(uiPlayer, this::updateUI));
             checkUpdatesButton.setPivot(Pivot.LowerLeft);
             checkUpdatesButton.style.position.set(Position.Absolute);
@@ -381,8 +381,10 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         panel.addChild(checkPlugin);
 
         if (updateAvailable(pluginLabel) || installAvailable(pluginLabel) || installing(pluginLabel)) {
-            AdvancedButton updateButton = AdvancedButtonFactory.danger(installing(pluginLabel) ? "Aktualisierung läuft..."
-                    : installAvailable(pluginLabel) ? "Installieren" : "Update", event -> showUpdateConfirmation());
+            AdvancedButton updateButton = AdvancedButtonFactory.danger(installing(pluginLabel)
+                    ? t().get("TC_PLUGIN_UPDATE_INSTALLING", uiPlayer)
+                    : installAvailable(pluginLabel) ? t().get("TC_PLUGIN_UPDATE_INSTALL_ACTION", uiPlayer)
+                            : t().get("TC_PLUGIN_UPDATE_ACTION", uiPlayer), event -> showUpdateConfirmation());
             updateButton.setPivot(Pivot.LowerLeft);
             updateButton.setPosition(0, 94, true);
             updateButton.style.left.set(290, Unit.Pixel);
@@ -487,16 +489,16 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         dialog.setBorderColor(0xD7AE55FF);
         addChild(dialog);
 
-        UILabel title = new UILabel(install ? "Plugin installieren" : "Plugin-Update installieren");
+        UILabel title = new UILabel(t().get(install ? "TC_PLUGIN_INSTALL_TITLE" : "TC_PLUGIN_UPDATE_INSTALL_TITLE", uiPlayer));
         title.setPivot(Pivot.UpperLeft);
         title.setPosition(20, 18, false);
         title.setSize(380, 28, false);
         title.setFontSize(18);
         title.setFontColor(0xF4F0E6FF);
         dialog.addChild(title);
-        UILabel message = new UILabel(install ? selectedPlugin + " wird installiert. Anschließend werden die Plugins neu geladen."
-                : selectedPlugin + " wird von v" + result.installedVersion() + " auf v" + result.latestVersion()
-                        + " aktualisiert. Anschließend werden die Plugins neu geladen.");
+        UILabel message = new UILabel(t().get(install ? "TC_PLUGIN_INSTALL_MESSAGE" : "TC_PLUGIN_UPDATE_INSTALL_MESSAGE", uiPlayer)
+                .replace("PH_PLUGIN_NAME", selectedPlugin).replace("PH_INSTALLED_VERSION", result.installedVersion())
+                .replace("PH_LATEST_VERSION", result.latestVersion()));
         message.setPivot(Pivot.UpperLeft);
         message.setPosition(20, 58, false);
         message.setSize(380, 68, false);
@@ -504,12 +506,13 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         message.setTextWrap(true);
         message.setFontColor(0xE0D8C8FF);
         dialog.addChild(message);
-        AdvancedButton cancel = AdvancedButtonFactory.cancel("Abbrechen", event -> removeChild(dialog));
+        AdvancedButton cancel = AdvancedButtonFactory.cancel(t().get("TC_BTN_CANCEL", uiPlayer), event -> removeChild(dialog));
         cancel.setPivot(Pivot.UpperLeft);
         cancel.setPosition(24, 154, false);
         cancel.setSize(140, 32, false);
         dialog.addChild(cancel);
-        AdvancedButton confirm = AdvancedButtonFactory.danger(install ? "Installieren" : "Update installieren", event -> {
+        AdvancedButton confirm = AdvancedButtonFactory.danger(t().get(
+                install ? "TC_PLUGIN_UPDATE_INSTALL_ACTION" : "TC_PLUGIN_UPDATE_INSTALL_CONFIRM", uiPlayer), event -> {
             removeChild(dialog);
             OZTools.installPluginUpdate(selectedPlugin, uiPlayer, this::updateUI);
         });
@@ -540,7 +543,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         dialog.setBorderColor(0xD7AE55FF);
         addChild(dialog);
 
-        UILabel title = new UILabel("Alle Plugin-Updates installieren");
+        UILabel title = new UILabel(t().get("TC_PLUGIN_UPDATE_ALL_TITLE", uiPlayer));
         title.setPivot(Pivot.UpperLeft);
         title.setPosition(20, 18, false);
         title.setSize(520, 28, false);
@@ -548,8 +551,8 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         title.setFontColor(0xF4F0E6FF);
         dialog.addChild(title);
 
-        UILabel message = new UILabel(pluginLabels.size()
-                + " Plugins werden nacheinander aktualisiert. Die Plugins werden erst danach einmal neu geladen.");
+        UILabel message = new UILabel(t().get("TC_PLUGIN_UPDATE_ALL_MESSAGE", uiPlayer)
+                .replace("PH_PLUGIN_COUNT", String.valueOf(pluginLabels.size())));
         message.setPivot(Pivot.UpperLeft);
         message.setPosition(20, 50, false);
         message.setSize(520, 34, false);
@@ -584,12 +587,12 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         notes.addChild(noteText);
         dialog.addChild(notes);
 
-        AdvancedButton cancel = AdvancedButtonFactory.cancel("Abbrechen", event -> removeChild(dialog));
+        AdvancedButton cancel = AdvancedButtonFactory.cancel(t().get("TC_BTN_CANCEL", uiPlayer), event -> removeChild(dialog));
         cancel.setPivot(Pivot.UpperLeft);
         cancel.setPosition(24, 322, false);
         cancel.setSize(150, 32, false);
         dialog.addChild(cancel);
-        AdvancedButton confirm = AdvancedButtonFactory.danger("Alle aktualisieren", event -> {
+        AdvancedButton confirm = AdvancedButtonFactory.danger(t().get("TC_PLUGIN_UPDATE_ALL_ACTION", uiPlayer), event -> {
             removeChild(dialog);
             OZTools.installPluginUpdates(pluginLabels, uiPlayer, this::updateUI);
         });
