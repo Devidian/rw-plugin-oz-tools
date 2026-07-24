@@ -44,6 +44,58 @@ public class PluginUpdateServiceTest {
     }
 
     @Test
+    public void bundledCatalogueIncludesBosses() {
+        assertTrue(PluginUpdateService.managedPluginNames().contains("OZ - Bosses"));
+    }
+
+    @Test
+    public void parsesStrictOzPluginCatalogue() throws Exception {
+        var catalog = PluginUpdateService.parseCatalog("""
+                {
+                  "schemaVersion": 1,
+                  "plugins": [
+                    {
+                      "name": "OZ - Bosses",
+                      "repository": "Devidian/rw-plugin-oz-bosses",
+                      "directory": "OZBosses"
+                    }
+                  ]
+                }
+                """);
+
+        assertEquals("Devidian/rw-plugin-oz-bosses", catalog.get("OZ - Bosses").repository());
+        assertEquals("OZBosses", catalog.get("OZ - Bosses").directory());
+    }
+
+    @Test
+    public void rejectsExternalOrUnsafeCatalogueEntries() throws Exception {
+        assertInvalidCatalogue("""
+                {
+                  "schemaVersion": 1,
+                  "plugins": [
+                    {
+                      "name": "Unsafe",
+                      "repository": "OtherOwner/plugin",
+                      "directory": "Unsafe"
+                    }
+                  ]
+                }
+                """);
+        assertInvalidCatalogue("""
+                {
+                  "schemaVersion": 1,
+                  "plugins": [
+                    {
+                      "name": "OZ - Bosses",
+                      "repository": "Devidian/rw-plugin-oz-bosses",
+                      "directory": "../OZBosses"
+                    }
+                  ]
+                }
+                """);
+    }
+
+    @Test
     public void rejectsReleasesWithoutZipAsset() throws Exception {
         try {
             PluginUpdateService.selectZipAsset(JsonParser.parseString("{\"assets\":[]}").getAsJsonObject());
@@ -99,5 +151,14 @@ public class PluginUpdateServiceTest {
                 ToolsPlayerPreferences.normalizeLanguageSource("GAME"));
         assertEquals("de", ToolsPlayerPreferences.normalizeLanguageCode("de-DE"));
         assertEquals("en", ToolsPlayerPreferences.normalizeLanguageCode("123"));
+    }
+
+    private static void assertInvalidCatalogue(String json) {
+        try {
+            PluginUpdateService.parseCatalog(json);
+            fail("Expected invalid plugin catalogue to fail");
+        } catch (IOException expected) {
+            assertTrue(expected.getMessage().contains("catalogue"));
+        }
     }
 }

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [0.23.9] - 2026-07-24 | Trusted plugin catalogue
+
+- feat: load the trusted OZ plugin catalogue from the Tools repository with a validated bundled fallback
+- feat: make OZ Bosses available for installation through the plugin manager
+- security: restrict default update trust to exact catalogue repositories instead of every Devidian repository
+
 ## [0.23.8] - 2026-07-24 | Shared optional bridges
 
 - feat: provide central reflection-only Discord, Wallet, and Mail bridges for OZ plugins

@@ -13,10 +13,14 @@ This plugin has a set of utilities and libs used by different Plugins.
 - SQLite DB Initializer (per Plugin)
 - Player database lookup helper for recently seen players, persisted exact-name lookup, and best-effort player records
 - Opt-in JVM thread lifecycle diagnostics and reusable diagnostic thread factory
-- Opt-in public GitHub release checks for installed plugins, restricted to OZ
-  repositories by default; administrators can manually check and confirm an
-  available update from the plugin settings overlay. Checks run serially with a
-  configurable three-second request interval to avoid GitHub API rate limits.
+- Opt-in public GitHub release checks for installed plugins, restricted by
+  default to the maintained
+  [`plugin-catalog.json`](src/main/resources/plugin-catalog.json). OZ Tools
+  refreshes that catalogue from this repository before update checks, so new
+  trusted plugins do not require a Tools release. Administrators can manually
+  check, install, and update catalogue plugins from the settings overlay.
+  Release checks run serially with a configurable three-second request interval
+  to avoid GitHub API rate limits.
 
 ## External libs
 

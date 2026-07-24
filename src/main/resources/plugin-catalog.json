@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "plugins": [
+    {
+      "name": "OZ - Tools",
+      "repository": "Devidian/rw-plugin-oz-tools",
+      "directory": "OZTools"
+    },
+    {
+      "name": "OZ - Marketplace",
+      "repository": "Devidian/rw-plugin-oz-marketplace",
+      "directory": "OZMarketplace"
+    },
+    {
+      "name": "OZ - Wallet",
+      "repository": "Devidian/rw-plugin-oz-wallet",
+      "directory": "OZWallet"
+    },
+    {
+      "name": "OZ - Shop",
+      "repository": "Devidian/rw-plugin-oz-shop",
+      "directory": "OZShop"
+    },
+    {
+      "name": "OZ - GPS",
+      "repository": "Devidian/rw-plugin-oz-gps",
+      "directory": "OZGPS"
+    },
+    {
+      "name": "OZ - Land Claim",
+      "repository": "Devidian/rw-plugin-oz-land-claim",
+      "directory": "OZLandClaim"
+    },
+    {
+      "name": "OZ - Rewards",
+      "repository": "Devidian/rw-plugin-oz-rewards",
+      "directory": "OZRewards"
+    },
+    {
+      "name": "OZ - Mail",
+      "repository": "Devidian/rw-plugin-oz-mail",
+      "directory": "OZMail"
+    },
+    {
+      "name": "OZ - Admin Utils",
+      "repository": "Devidian/rw-plugin-oz-admin-utils",
+      "directory": "OZAdminUtils"
+    },
+    {
+      "name": "OZ - Discord Connect",
+      "repository": "Devidian/rw-plugin-oz-discord-connect",
+      "directory": "OZDiscordConnect"
+    },
+    {
+      "name": "OZ - Global Intercom",
+      "repository": "Devidian/rw-plugin-oz-global-intercom",
+      "directory": "OZGlobalIntercom"
+    },
+    {
+      "name": "OZ - Bosses",
+      "repository": "Devidian/rw-plugin-oz-bosses",
+      "directory": "OZBosses"
+    }
+  ]
+}

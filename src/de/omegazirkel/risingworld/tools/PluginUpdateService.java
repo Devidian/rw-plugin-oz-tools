@@ -6,10 +6,13 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.sql.Connection;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +24,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -34,21 +38,13 @@ public final class PluginUpdateService implements AutoCloseable {
     public record Result(String installedVersion, String latestVersion, String releaseUrl, String releaseNotes,
             State state, long checkedAtEpochMillis) { }
     private record ReleaseInfo(String version, String url, String notes) { }
-    private record CatalogEntry(String repository, String directory) { }
-    private static final Map<String, CatalogEntry> CATALOG = Map.ofEntries(
-            Map.entry("OZ - Tools", new CatalogEntry("Devidian/rw-plugin-oz-tools", "OZTools")),
-            Map.entry("OZ - Marketplace", new CatalogEntry("Devidian/rw-plugin-oz-marketplace", "OZMarketplace")),
-            Map.entry("OZ - Wallet", new CatalogEntry("Devidian/rw-plugin-oz-wallet", "OZWallet")),
-            Map.entry("OZ - Shop", new CatalogEntry("Devidian/rw-plugin-oz-shop", "OZShop")),
-            Map.entry("OZ - GPS", new CatalogEntry("Devidian/rw-plugin-oz-gps", "OZGPS")),
-            Map.entry("OZ - Land Claim", new CatalogEntry("Devidian/rw-plugin-oz-land-claim", "OZLandClaim")),
-            Map.entry("OZ - Rewards", new CatalogEntry("Devidian/rw-plugin-oz-rewards", "OZRewards")),
-            Map.entry("OZ - Mail", new CatalogEntry("Devidian/rw-plugin-oz-mail", "OZMail")),
-            Map.entry("OZ - Admin Utils", new CatalogEntry("Devidian/rw-plugin-oz-admin-utils", "OZAdminUtils")),
-            Map.entry("OZ - Discord Connect", new CatalogEntry("Devidian/rw-plugin-oz-discord-connect", "OZDiscordConnect")),
-            Map.entry("OZ - Global Intercom", new CatalogEntry("Devidian/rw-plugin-oz-global-intercom", "OZGlobalIntercom")));
+    record CatalogEntry(String repository, String directory) { }
 
     private static final String GITHUB_API_PREFIX = "https://api.github.com/repos/";
+    private static final URI REMOTE_CATALOG_URI = URI.create(
+            "https://raw.githubusercontent.com/Devidian/rw-plugin-oz-tools/main/src/main/resources/plugin-catalog.json");
+    private static final int MAX_CATALOG_BYTES = 64 * 1024;
+    private static volatile Map<String, CatalogEntry> catalog = loadBundledCatalog();
     private final OZTools tools;
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8))
             .followRedirects(HttpClient.Redirect.NORMAL).build();
@@ -100,24 +96,26 @@ public final class PluginUpdateService implements AutoCloseable {
     }
 
     private void installLatest(String pluginName, Runnable onSuccess, Consumer<String> onFailure, Result previous) {
+        refreshCatalog();
         Plugin plugin = null;
         for (Plugin candidate : tools.getAllPlugins()) {
             if (pluginName.equals(candidate.getDescription("name"))) { plugin = candidate; break; }
         }
-        CatalogEntry catalog = CATALOG.get(pluginName);
-        if (plugin == null && catalog == null) {
+        CatalogEntry catalogEntry = catalog.get(pluginName);
+        if (plugin == null && catalogEntry == null) {
             failInstallation(pluginName, previous, onFailure, "unknown-plugin");
             return;
         }
-        String repository = plugin == null ? catalog.repository() : repositoryFrom(plugin.getDescription("website"));
-        if (repository == null && catalog != null) repository = catalog.repository();
-        if (repository == null || (!PluginSettings.getInstance().allowExternalPluginRepositories && !repository.startsWith("Devidian/"))) {
+        String repository = catalogEntry != null ? catalogEntry.repository()
+                : repositoryFrom(plugin.getDescription("website"));
+        if (!isTrustedRepository(pluginName, repository)) {
             failInstallation(pluginName, previous, onFailure, "untrusted-release-source");
             return;
         }
         try {
             String assetUrl = selectZipAsset(releaseJson(repository));
-            Path target = plugin == null ? Path.of(tools.getPath()).toAbsolutePath().normalize().getParent().resolve(catalog.directory())
+            Path target = plugin == null ? Path.of(tools.getPath()).toAbsolutePath().normalize().getParent()
+                    .resolve(catalogEntry.directory())
                     : Path.of(plugin.getPath()).toAbsolutePath().normalize();
             Path parent = target.getParent();
             if (parent == null || !Files.isDirectory(parent)) throw new IOException("Invalid plugin path: " + target);
@@ -249,6 +247,7 @@ public final class PluginUpdateService implements AutoCloseable {
     public void checkPluginAsync(String pluginName, Consumer<Result> completed) {
         if (pluginName == null || pluginName.isBlank()) return;
         executor.execute(() -> {
+            refreshCatalog();
             Map<String, Result> checked = new LinkedHashMap<>(results);
             CheckSource source = checkSource(pluginName);
             if (source == null) return;
@@ -258,26 +257,22 @@ public final class PluginUpdateService implements AutoCloseable {
     }
 
     private void checkInstalled(Consumer<String> checkedPlugin, Consumer<String> resultUpdated, Consumer<Boolean> completed) {
+        refreshCatalog();
+        Map<String, CatalogEntry> catalogSnapshot = catalog;
         Map<String, Result> checked = new LinkedHashMap<>(results);
         Map<String, Plugin> installed = new LinkedHashMap<>();
         for (Plugin plugin : tools.getAllPlugins()) installed.put(plugin.getDescription("name"), plugin);
         boolean firstRequest = true;
-        for (Map.Entry<String, CatalogEntry> catalogEntry : CATALOG.entrySet()) {
+        for (Map.Entry<String, CatalogEntry> catalogEntry : catalogSnapshot.entrySet()) {
             String name = catalogEntry.getKey();
             Plugin plugin = installed.remove(name);
-            String repository = plugin == null ? catalogEntry.getValue().repository() : repositoryFrom(plugin.getDescription("website"));
-            if (repository == null) repository = catalogEntry.getValue().repository();
+            String repository = catalogEntry.getValue().repository();
             String installedVersion = plugin == null ? "N/A" : plugin.getDescription("version");
-            if (repository == null) {
-                publishResult(name, new Result(installedVersion, "", "", "", State.ERROR, System.currentTimeMillis()), checked, resultUpdated);
-                continue;
-            }
             firstRequest = checkRepository(name, repository, installedVersion, plugin == null, checked, checkedPlugin, resultUpdated, firstRequest);
         }
         for (Plugin plugin : installed.values()) {
             String repository = repositoryFrom(plugin.getDescription("website"));
-            if (repository == null || (!PluginSettings.getInstance().allowExternalPluginRepositories
-                    && !repository.startsWith("Devidian/"))) continue;
+            if (!isTrustedRepository(plugin.getDescription("name"), repository)) continue;
             firstRequest = checkRepository(plugin.getDescription("name"), repository, plugin.getDescription("version"), false,
                     checked, checkedPlugin, resultUpdated, firstRequest);
         }
@@ -288,7 +283,7 @@ public final class PluginUpdateService implements AutoCloseable {
 
     private boolean checkRepository(String name, String repository, String installedVersion, boolean notInstalled,
             Map<String, Result> checked, Consumer<String> checkedPlugin, Consumer<String> resultUpdated, boolean firstRequest) {
-        if (!PluginSettings.getInstance().allowExternalPluginRepositories && !repository.startsWith("Devidian/")) {
+        if (!isTrustedRepository(name, repository)) {
             return firstRequest;
         }
         try {
@@ -314,15 +309,96 @@ public final class PluginUpdateService implements AutoCloseable {
 
     private record CheckSource(String repository, String installedVersion, boolean notInstalled) { }
     private CheckSource checkSource(String name) {
-        CatalogEntry catalog = CATALOG.get(name);
+        CatalogEntry catalogEntry = catalog.get(name);
         for (Plugin plugin : tools.getAllPlugins()) {
             if (name.equals(plugin.getDescription("name"))) {
-                String repository = repositoryFrom(plugin.getDescription("website"));
-                if (repository == null && catalog != null) repository = catalog.repository();
+                String repository = catalogEntry != null ? catalogEntry.repository()
+                        : repositoryFrom(plugin.getDescription("website"));
                 return repository == null ? null : new CheckSource(repository, plugin.getDescription("version"), false);
             }
         }
-        return catalog == null ? null : new CheckSource(catalog.repository(), "N/A", true);
+        return catalogEntry == null ? null : new CheckSource(catalogEntry.repository(), "N/A", true);
+    }
+
+    private boolean isTrustedRepository(String pluginName, String repository) {
+        if (repository == null) return false;
+        CatalogEntry entry = catalog.get(pluginName);
+        return (entry != null && entry.repository().equals(repository))
+                || PluginSettings.getInstance().allowExternalPluginRepositories;
+    }
+
+    private void refreshCatalog() {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(REMOTE_CATALOG_URI).timeout(Duration.ofSeconds(12))
+                    .header("Accept", "application/json").GET().build();
+            HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            try (InputStream body = response.body()) {
+                if (response.statusCode() != 200) throw new IOException("GitHub HTTP " + response.statusCode());
+                catalog = parseCatalog(readBounded(body));
+            }
+        } catch (Exception ex) {
+            OZTools.logger().warn("Could not refresh trusted plugin catalogue; using the last valid catalogue: "
+                    + ex.getMessage());
+        }
+    }
+
+    private static Map<String, CatalogEntry> loadBundledCatalog() {
+        try (InputStream resource = PluginUpdateService.class.getResourceAsStream("/plugin-catalog.json")) {
+            if (resource == null) throw new IOException("Bundled plugin catalogue is missing");
+            return parseCatalog(readBounded(resource));
+        } catch (IOException ex) {
+            throw new IllegalStateException("Could not load bundled plugin catalogue", ex);
+        }
+    }
+
+    private static String readBounded(InputStream input) throws IOException {
+        byte[] data = input.readNBytes(MAX_CATALOG_BYTES + 1);
+        if (data.length > MAX_CATALOG_BYTES) throw new IOException("Plugin catalogue exceeds 64 KiB");
+        return new String(data, StandardCharsets.UTF_8);
+    }
+
+    static Map<String, CatalogEntry> parseCatalog(String json) throws IOException {
+        try {
+            JsonObject root = JsonParser.parseString(json).getAsJsonObject();
+            if (!root.has("schemaVersion") || root.get("schemaVersion").getAsInt() != 1) {
+                throw new IOException("Unsupported plugin catalogue schema");
+            }
+            JsonArray plugins = root.getAsJsonArray("plugins");
+            if (plugins == null || plugins.isEmpty() || plugins.size() > 100) {
+                throw new IOException("Plugin catalogue must contain between 1 and 100 entries");
+            }
+            Map<String, CatalogEntry> parsed = new LinkedHashMap<>();
+            Set<String> repositories = new HashSet<>();
+            Set<String> directories = new HashSet<>();
+            for (var element : plugins) {
+                if (!element.isJsonObject()) throw new IOException("Plugin catalogue entry must be an object");
+                JsonObject entry = element.getAsJsonObject();
+                String name = requiredCatalogString(entry, "name");
+                String repository = requiredCatalogString(entry, "repository");
+                String directory = requiredCatalogString(entry, "directory");
+                if (name.length() > 80 || !name.matches("[A-Za-z0-9 ._&'()-]+")
+                        || !repository.matches("Devidian/rw-plugin-oz-[A-Za-z0-9][A-Za-z0-9._-]*")
+                        || !directory.matches("[A-Za-z0-9][A-Za-z0-9._-]*")) {
+                    throw new IOException("Invalid plugin catalogue entry: " + name);
+                }
+                if (parsed.putIfAbsent(name, new CatalogEntry(repository, directory)) != null
+                        || !repositories.add(repository) || !directories.add(directory)) {
+                    throw new IOException("Duplicate plugin catalogue entry: " + name);
+                }
+            }
+            return Collections.unmodifiableMap(parsed);
+        } catch (RuntimeException ex) {
+            throw new IOException("Invalid plugin catalogue JSON", ex);
+        }
+    }
+
+    private static String requiredCatalogString(JsonObject entry, String key) throws IOException {
+        if (!entry.has(key) || !entry.get(key).isJsonPrimitive()) {
+            throw new IOException("Plugin catalogue entry is missing " + key);
+        }
+        String value = entry.get(key).getAsString().trim();
+        if (value.isEmpty()) throw new IOException("Plugin catalogue entry has empty " + key);
+        return value;
     }
 
     private JsonObject releaseJson(String repository) throws Exception {
@@ -355,7 +431,7 @@ public final class PluginUpdateService implements AutoCloseable {
                 ? parts[0] + "/" + parts[1] : null;
     }
 
-    public static java.util.Set<String> managedPluginNames() { return CATALOG.keySet(); }
+    public static Set<String> managedPluginNames() { return catalog.keySet(); }
 
     static int compare(String left, String right) {
         String[] a = left.replaceFirst("^[vV]", "").split("[.-]");
