@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## [0.23.10] - 2026-07-24 | Catalogue initialization fallback
+
+- fix: prevent bundled catalogue resource failures from aborting OZ Tools class initialization during plugin reloads
+- fix: resolve the bundled catalogue through the active Rising World plugin class loader and retain remote catalogue checks as a safe fallback
+
 ## [0.23.9] - 2026-07-24 | Trusted plugin catalogue
 
 - feat: load the trusted OZ plugin catalogue from the Tools repository with a validated bundled fallback

@@ -44,7 +44,8 @@ public final class PluginUpdateService implements AutoCloseable {
     private static final URI REMOTE_CATALOG_URI = URI.create(
             "https://raw.githubusercontent.com/Devidian/rw-plugin-oz-tools/main/src/main/resources/plugin-catalog.json");
     private static final int MAX_CATALOG_BYTES = 64 * 1024;
-    private static volatile Map<String, CatalogEntry> catalog = loadBundledCatalog();
+    private static volatile Map<String, CatalogEntry> catalog = Map.of();
+    private static volatile String bundledCatalogError;
     private final OZTools tools;
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8))
             .followRedirects(HttpClient.Redirect.NORMAL).build();
@@ -57,6 +58,10 @@ public final class PluginUpdateService implements AutoCloseable {
 
     public PluginUpdateService(OZTools tools, Connection connection) {
         this.tools = tools;
+        if (!ensureBundledCatalog()) {
+            OZTools.logger().error("Could not load bundled trusted plugin catalogue; remote checks remain available: "
+                    + bundledCatalogError);
+        }
         this.store = new PluginUpdateStore(connection);
         this.results = Collections.unmodifiableMap(store.load());
     }
@@ -336,18 +341,36 @@ public final class PluginUpdateService implements AutoCloseable {
                 if (response.statusCode() != 200) throw new IOException("GitHub HTTP " + response.statusCode());
                 catalog = parseCatalog(readBounded(body));
             }
-        } catch (Exception ex) {
+        } catch (Exception | LinkageError ex) {
             OZTools.logger().warn("Could not refresh trusted plugin catalogue; using the last valid catalogue: "
                     + ex.getMessage());
         }
     }
 
-    private static Map<String, CatalogEntry> loadBundledCatalog() {
-        try (InputStream resource = PluginUpdateService.class.getResourceAsStream("/plugin-catalog.json")) {
+    private static boolean ensureBundledCatalog() {
+        if (!catalog.isEmpty()) return true;
+        synchronized (PluginUpdateService.class) {
+            if (!catalog.isEmpty()) return true;
+            try {
+                catalog = loadBundledCatalog();
+                bundledCatalogError = null;
+                return true;
+            } catch (Exception | LinkageError ex) {
+                bundledCatalogError = ex.getClass().getSimpleName() + ": " + ex.getMessage();
+                return false;
+            }
+        }
+    }
+
+    private static Map<String, CatalogEntry> loadBundledCatalog() throws IOException {
+        ClassLoader loader = PluginUpdateService.class.getClassLoader();
+        InputStream bundledResource = loader == null ? null : loader.getResourceAsStream("plugin-catalog.json");
+        if (bundledResource == null) {
+            bundledResource = PluginUpdateService.class.getResourceAsStream("/plugin-catalog.json");
+        }
+        try (InputStream resource = bundledResource) {
             if (resource == null) throw new IOException("Bundled plugin catalogue is missing");
             return parseCatalog(readBounded(resource));
-        } catch (IOException ex) {
-            throw new IllegalStateException("Could not load bundled plugin catalogue", ex);
         }
     }
 
@@ -431,7 +454,10 @@ public final class PluginUpdateService implements AutoCloseable {
                 ? parts[0] + "/" + parts[1] : null;
     }
 
-    public static Set<String> managedPluginNames() { return catalog.keySet(); }
+    public static Set<String> managedPluginNames() {
+        ensureBundledCatalog();
+        return catalog.keySet();
+    }
 
     static int compare(String left, String right) {
         String[] a = left.replaceFirst("^[vV]", "").split("[.-]");
