@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- feat: provide central reflection-only Discord, Wallet, and Mail bridges for OZ plugins
+
 ## [0.23.7] - 2026-07-24 | Button surface icons
 
 - fix: allow shared advanced buttons to render action icons on their clickable surface
