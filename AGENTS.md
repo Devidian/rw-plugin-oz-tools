@@ -24,6 +24,10 @@ Does not own:
 - Follow `.codex/agents.toml` for local agent roles, task classes, context loading, and escalation.
 - Follow `docs/policies/repository-policy.md` for reusable governance rules.
 - Keep `README.md`, `HISTORY.md`, and `PLANS.md` aligned with behavior or structure changes.
+- Keep the `plugin.yml` entry class as the sole Rising World `Listener` and sole
+  `registerEventListener(...)` target. It may only wire lifecycle, delegate
+  events/settings, and expose thin compatibility facades; reusable runtime,
+  persistence, UI, integrations, and timers belong in thematic classes.
 
 ## Validation
 - Run `mvn -B -DskipTests package` for build-impacting changes.

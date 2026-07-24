@@ -5,6 +5,14 @@
 - Do not lower Maven compiler source, target, or release settings below 20.
 - Runtime/tooling changes must be reflected in `README.md`, `HISTORY.md`, CI, and packaging files when affected.
 
+## Plugin Entry-Point Policy
+- The `plugin.yml` main class is the sole Rising World `Listener` and sole
+  `registerEventListener(...)` target.
+- Keep it limited to lifecycle wiring, settings/event delegation, and thin
+  compatibility facades. Put runtime infrastructure, persistence, UI,
+  integrations, and timers in focused thematic classes that do not implement
+  Rising World's `Listener`.
+
 ## Dependency Policy
 - Keep dependencies minimal.
 - Add external libraries only when technically necessary and compatible with the plugin runtime.
