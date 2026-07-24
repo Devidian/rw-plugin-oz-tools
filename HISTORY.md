@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.23.7] - 2026-07-24 | Button surface icons
+
+- fix: allow shared advanced buttons to render action icons on their clickable surface
+
 ## [0.23.6] - 2026-07-21 | Update UI translations
 
 - fix: translate all player-facing plugin update actions and confirmations

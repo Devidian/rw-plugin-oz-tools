@@ -4,11 +4,13 @@ import java.util.EnumMap;
 import java.util.Map;
 
 import net.risingworld.api.callbacks.Callback;
+import net.risingworld.api.assets.TextureAsset;
 import net.risingworld.api.events.player.ui.PlayerUIElementClickEvent;
 import net.risingworld.api.ui.UIElement;
 import net.risingworld.api.ui.UILabel;
 import net.risingworld.api.ui.style.Pivot;
 import net.risingworld.api.ui.style.TextAnchor;
+import net.risingworld.api.ui.style.ScaleMode;
 
 /**
  * Stable button layout container with independently switchable visual states.
@@ -99,6 +101,12 @@ public abstract class AdvancedBaseButton extends OZUIElement {
 
     public final void setText(String text) {
         label.setText(text == null ? "" : text);
+    }
+
+    /** Applies an icon to the actual clickable surface, above its state background. */
+    public final void setSurfaceIcon(TextureAsset icon) {
+        button.style.backgroundImage.set(icon);
+        button.style.backgroundImageScaleMode.set(ScaleMode.ScaleToFit);
     }
 
     /**
