@@ -2,7 +2,10 @@
 
 ## Unreleased
 
+## [0.23.8] - 2026-07-24 | Shared optional bridges
+
 - feat: provide central reflection-only Discord, Wallet, and Mail bridges for OZ plugins
+- refactor: keep the plugin entry point limited to lifecycle wiring and event delegation
 
 ## [0.23.7] - 2026-07-24 | Button surface icons
 
