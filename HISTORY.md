@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## [0.23.11] - 2026-07-27 | Mail bridge API v2
+
+- feat: extend the optional Mail bridge to API v2 with mailbox-capacity checks and trusted attachments
+- fix: preserve the API v1 text-mail request contract for existing consumers
+
 ## [0.23.10] - 2026-07-24 | Catalogue initialization fallback
 
 - fix: prevent bundled catalogue resource failures from aborting OZ Tools class initialization during plugin reloads

@@ -13,6 +13,7 @@ This plugin has a set of utilities and libs used by different Plugins.
 - SQLite DB Initializer (per Plugin)
 - Player database lookup helper for recently seen players, persisted exact-name lookup, and best-effort player records
 - Opt-in JVM thread lifecycle diagnostics and reusable diagnostic thread factory
+- Reflection-only Mail bridge API v2 for text mail, mailbox capacity, and trusted plugin attachments
 - Opt-in public GitHub release checks for installed plugins, restricted by
   default to the maintained
   [`plugin-catalog.json`](src/main/resources/plugin-catalog.json). OZ Tools
