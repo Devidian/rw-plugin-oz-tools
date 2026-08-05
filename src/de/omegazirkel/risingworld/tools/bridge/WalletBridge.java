@@ -63,6 +63,106 @@ public class WalletBridge {
                 string(field(response, "message")));
     }
 
+    public boolean hasSystemAccountApi() {
+        Plugin wallet = wallet();
+        if (wallet == null) return false;
+        try {
+            wallet.getClass().getMethod("transferPlayerToSystemIdempotent", int.class, String.class, long.class,
+                    String.class, String.class, String.class, String.class);
+            return true;
+        } catch (NoSuchMethodException ex) {
+            return false;
+        }
+    }
+
+    public String worldSystemAccountId() {
+        Object value = call("worldSystemAccountId");
+        return value instanceof String text && !text.isBlank() ? text.trim() : "";
+    }
+
+    public SystemAccountCallResult createSystemAccount(String accountId, String accountType, String displayName,
+            String pluginIdentifier) {
+        return systemAccountResult(call("createSystemAccount",
+                new Class<?>[] { String.class, String.class, String.class, String.class },
+                accountId, accountType, displayName, pluginIdentifier));
+    }
+
+    public SystemAccountCallResult systemAccount(String accountId) {
+        return systemAccountResult(call("systemAccount", new Class<?>[] { String.class }, accountId));
+    }
+
+    public SystemAccountCallResult archiveSystemAccount(String accountId, String pluginIdentifier) {
+        return systemAccountResult(call("archiveSystemAccount", new Class<?>[] { String.class, String.class },
+                accountId, pluginIdentifier));
+    }
+
+    public SystemAccountCallResult updateSystemAccountDisplayName(String accountId, String displayName,
+            String pluginIdentifier) {
+        return systemAccountResult(call("updateSystemAccountDisplayName",
+                new Class<?>[] { String.class, String.class, String.class },
+                accountId, displayName, pluginIdentifier));
+    }
+
+    public WalletTransferCallResult transferPlayerToSystemIdempotent(int payerDbId, String payeeAccountId,
+            long value, String reason, String currencyIdentifier, String pluginIdentifier, String correlationId) {
+        Object response = call("transferPlayerToSystemIdempotent",
+                new Class<?>[] { int.class, String.class, long.class, String.class, String.class, String.class,
+                        String.class },
+                payerDbId, payeeAccountId, value, reason, currencyIdentifier, pluginIdentifier, correlationId);
+        return transferResult(response);
+    }
+
+    public WalletTransferCallResult transferPlayerToWorldIdempotent(int payerDbId, long value, String reason,
+            String currencyIdentifier, String pluginIdentifier, String correlationId) {
+        Object response = call("transferPlayerToWorldIdempotent",
+                new Class<?>[] { int.class, long.class, String.class, String.class, String.class, String.class },
+                payerDbId, value, reason, currencyIdentifier, pluginIdentifier, correlationId);
+        return transferResult(response);
+    }
+
+    public WalletTransferCallResult transferSystemToPlayerIdempotent(String payerAccountId, int payeeDbId,
+            long value, String reason, String currencyIdentifier, String pluginIdentifier, String correlationId) {
+        Object response = call("transferSystemToPlayerIdempotent",
+                new Class<?>[] { String.class, int.class, long.class, String.class, String.class, String.class,
+                        String.class },
+                payerAccountId, payeeDbId, value, reason, currencyIdentifier, pluginIdentifier, correlationId);
+        return transferResult(response);
+    }
+
+    public WalletTransferCallResult transferSystemToSystemIdempotent(String payerAccountId, String payeeAccountId,
+            long value, String reason, String currencyIdentifier, String pluginIdentifier, String correlationId) {
+        Object response = call("transferSystemToSystemIdempotent",
+                new Class<?>[] { String.class, String.class, long.class, String.class, String.class, String.class,
+                        String.class },
+                payerAccountId, payeeAccountId, value, reason, currencyIdentifier, pluginIdentifier, correlationId);
+        return transferResult(response);
+    }
+
+    public WalletTransferCallResult reverseAccountTransferIdempotent(String originalCorrelationId,
+            String reversalCorrelationId, String reason, String pluginIdentifier) {
+        Object response = call("reverseAccountTransferIdempotent",
+                new Class<?>[] { String.class, String.class, String.class, String.class },
+                originalCorrelationId, reversalCorrelationId, reason, pluginIdentifier);
+        return transferResult(response);
+    }
+
+    public List<SystemBalanceInfo> systemAccountBalances(String accountId) {
+        Object response = call("systemAccountBalances", new Class<?>[] { String.class }, accountId);
+        if (!result(response).success() || !(field(response, "balances") instanceof Iterable<?> balances)) {
+            return List.of();
+        }
+        List<SystemBalanceInfo> values = new ArrayList<>();
+        for (Object balance : balances) {
+            Object currency = getter(balance, "getCurrency");
+            Object amount = getter(balance, "getBalance");
+            Object identifier = getter(currency, "getIdentifier");
+            if (amount instanceof Long number && identifier instanceof String text && !text.isBlank()) {
+                values.add(new SystemBalanceInfo(text.trim().toUpperCase(Locale.ROOT), number));
+            }
+        }
+        return List.copyOf(values);
+    }
+
     public long balanceDefault(int playerDbId) {
         return balanceValue(call("balanceDefault", new Class<?>[] { int.class }, playerDbId)).balance();
     }
@@ -98,6 +198,20 @@ public class WalletBridge {
         return value instanceof Long amount ? new BalanceInfo(true, amount) : new BalanceInfo(false, 0L);
     }
 
+    private WalletTransferCallResult transferResult(Object response) {
+        return new WalletTransferCallResult(Boolean.TRUE.equals(field(response, "success")),
+                string(field(response, "errorCode")), string(field(response, "message")));
+    }
+
+    private SystemAccountCallResult systemAccountResult(Object response) {
+        Object account = field(response, "account");
+        return new SystemAccountCallResult(Boolean.TRUE.equals(field(response, "success")),
+                string(field(response, "errorCode")), string(field(response, "message")),
+                string(getter(account, "getAccountId")), string(getter(account, "getOwnerPlugin")),
+                string(getter(account, "getAccountType")), string(getter(account, "getDisplayName")),
+                string(getter(account, "getStatus")));
+    }
+
     private Object call(String method) { return call(method, new Class<?>[0]); }
     private Object call(String method, Class<?>[] types, Object... values) {
         Plugin wallet = wallet();
@@ -125,6 +239,9 @@ public class WalletBridge {
         public static WalletCallResult success(String message) { return new WalletCallResult(true, message); }
     }
     public record WalletTransferCallResult(boolean success, String errorCode, String message) {}
+    public record SystemAccountCallResult(boolean success, String errorCode, String message, String accountId,
+            String ownerPlugin, String accountType, String displayName, String status) {}
+    public record SystemBalanceInfo(String currencyIdentifier, long balance) {}
     public record BalanceInfo(boolean success, long balance) {}
     public record CurrencyInfo(String identifier, String name, String iconKey, String pluginIdentifier, boolean defaultCurrency) {}
 }

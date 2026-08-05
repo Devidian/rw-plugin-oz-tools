@@ -30,7 +30,9 @@ public class TableScrollView extends OZUIElement {
 
         // Header
         headerContainer = new OZUIElement();
-        headerContainer.style.width.set(100, Unit.Percent);
+        // Match the deliberately narrowed scroll content so header and body
+        // column boundaries remain visually aligned.
+        headerContainer.style.width.set(99, Unit.Percent);
         headerContainer.style.height.set(HEADER_HEIGHT, Unit.Pixel);
         headerContainer.setPivot(Pivot.UpperLeft);
 

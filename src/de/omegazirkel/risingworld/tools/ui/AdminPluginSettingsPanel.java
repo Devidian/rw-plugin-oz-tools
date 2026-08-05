@@ -279,7 +279,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
 
     private Dropdown selectDropdown(AdminSettingsEntry entry) {
         List<DropdownOption> options = entry.getOptions().stream()
-                .map(option -> new DropdownOption(option, option))
+                .map(option -> new DropdownOption(option, settingOptionText(entry, option)))
                 .collect(Collectors.toList());
         Dropdown dropdown = new Dropdown(options, entry.getValue(), selected -> {
             if (!isValidValue(entry, selected)) {
@@ -429,6 +429,13 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         }
         String explicitText = pluginText(fallback);
         return fallback == null || fallback.equals(explicitText) ? (fallback == null ? "" : fallback) : explicitText;
+    }
+
+    private String settingOptionText(AdminSettingsEntry entry, String option) {
+        String key = "TC_SETTING_" + normalizeSettingKey(entry.getKey()) + "_OPTION_"
+                + normalizeSettingKey(option);
+        String translated = pluginText(key);
+        return key.equals(translated) ? option : translated;
     }
 
     private String normalizeSettingKey(String key) {

@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## [0.23.12] - 2026-08-05 | Wallet system-account bridge
+
+- feat: extend the shared optional Wallet bridge with system-account discovery, lifecycle, balances, and idempotent transfer wrappers
+- fix: keep shared table headers aligned with their scroll content
+- fix: localize selectable admin-setting option labels through plugin i18n
 
 ## [0.23.11] - 2026-07-27 | Mail bridge API v2
 
