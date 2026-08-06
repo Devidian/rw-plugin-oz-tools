@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.23.13] - 2026-08-06 | Wallet audit-language bridge
+
+- fix: expose Wallet's configured system-account audit language through the optional reflection bridge
+
 ## [0.23.12] - 2026-08-05 | Wallet system-account bridge
 
 - feat: extend the shared optional Wallet bridge with system-account discovery, lifecycle, balances, and idempotent transfer wrappers

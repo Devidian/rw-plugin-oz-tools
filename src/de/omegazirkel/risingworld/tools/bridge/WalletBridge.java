@@ -25,6 +25,12 @@ public class WalletBridge {
         return value instanceof String text && !text.isBlank() ? text.trim() : "";
     }
 
+    /** Returns the Wallet administrator-selected system-account audit language. */
+    public String walletAuditLanguage() {
+        Object value = call("walletAuditLanguage");
+        return value instanceof String text && text.trim().equalsIgnoreCase("de") ? "de" : "en";
+    }
+
     public WalletCallResult registerCurrency(String identifier, String name, String icon, String pluginIdentifier) {
         return result(call("registerCurrency", new Class<?>[] { String.class, String.class, String.class, String.class },
                 identifier, name, icon, pluginIdentifier));
