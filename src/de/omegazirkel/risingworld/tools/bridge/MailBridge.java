@@ -32,6 +32,25 @@ public class MailBridge {
         }
     }
 
+    /** Sends a trusted, idempotent operator report without consuming mailbox capacity. */
+    public BridgeResult sendSystemReport(PluginMailRequest request) {
+        if (owner == null || request == null || !request.valid()) return BridgeResult.invalid();
+        String callerPlugin = owner.getDescription("name");
+        if (callerPlugin == null || callerPlugin.isBlank()
+                || !callerPlugin.trim().equalsIgnoreCase(request.senderPlugin().trim())) return BridgeResult.invalid();
+        Plugin mailPlugin = owner.getPluginByName("OZ - Mail");
+        if (mailPlugin == null) return BridgeResult.unavailable();
+        try {
+            Method method = mailPlugin.getClass().getMethod("sendPluginSystemReport", String.class, int.class,
+                    String.class, String.class, String.class, String.class);
+            Object result = method.invoke(mailPlugin, callerPlugin.trim(), request.recipientDbId(),
+                    request.recipientName(), request.subject(), request.body(), request.correlationId());
+            return BridgeResult.from(result);
+        } catch (ReflectiveOperationException ex) {
+            return BridgeResult.unavailable();
+        }
+    }
+
     public boolean canReceiveMail(int recipientDbId) {
         if (owner == null || recipientDbId <= 0) return false;
         Plugin mailPlugin = owner.getPluginByName("OZ - Mail");

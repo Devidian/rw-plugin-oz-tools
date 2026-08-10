@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.23.14] - 2026-08-10 | Mail system-report bridge
+
+- feat: expose trusted, quota-exempt OZ Mail system-report delivery to sibling plugins.
+
 ## [0.23.13] - 2026-08-06 | Wallet audit-language bridge
 
 - fix: expose Wallet's configured system-account audit language through the optional reflection bridge
