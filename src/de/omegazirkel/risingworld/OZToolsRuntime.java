@@ -28,7 +28,6 @@ import de.omegazirkel.risingworld.tools.db.SQLiteConnectionFactory;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
 import de.omegazirkel.risingworld.tools.ui.AdminPluginSettingsPanel;
 import de.omegazirkel.risingworld.tools.ui.AssetManager;
-import de.omegazirkel.risingworld.tools.ui.CursorManager;
 import de.omegazirkel.risingworld.tools.ui.InventoryOverlayPanel;
 import de.omegazirkel.risingworld.tools.ui.PlayerPluginSettingsOverlay;
 import de.omegazirkel.risingworld.tools.ui.PluginInfoStatusProviders;
@@ -46,6 +45,7 @@ import net.risingworld.api.events.player.PlayerDisconnectEvent;
 import net.risingworld.api.events.player.PlayerSpawnEvent;
 import net.risingworld.api.events.player.ui.PlayerToggleInventoryEvent;
 import net.risingworld.api.events.player.ui.PlayerUITextFieldChangeEvent;
+import net.risingworld.api.ui.UITarget;
 import net.risingworld.api.objects.Player;
 
 /**
@@ -76,15 +76,15 @@ class OZToolsRuntime extends Plugin {
         PluginUpdateService service = activePluginUpdateService;
         OZToolsRuntime tools = activeTools;
         if (service == null || tools == null || player == null || !player.isAdmin()) return;
-        player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_CHECK_STARTED", player));
+        player.sendTextMessage(t.get("tc.plugin.update.check.started", player));
         service.checkAsync(pluginName -> tools.serverThreadDispatcher.dispatch(() -> player.sendTextMessage(
-                t.get("TC_PLUGIN_UPDATE_CHECK_PLUGIN", player).replace("PH_PLUGIN_NAME", pluginName))),
+                t.get("tc.plugin.update.check.plugin", player).replace("PH_PLUGIN_NAME", pluginName))),
                 ignored -> tools.serverThreadDispatcher.dispatch(() -> {
                     if (onCompleted != null) onCompleted.run();
                 }),
                 updatesAvailable -> tools.serverThreadDispatcher.dispatch(() -> {
-                    player.sendTextMessage(t.get(updatesAvailable ? "TC_PLUGIN_UPDATE_CHECK_UPDATES_AVAILABLE"
-                            : "TC_PLUGIN_UPDATE_CHECK_NONE", player));
+                    player.sendTextMessage(t.get(updatesAvailable ? "tc.plugin.update.check.updates.available"
+                            : "tc.plugin.update.check.none", player));
                     if (onCompleted != null) onCompleted.run();
                 }));
     }
@@ -93,9 +93,9 @@ class OZToolsRuntime extends Plugin {
         PluginUpdateService service = activePluginUpdateService;
         OZToolsRuntime tools = activeTools;
         if (service == null || tools == null || player == null || !player.isAdmin()) return;
-        player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_CHECK_PLUGIN", player).replace("PH_PLUGIN_NAME", pluginName));
+        player.sendTextMessage(t.get("tc.plugin.update.check.plugin", player).replace("PH_PLUGIN_NAME", pluginName));
         service.checkPluginAsync(pluginName, ignored -> tools.serverThreadDispatcher.dispatch(() -> {
-            player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_CHECK_PLUGIN_COMPLETED", player)
+            player.sendTextMessage(t.get("tc.plugin.update.check.plugin.completed", player)
                     .replace("PH_PLUGIN_NAME", pluginName));
             if (onCompleted != null) onCompleted.run();
         }));
@@ -117,20 +117,20 @@ class OZToolsRuntime extends Plugin {
         if (service == null || tools == null) return;
         PluginUpdateService.Result result = pluginUpdateResult(pluginName);
         if (player != null && player.isAdmin() && result != null) {
-            player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_STARTED", player)
+            player.sendTextMessage(t.get("tc.plugin.update.install.started", player)
                     .replace("PH_PLUGIN_NAME", pluginName)
                     .replace("PH_INSTALLED_VERSION", result.installedVersion())
                     .replace("PH_LATEST_VERSION", result.latestVersion()));
         }
         service.installLatestAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() ->
                 {
-                    if (player != null) player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_COMPLETED", player));
+                    if (player != null) player.sendTextMessage(t.get("tc.plugin.update.install.completed", player));
                     service.markInstalledLatest(pluginName);
                     if (onStateChanged != null) onStateChanged.run();
                     tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
                 }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
                     if (player != null) player.sendTextMessage(t.get("untrusted-release-source".equals(reason)
-                            ? "TC_PLUGIN_UPDATE_INSTALL_FAILED_UNTRUSTED_SOURCE" : "TC_PLUGIN_UPDATE_INSTALL_FAILED", player));
+                            ? "tc.plugin.update.install.failed.untrusted.source" : "tc.plugin.update.install.failed", player));
                     if (onStateChanged != null) onStateChanged.run();
                 }));
         if (onStateChanged != null) onStateChanged.run();
@@ -155,7 +155,7 @@ class OZToolsRuntime extends Plugin {
             List<String> pending,
             int index, Player player, Runnable onStateChanged) {
         if (index >= pending.size()) {
-            player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_COMPLETED", player));
+            player.sendTextMessage(t.get("tc.plugin.update.install.completed", player));
             if (onStateChanged != null) onStateChanged.run();
             tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
             return;
@@ -163,7 +163,7 @@ class OZToolsRuntime extends Plugin {
         String pluginName = pending.get(index);
         PluginUpdateService.Result result = pluginUpdateResult(pluginName);
         if (result != null) {
-            player.sendTextMessage(t.get("TC_PLUGIN_UPDATE_INSTALL_STARTED", player)
+            player.sendTextMessage(t.get("tc.plugin.update.install.started", player)
                     .replace("PH_PLUGIN_NAME", pluginName)
                     .replace("PH_INSTALLED_VERSION", result.installedVersion())
                     .replace("PH_LATEST_VERSION", result.latestVersion()));
@@ -174,7 +174,7 @@ class OZToolsRuntime extends Plugin {
             installPluginUpdatesNext(service, tools, pending, index + 1, player, onStateChanged);
         }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
             player.sendTextMessage(t.get("untrusted-release-source".equals(reason)
-                    ? "TC_PLUGIN_UPDATE_INSTALL_FAILED_UNTRUSTED_SOURCE" : "TC_PLUGIN_UPDATE_INSTALL_FAILED", player));
+                    ? "tc.plugin.update.install.failed.untrusted.source" : "tc.plugin.update.install.failed", player));
             if (onStateChanged != null) onStateChanged.run();
         }));
     }
@@ -248,11 +248,17 @@ class OZToolsRuntime extends Plugin {
             for (Plugin plugin : this.getAllPlugins()) {
                 if (plugin instanceof FileChangeListener listener) {
                     Path pluginDir = Paths.get(plugin.getPath());
-                    Path settings = pluginDir.resolve("settings.properties");
-                    if (Files.exists(settings)) {
-                        fileWatcher.addSettingsFile(settings, listener);
-                    } else {
-                        logger().info("Plugin has no settings.properties: " + plugin.getPath());
+                    fileWatcher.addSettingsDirectory(pluginDir, listener);
+                    try (java.util.stream.Stream<Path> files = Files.list(pluginDir)) {
+                        List<Path> settings = files
+                                .filter(path -> {
+                                    String name = path.getFileName().toString();
+                                    return name.equals("settings.properties")
+                                            || (name.startsWith("settings.") && name.endsWith(".json"));
+                                })
+                                .toList();
+                        for (Path setting : settings) fileWatcher.addSettingsFile(setting, listener);
+                        if (settings.isEmpty()) logger().info("Plugin has no settings file: " + plugin.getPath());
                     }
                     fileWatcher.addListener((FileChangeListener) plugin);
                 }
@@ -329,7 +335,7 @@ class OZToolsRuntime extends Plugin {
     public void onPlayerSpawn(PlayerSpawnEvent event) {
         if (s.enablePluginWelcomeMessage) {
             Player player = event.getPlayer();
-            player.sendTextMessage(t.get("TC_MSG_PLUGIN_WELCOME", player)
+            player.sendTextMessage(t.get("tc.msg.plugin.welcome", player)
                     .replace("PH_PLUGIN_NAME", getDescription("name"))
                     .replace("PH_PLUGIN_CMD", pluginCMD)
                     .replace("PH_PLUGIN_VERSION", getDescription("version")));
@@ -384,18 +390,17 @@ class OZToolsRuntime extends Plugin {
                 PlayerPluginSettingsOverlay overlay = (PlayerPluginSettingsOverlay) player
                         .getAttribute("tools.ui.overlay");
                 if (overlay != null) {
-                    overlay.close();
+                    player.deleteAttribute("tools.ui.overlay");
                 }
                 overlay = new PlayerPluginSettingsOverlay(player);
-                CursorManager.show(player);
-                player.addUIElement(overlay);
+                player.addUIElement(overlay, UITarget.Modal);
                 player.setAttribute("tools.ui.overlay", overlay);
                 break;
             case "help":
             case "":
             default:
                 player.sendTextMessage(c.okay + this.getName() + c.endTag + "\n "
-                        + t.get("TC_CMD_HELP", player).replace("PH_PLUGIN_CMD", pluginCMD));
+                        + t.get("tc.cmd.help", player).replace("PH_PLUGIN_CMD", pluginCMD));
                 break;
         }
     }

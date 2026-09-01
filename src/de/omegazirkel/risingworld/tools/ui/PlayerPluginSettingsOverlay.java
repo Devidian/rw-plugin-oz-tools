@@ -153,7 +153,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         if (uiPlayer.isAdmin()) {
             List<String> pendingUpdates = pendingUpdates();
             if (pendingUpdates.size() >= 2) {
-                AdvancedButton updateAllButton = AdvancedButtonFactory.danger(t().get("TC_PLUGIN_UPDATE_ALL_ACTION", uiPlayer), event ->
+                AdvancedButton updateAllButton = AdvancedButtonFactory.danger(t().get("tc.plugin.update.all.action", uiPlayer), event ->
                         showAllUpdatesConfirmation(pendingUpdates));
                 updateAllButton.setPivot(Pivot.LowerLeft);
                 updateAllButton.style.position.set(Position.Absolute);
@@ -168,7 +168,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
                 updateAllButton.setHoverBorderColor(0xF2C766FF);
                 navSidebar.addChild(updateAllButton);
             }
-            AdvancedButton checkUpdatesButton = AdvancedButtonFactory.defaultButton(t().get("TC_PLUGIN_UPDATE_CHECK_ACTION", uiPlayer),
+            AdvancedButton checkUpdatesButton = AdvancedButtonFactory.defaultButton(t().get("tc.plugin.update.check.action", uiPlayer),
                     event -> OZTools.checkPluginUpdates(uiPlayer, this::updateUI));
             checkUpdatesButton.setPivot(Pivot.LowerLeft);
             checkUpdatesButton.style.position.set(Position.Absolute);
@@ -198,7 +198,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         closeButton.setBorder(1);
         closeButton.setBorderColor(0x8A6A2DFF);
         closeButton.setHoverBorderColor(0xD7AE55FF);
-        UILabel btnLabel = new UILabel(t().get("TC_BTN_CLOSE", uiPlayer));
+        UILabel btnLabel = new UILabel(t().get("tc.btn.close", uiPlayer));
         btnLabel.setPivot(Pivot.MiddleCenter);
         btnLabel.setPosition(50, 50, true);
         btnLabel.setFontColor(0xF4F0E6FF);
@@ -206,13 +206,13 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         closeButton.addChild(btnLabel);
         navSidebar.addChild(closeButton);
 
-        addTabButton(TAB_SETTINGS, t().get("TC_TAB_SETTINGS", uiPlayer), 0);
-        addTabButton(TAB_DATA, t().get("TC_TAB_DATA", uiPlayer), 150);
+        addTabButton(TAB_SETTINGS, t().get("tc.tab.settings", uiPlayer), 0);
+        addTabButton(TAB_DATA, t().get("tc.tab.data", uiPlayer), 150);
         if (canShowReleaseNotesTab(selectedPlugin)) {
-            addTabButton(TAB_RELEASE_NOTES, t().get("TC_TAB_RELEASE_NOTES", uiPlayer), 300);
+            addTabButton(TAB_RELEASE_NOTES, t().get("tc.tab.release.notes", uiPlayer), 300);
         }
         if (canShowPluginSettingsTab(selectedPlugin)) {
-            addTabButton(TAB_PLUGIN_SETTINGS, t().get("TC_TAB_PLUGIN_SETTINGS", uiPlayer), 450);
+            addTabButton(TAB_PLUGIN_SETTINGS, t().get("tc.tab.plugin.settings", uiPlayer), 450);
         }
 
         // clear content
@@ -265,8 +265,8 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
     public void close() {
         uiPlayer.removeUIElement(this);
+        uiPlayer.closeAllActiveUIWindows();
         uiPlayer.deleteAttribute("tools.ui.overlay");
-        CursorManager.hide(uiPlayer);
     }
 
     private void addTabButton(String tab, String label, int x) {
@@ -307,7 +307,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     }
 
     private UILabel emptySettingsContent(String pluginLabel) {
-        UILabel label = new UILabel(t().get("TC_SETTINGS_EMPTY", uiPlayer).replace("PH_PLUGIN_NAME", pluginLabel));
+        UILabel label = new UILabel(t().get("tc.settings.empty", uiPlayer).replace("PH_PLUGIN_NAME", pluginLabel));
         label.setPivot(Pivot.MiddleCenter);
         label.setPosition(50, 50, true);
         label.setFontSize(16);
@@ -322,7 +322,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         panel.setPivot(Pivot.UpperLeft);
         panel.setSize(100, 100, true);
 
-        UILabel title = new UILabel(t().get("TC_PLUGIN_UPDATE_RELEASE_NOTES_TITLE", uiPlayer));
+        UILabel title = new UILabel(t().get("tc.plugin.update.release.notes.title", uiPlayer));
         title.setPivot(Pivot.UpperLeft);
         title.style.left.set(5, Unit.Percent);
         title.style.top.set(0, Unit.Pixel);
@@ -333,7 +333,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         title.setFontColor(0xF4F0E6FF);
         panel.addChild(title);
 
-        UILabel subtitle = new UILabel(t().get("TC_PLUGIN_UPDATE_RELEASE_NOTES_SUBTITLE", uiPlayer)
+        UILabel subtitle = new UILabel(t().get("tc.plugin.update.release.notes.subtitle", uiPlayer)
                 .replace("PH_PLUGIN_NAME", pluginLabel)
                 .replace("PH_LATEST_VERSION", result == null || result.latestVersion().isBlank() ? "?" : result.latestVersion()));
         subtitle.setPivot(Pivot.UpperLeft);
@@ -358,7 +358,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         panel.addChild(scroll);
 
         String notes = result == null || result.releaseNotes().isBlank()
-                ? t().get("TC_PLUGIN_UPDATE_RELEASE_NOTES_EMPTY", uiPlayer) : result.releaseNotes();
+                ? t().get("tc.plugin.update.release.notes.empty", uiPlayer) : result.releaseNotes();
         UILabel notesLabel = new UILabel(notes.length() > 1800 ? notes.substring(0, 1800) + "..." : notes);
         notesLabel.setPivot(Pivot.UpperLeft);
         notesLabel.setPosition(0, 0, false);
@@ -368,7 +368,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         notesLabel.setFontColor(0xE0D8C8FF);
         scroll.addChild(notesLabel);
 
-        AdvancedButton checkPlugin = AdvancedButtonFactory.defaultButton(t().get("TC_PLUGIN_UPDATE_CHECK_PLUGIN_ACTION", uiPlayer),
+        AdvancedButton checkPlugin = AdvancedButtonFactory.defaultButton(t().get("tc.plugin.update.check.plugin.action", uiPlayer),
                 event -> OZTools.checkPluginUpdate(pluginLabel, uiPlayer, this::updateUI));
         checkPlugin.setPivot(Pivot.LowerLeft);
         checkPlugin.setPosition(5, 94, true);
@@ -382,9 +382,9 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
         if (updateAvailable(pluginLabel) || installAvailable(pluginLabel) || installing(pluginLabel)) {
             AdvancedButton updateButton = AdvancedButtonFactory.danger(installing(pluginLabel)
-                    ? t().get("TC_PLUGIN_UPDATE_INSTALLING", uiPlayer)
-                    : installAvailable(pluginLabel) ? t().get("TC_PLUGIN_UPDATE_INSTALL_ACTION", uiPlayer)
-                            : t().get("TC_PLUGIN_UPDATE_ACTION", uiPlayer), event -> showUpdateConfirmation());
+                    ? t().get("tc.plugin.update.installing", uiPlayer)
+                    : installAvailable(pluginLabel) ? t().get("tc.plugin.update.install.action", uiPlayer)
+                            : t().get("tc.plugin.update.action", uiPlayer), event -> showUpdateConfirmation());
             updateButton.setPivot(Pivot.LowerLeft);
             updateButton.setPosition(0, 94, true);
             updateButton.style.left.set(290, Unit.Pixel);
@@ -398,7 +398,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             panel.addChild(updateButton);
         }
 
-        UILabel checkedAt = new UILabel(t().get("TC_PLUGIN_UPDATE_LAST_CHECKED", uiPlayer)
+        UILabel checkedAt = new UILabel(t().get("tc.plugin.update.last.checked", uiPlayer)
                 .replace("PH_CHECKED_AT", result == null || result.checkedAtEpochMillis() <= 0 ? "-"
                         : DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").withZone(ZoneId.systemDefault())
                                 .format(Instant.ofEpochMilli(result.checkedAtEpochMillis()))));
@@ -489,14 +489,14 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         dialog.setBorderColor(0xD7AE55FF);
         addChild(dialog);
 
-        UILabel title = new UILabel(t().get(install ? "TC_PLUGIN_INSTALL_TITLE" : "TC_PLUGIN_UPDATE_INSTALL_TITLE", uiPlayer));
+        UILabel title = new UILabel(t().get(install ? "tc.plugin.install.title" : "tc.plugin.update.install.title", uiPlayer));
         title.setPivot(Pivot.UpperLeft);
         title.setPosition(20, 18, false);
         title.setSize(380, 28, false);
         title.setFontSize(18);
         title.setFontColor(0xF4F0E6FF);
         dialog.addChild(title);
-        UILabel message = new UILabel(t().get(install ? "TC_PLUGIN_INSTALL_MESSAGE" : "TC_PLUGIN_UPDATE_INSTALL_MESSAGE", uiPlayer)
+        UILabel message = new UILabel(t().get(install ? "tc.plugin.install.message" : "tc.plugin.update.install.message", uiPlayer)
                 .replace("PH_PLUGIN_NAME", selectedPlugin).replace("PH_INSTALLED_VERSION", result.installedVersion())
                 .replace("PH_LATEST_VERSION", result.latestVersion()));
         message.setPivot(Pivot.UpperLeft);
@@ -506,13 +506,13 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         message.setTextWrap(true);
         message.setFontColor(0xE0D8C8FF);
         dialog.addChild(message);
-        AdvancedButton cancel = AdvancedButtonFactory.cancel(t().get("TC_BTN_CANCEL", uiPlayer), event -> removeChild(dialog));
+        AdvancedButton cancel = AdvancedButtonFactory.cancel(t().get("tc.btn.cancel", uiPlayer), event -> removeChild(dialog));
         cancel.setPivot(Pivot.UpperLeft);
         cancel.setPosition(24, 154, false);
         cancel.setSize(140, 32, false);
         dialog.addChild(cancel);
         AdvancedButton confirm = AdvancedButtonFactory.danger(t().get(
-                install ? "TC_PLUGIN_UPDATE_INSTALL_ACTION" : "TC_PLUGIN_UPDATE_INSTALL_CONFIRM", uiPlayer), event -> {
+                install ? "tc.plugin.update.install.action" : "tc.plugin.update.install.confirm", uiPlayer), event -> {
             removeChild(dialog);
             OZTools.installPluginUpdate(selectedPlugin, uiPlayer, this::updateUI);
         });
@@ -543,7 +543,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         dialog.setBorderColor(0xD7AE55FF);
         addChild(dialog);
 
-        UILabel title = new UILabel(t().get("TC_PLUGIN_UPDATE_ALL_TITLE", uiPlayer));
+        UILabel title = new UILabel(t().get("tc.plugin.update.all.title", uiPlayer));
         title.setPivot(Pivot.UpperLeft);
         title.setPosition(20, 18, false);
         title.setSize(520, 28, false);
@@ -551,7 +551,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         title.setFontColor(0xF4F0E6FF);
         dialog.addChild(title);
 
-        UILabel message = new UILabel(t().get("TC_PLUGIN_UPDATE_ALL_MESSAGE", uiPlayer)
+        UILabel message = new UILabel(t().get("tc.plugin.update.all.message", uiPlayer)
                 .replace("PH_PLUGIN_COUNT", String.valueOf(pluginLabels.size())));
         message.setPivot(Pivot.UpperLeft);
         message.setPosition(20, 50, false);
@@ -587,12 +587,12 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         notes.addChild(noteText);
         dialog.addChild(notes);
 
-        AdvancedButton cancel = AdvancedButtonFactory.cancel(t().get("TC_BTN_CANCEL", uiPlayer), event -> removeChild(dialog));
+        AdvancedButton cancel = AdvancedButtonFactory.cancel(t().get("tc.btn.cancel", uiPlayer), event -> removeChild(dialog));
         cancel.setPivot(Pivot.UpperLeft);
         cancel.setPosition(24, 322, false);
         cancel.setSize(150, 32, false);
         dialog.addChild(cancel);
-        AdvancedButton confirm = AdvancedButtonFactory.danger(t().get("TC_PLUGIN_UPDATE_ALL_ACTION", uiPlayer), event -> {
+        AdvancedButton confirm = AdvancedButtonFactory.danger(t().get("tc.plugin.update.all.action", uiPlayer), event -> {
             removeChild(dialog);
             OZTools.installPluginUpdates(pluginLabels, uiPlayer, this::updateUI);
         });

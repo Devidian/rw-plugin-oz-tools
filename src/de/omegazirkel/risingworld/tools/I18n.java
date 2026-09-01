@@ -7,8 +7,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import de.omegazirkel.risingworld.OZTools;
 import net.risingworld.api.Plugin;
@@ -16,7 +19,7 @@ import net.risingworld.api.objects.Player;
 
 public class I18n {
     private static ConcurrentHashMap<String, I18n> instanceMap = new ConcurrentHashMap<String, I18n>();
-    private Map<String, Properties> language = new HashMap<String, Properties>();
+    private Map<String, Map<String, String>> language = new HashMap<String, Map<String, String>>();
     private String loadedPluginPath;
     private static final String defaultLanguage = "en";
 
@@ -72,15 +75,16 @@ public class I18n {
             logger().debug("Files found: " + listOfFiles.length);
             for (File f : listOfFiles) {
                 logger().debug("loading: " + f.getAbsolutePath());
-                if (f.isFile() && f.getName().endsWith("properties")) {
+                if (f.isFile() && f.getName().endsWith(".json")) {
                     String lang = f.getName().substring(0, 2);
-                    // log.out("lang: "+lang);
-                    Properties lngProperties = new Properties();
                     try {
                         in = new FileInputStream(f);
-                        lngProperties.load(new InputStreamReader(in, "UTF8"));
+                        JsonElement root = JsonParser.parseReader(new InputStreamReader(in, "UTF8"));
                         in.close();
-                        this.language.put(lang.toLowerCase(), lngProperties);
+                        if (!root.isJsonObject()) throw new IOException("Translation root must be an object");
+                        Map<String, String> entries = new HashMap<String, String>();
+                        flatten("", root.getAsJsonObject(), entries);
+                        this.language.put(lang.toLowerCase(), entries);
                     } catch (FileNotFoundException e) {
                         logger().fatal("FileNotFoundException: " + e.getMessage());
                         e.printStackTrace();
@@ -137,18 +141,22 @@ public class I18n {
      */
     public String get(String key, String lang) {
         try {
+            key = canonicalKey(key);
             if (!this.language.containsKey(defaultLanguage)) {
                 logger().error("no default language loaded. Failed to lookup " + key);
                 return key;
             }
-            Properties lngDefaultProperties = this.language.get(defaultLanguage);
-            Properties lngProperties = null;
+            Map<String, String> lngDefaultProperties = this.language.get(defaultLanguage);
+            Map<String, String> lngProperties = null;
             if (!this.language.containsKey(lang.toLowerCase())) {
                 lngProperties = lngDefaultProperties;
             } else {
                 lngProperties = this.language.get(lang.toLowerCase());
             }
-            return lngProperties.getProperty(key, lngDefaultProperties.getProperty(key, key));
+            String leafKey = key + ".$value";
+            return lngProperties.getOrDefault(key,
+                    lngProperties.getOrDefault(leafKey, lngDefaultProperties.getOrDefault(key,
+                            lngDefaultProperties.getOrDefault(leafKey, key))));
         } catch (Exception e) {
             logger().fatal("Exception: " + e.getMessage());
             e.printStackTrace();
@@ -164,5 +172,19 @@ public class I18n {
      */
     public String get(String key) {
         return this.get(key, defaultLanguage);
+    }
+
+    private static void flatten(String prefix, JsonObject object, Map<String, String> entries) {
+        for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
+            String path = prefix.isEmpty() ? entry.getKey() : prefix + "." + entry.getKey();
+            if (entry.getValue().isJsonObject()) flatten(path, entry.getValue().getAsJsonObject(), entries);
+            else if (entry.getValue().isJsonPrimitive()) entries.put(path, entry.getValue().getAsString());
+            else throw new IllegalArgumentException("Unsupported translation value at " + path);
+        }
+    }
+
+    private static String canonicalKey(String key) {
+        return key != null && key.regionMatches(true, 0, "TC_", 0, 3)
+                ? key.toLowerCase().replace('_', '.') : key;
     }
 }

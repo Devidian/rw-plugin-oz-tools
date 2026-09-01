@@ -1,0 +1,207 @@
+{
+  "tc": {
+    "btn": {
+      "cancel": "Abbrechen",
+      "close": "Schließen"
+    },
+    "cmd": {
+      "help": "Plugin Hilfe\nTippe \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD rk [KEY]\u003c/color\u003e um eine Taste [KEY] zu registrieren der das Menü öffnet.\nTippe \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD open\u003c/color\u003e um das Menü zu öffnen.",
+      "status": "🔎 Plugin Status\n➡️ Plugin version: PH_VERSION\n➡️ Installierte Sprachen: PH_LANG_AVAILABLE\n➡️ Deine Sprache: PH_LANGUAGE\n➡️ Verwendete Sprache: PH_USEDLANG"
+    },
+    "data": {
+      "desc": "Hier kannst du gespeicherte Daten für das Plugin PH_PLUGIN_NAME ansehen.",
+      "empty": "Für dieses Plugin sind noch keine gespeicherten Spielerdaten verfügbar.",
+      "title": "Gespeicherte Daten für PH_PLUGIN_NAME"
+    },
+    "menu": {
+      "back": "Zurück",
+      "close": "Menü schließen",
+      "settings": "Einstellungen"
+    },
+    "msg": {
+      "plugin": {
+        "welcome": "➡️ \u003ccolor\u003d#F00000\u003ePH_PLUGIN_NAME\u003c/color\u003e | \u003ccolor\u003d#F0F000\u003evPH_PLUGIN_VERSION\u003c/color\u003e | \u003ccolor\u003d#C0C0C0\u003e/PH_PLUGIN_CMD\u003c/color\u003e | geladen!"
+      }
+    },
+    "plugin": {
+      "info": {
+        "status": {
+          "tab": {
+            "info": "Info",
+            "status": "Status"
+          },
+          "title": "Plugin: PH_PLUGIN_NAME"
+        }
+      },
+      "install": {
+        "message": "PH_PLUGIN_NAME wird installiert. Anschließend werden die Plugins neu geladen.",
+        "title": "Plugin installieren"
+      },
+      "settings": {
+        "default": "Default: PH_DEFAULT_VALUE",
+        "desc": "Admin-Einstellungen aus der settings-Datei des Plugins.",
+        "empty": "Für dieses Plugin sind noch keine Admin-Settings-Metadaten registriert.",
+        "hidden": "Ausgeblendet",
+        "invalid": "Ungültiger Wert für PH_SETTING_KEY.",
+        "reload": "Neu laden",
+        "save": {
+          "$value": "Speichern",
+          "failed": "PH_SETTING_KEY konnte nicht gespeichert werden."
+        },
+        "saved": "PH_SETTING_KEY gespeichert und Einstellungen neu geladen.",
+        "title": "PluginSettings für PH_PLUGIN_NAME"
+      },
+      "update": {
+        "action": "Update",
+        "all": {
+          "action": "Alle aktualisieren",
+          "message": "PH_PLUGIN_COUNT Plugins werden nacheinander aktualisiert. Die Plugins werden erst danach einmal neu geladen.",
+          "title": "Alle Plugin-Updates installieren"
+        },
+        "check": {
+          "action": "Auf Updates prüfen",
+          "none": "Überprüfung abgeschlossen. Keine neuen Updates verfügbar.",
+          "plugin": {
+            "$value": "Prüfe PH_PLUGIN_NAME auf eine neue Version.",
+            "action": "Dieses Plugin prüfen",
+            "completed": "Überprüfung für PH_PLUGIN_NAME abgeschlossen."
+          },
+          "started": "Beginne Prüfung auf neue Plugin-Updates.",
+          "updates": {
+            "available": "Überprüfung abgeschlossen. Neue Plugin-Updates sind verfügbar."
+          }
+        },
+        "installing": "Aktualisierung läuft...",
+        "install": {
+          "action": "Installieren",
+          "completed": "Aktualisierung abgeschlossen. Lade Plugins neu.",
+          "confirm": "Update installieren",
+          "failed": {
+            "$value": "\u003ccolor\u003d#F0A000\u003ePlugin-Aktualisierung fehlgeschlagen. Das installierte Plugin wurde nicht verändert.\u003c/color\u003e",
+            "untrusted": {
+              "source": "\u003ccolor\u003d#F0A000\u003eAktualisierung fehlgeschlagen: nicht vertrauenswürdige Quelle.\u003c/color\u003e"
+            }
+          },
+          "message": "PH_PLUGIN_NAME wird von vPH_INSTALLED_VERSION auf vPH_LATEST_VERSION aktualisiert. Anschließend werden die Plugins neu geladen.",
+          "started": "Aktualisiere PH_PLUGIN_NAME von vPH_INSTALLED_VERSION auf vPH_LATEST_VERSION.",
+          "title": "Plugin-Update installieren"
+        },
+        "last": {
+          "checked": "Letzte Prüfung: PH_CHECKED_AT"
+        },
+        "release": {
+          "notes": {
+            "empty": "Für dieses Release wurden keine Hinweise hinterlegt.",
+            "subtitle": "Release-Hinweise zum Plugin \u003ccolor\u003d#F2C766\u003ePH_PLUGIN_NAME\u003c/color\u003e \u003ccolor\u003d#F2C766\u003evPH_LATEST_VERSION\u003c/color\u003e",
+            "title": "Release-Hinweise"
+          }
+        }
+      }
+    },
+    "settings": {
+      "desc": "Hier kannst du die Einstellungen für das Plugin PH_PLUGIN_NAME anpassen.",
+      "empty": "Für PH_PLUGIN_NAME ist keine Einstellungsseite verfügbar.",
+      "title": "Plugin Einstellungen für PH_PLUGIN_NAME"
+    },
+    "setting": {
+      "allowexternalpluginrepositories": {
+        "desc": "Erlaubt kompatible öffentliche GitHub-Repositories außerhalb von OZ.",
+        "label": "Externe Repositories erlauben"
+      },
+      "automaticpluginupdatecheck": {
+        "desc": "Prüft öffentliche GitHub-Releases nach dem Serverstart.",
+        "label": "Automatische Update-Prüfung"
+      },
+      "enablepluginwelcomemessage": {
+        "desc": "Wenn aktiv, sendet Tools beim Betreten eine Willkommensnachricht.",
+        "label": "Willkommensnachricht"
+      },
+      "logging": {
+        "desc": "Logging-Ausgabe und Detailgrad.",
+        "label": "Protokollierung"
+      },
+      "loginternal": {
+        "desc": "Wenn aktiv, wird Log-Ausgabe in die Standardkonsole geschrieben.",
+        "label": "Internes Logging"
+      },
+      "loglevel": {
+        "desc": "Steuert die Tools-Logging-Ausgabe.",
+        "label": "Log-Level"
+      },
+      "playermessages": {
+        "desc": "Nachrichten, die Tools direkt an Spieler sendet.",
+        "label": "Spielernachrichten"
+      },
+      "pluginupdatecheckdelaybetweenpluginsseconds": {
+        "desc": "Verzögerung in Sekunden zwischen öffentlichen GitHub-Anfragen.",
+        "label": "Intervall der Update-Prüfung"
+      },
+      "pluginupdatecheckdelayseconds": {
+        "desc": "Verzögerung in Sekunden nach dem Serverstart.",
+        "label": "Verzögerung der Update-Prüfung"
+      },
+      "pluginupdates": {
+        "desc": "Automatische Prüfung und Installation öffentlicher Plugin-Updates.",
+        "label": "Plugin-Updates"
+      },
+      "reloadonchange": {
+        "desc": "Wenn aktiv, lösen Jar-Änderungen ein verzögertes Plugin-Reload aus.",
+        "label": "Bei Änderung neu laden"
+      },
+      "runtime": {
+        "desc": "Reload- und Wartungsverhalten zur Laufzeit.",
+        "label": "Laufzeit"
+      },
+      "threaddiagnosticsenabled": {
+        "desc": "Wenn aktiv, erfasst und protokolliert Tools JVM-weite Thread-Lifecycle-Informationen.",
+        "label": "Thread-Diagnose"
+      }
+    },
+    "tab": {
+      "data": "Gespeicherte Daten",
+      "plugin": {
+        "settings": "PluginSettings"
+      },
+      "release": {
+        "notes": "Release-Hinweise"
+      },
+      "settings": "Einstellungen"
+    },
+    "tools": {
+      "icon": {
+        "style": {
+          "classic": "Klassisch",
+          "modern": "Modern"
+        }
+      },
+      "info": {
+        "panel": {
+          "info": "\u003cb\u003ePH_PLUGIN_NAME\u003c/b\u003e\nVersion: PH_VERSION\nBefehl: \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD\u003c/color\u003e\n\nGemeinsame Runtime-Grundlage für Rising-World-Plugins.\n\nStellt wiederverwendbare Helfer für i18n, Logging, File-Watching, WebSocket, SQLite, Settings und UI bereit.",
+          "status": "\u003cb\u003eLaufzeitstatus\u003c/b\u003e\nShared-Provider-Registry: aktiv"
+        }
+      },
+      "language": {
+        "custom": "Eigene Sprache",
+        "game": "Spielsprache",
+        "system": "Systemsprache"
+      },
+      "setting": {
+        "icon": {
+          "style": {
+            "global": "Globaler Icon-Stil"
+          }
+        },
+        "inventory": {
+          "labels": "Labels unter Inventar-Shortcut-Icons anzeigen"
+        },
+        "language": "Sprache"
+      }
+    },
+    "ui": {
+      "btn": {
+        "off": "AUS",
+        "on": "AN"
+      }
+    }
+  }
+}

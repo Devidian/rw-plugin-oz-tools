@@ -60,7 +60,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         removeAllChilds();
 
         UILabel titleLabel = new UILabel(
-                t().get("TC_PLUGIN_SETTINGS_TITLE", uiPlayer).replace("PH_PLUGIN_NAME", adminSettings.pluginLabel));
+                t().get("tc.plugin.settings.title", uiPlayer).replace("PH_PLUGIN_NAME", adminSettings.pluginLabel));
         titleLabel.setPivot(Pivot.UpperLeft);
         titleLabel.style.left.set(5, Unit.Percent);
         titleLabel.style.top.set(0, Unit.Pixel);
@@ -73,7 +73,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         addChild(titleLabel);
 
         if (adminSettings.canReload()) {
-            OZUIElement reloadButton = actionButton(t().get("TC_PLUGIN_SETTINGS_RELOAD", uiPlayer));
+            OZUIElement reloadButton = actionButton(t().get("tc.plugin.settings.reload", uiPlayer));
             reloadButton.setPivot(Pivot.UpperLeft);
             reloadButton.style.position.set(Position.Absolute);
             reloadButton.style.right.set(5, Unit.Percent);
@@ -85,7 +85,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
             addChild(reloadButton);
         }
 
-        UILabel descLabel = new UILabel(t().get("TC_PLUGIN_SETTINGS_DESC", uiPlayer));
+        UILabel descLabel = new UILabel(t().get("tc.plugin.settings.desc", uiPlayer));
         descLabel.setPivot(Pivot.UpperLeft);
         descLabel.style.left.set(5, Unit.Percent);
         descLabel.style.top.set(12, Unit.Pixel);
@@ -134,7 +134,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         flexWrapper.removeAllChilds();
         List<AdminSettingsEntry> entries = adminSettings.getProvider().entries();
         if (entries == null || entries.isEmpty()) {
-            flexWrapper.addChild(messageLabel(t().get("TC_PLUGIN_SETTINGS_EMPTY", uiPlayer)));
+            flexWrapper.addChild(messageLabel(t().get("tc.plugin.settings.empty", uiPlayer)));
             return;
         }
         for (AdminSettingsEntry entry : entries) {
@@ -221,7 +221,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         row.addChild(description);
 
         if (entry.isSensitive()) {
-            row.addChild(readOnlyValue(t().get("TC_PLUGIN_SETTINGS_HIDDEN", uiPlayer)));
+            row.addChild(readOnlyValue(t().get("tc.plugin.settings.hidden", uiPlayer)));
             return row;
         }
 
@@ -242,23 +242,23 @@ public class AdminPluginSettingsPanel extends OZUIElement {
 
         UITextField input = input(entry);
         row.addChild(input);
-        OZUIElement saveButton = actionButton(t().get("TC_PLUGIN_SETTINGS_SAVE", uiPlayer));
+        OZUIElement saveButton = actionButton(t().get("tc.plugin.settings.save", uiPlayer));
         saveButton.setPivot(Pivot.MiddleRight);
         saveButton.setAbsolute();
         saveButton.style.right.set(1, Unit.Pixel);
         saveButton.style.top.set(50, Unit.Percent);
         saveButton.setClickAction(event -> input.getCurrentText(uiPlayer, value -> {
             if (!isValidValue(entry, value)) {
-                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_INVALID", uiPlayer)
+                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.invalid", uiPlayer)
                         .replace("PH_SETTING_KEY", entry.getKey()));
                 return;
             }
             if (entry.write(writeValue(entry, value))) {
                 adminSettings.reload();
-                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_SAVED", uiPlayer)
+                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.saved", uiPlayer)
                         .replace("PH_SETTING_KEY", entry.getKey()));
             } else {
-                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_SAVE_FAILED", uiPlayer)
+                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.save.failed", uiPlayer)
                         .replace("PH_SETTING_KEY", entry.getKey()));
             }
         }));
@@ -283,16 +283,16 @@ public class AdminPluginSettingsPanel extends OZUIElement {
                 .collect(Collectors.toList());
         Dropdown dropdown = new Dropdown(options, entry.getValue(), selected -> {
             if (!isValidValue(entry, selected)) {
-                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_INVALID", uiPlayer)
+                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.invalid", uiPlayer)
                         .replace("PH_SETTING_KEY", entry.getKey()));
                 return;
             }
             if (entry.write(writeValue(entry, selected))) {
                 adminSettings.reload();
-                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_SAVED", uiPlayer)
+                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.saved", uiPlayer)
                         .replace("PH_SETTING_KEY", entry.getKey()));
             } else {
-                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_SAVE_FAILED", uiPlayer)
+                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.save.failed", uiPlayer)
                         .replace("PH_SETTING_KEY", entry.getKey()));
             }
         });
@@ -310,10 +310,10 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         SwitchButton toggle = new SwitchButton(currentValue, newValue -> {
             if (entry.write(Boolean.toString(newValue))) {
                 adminSettings.reload();
-                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_SAVED", uiPlayer)
+                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.saved", uiPlayer)
                         .replace("PH_SETTING_KEY", entry.getKey()));
             } else {
-                uiPlayer.sendTextMessage(t().get("TC_PLUGIN_SETTINGS_SAVE_FAILED", uiPlayer)
+                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.save.failed", uiPlayer)
                         .replace("PH_SETTING_KEY", entry.getKey()));
             }
         });
@@ -406,7 +406,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         if (entry.getDefaultValue().isBlank()) {
             return description;
         }
-        String defaultText = t().get("TC_PLUGIN_SETTINGS_DEFAULT", uiPlayer)
+        String defaultText = t().get("tc.plugin.settings.default", uiPlayer)
                 .replace("PH_DEFAULT_VALUE", entry.getDefaultValue());
         if (description.isBlank()) {
             return defaultText;
@@ -422,7 +422,8 @@ public class AdminPluginSettingsPanel extends OZUIElement {
     }
 
     private String settingText(AdminSettingsEntry entry, String suffix, String fallback) {
-        String generatedKey = "TC_SETTING_" + normalizeSettingKey(entry.getKey()) + "_" + suffix;
+        String generatedKey = "tc.setting." + normalizeSettingKey(entry.getKey()).toLowerCase() + "."
+                + suffix.toLowerCase();
         String generatedText = pluginText(generatedKey);
         if (!generatedKey.equals(generatedText)) {
             return generatedText;
@@ -432,8 +433,8 @@ public class AdminPluginSettingsPanel extends OZUIElement {
     }
 
     private String settingOptionText(AdminSettingsEntry entry, String option) {
-        String key = "TC_SETTING_" + normalizeSettingKey(entry.getKey()) + "_OPTION_"
-                + normalizeSettingKey(option);
+        String key = "tc.setting." + normalizeSettingKey(entry.getKey()).toLowerCase() + ".option."
+                + normalizeSettingKey(option).toLowerCase();
         String translated = pluginText(key);
         return key.equals(translated) ? option : translated;
     }

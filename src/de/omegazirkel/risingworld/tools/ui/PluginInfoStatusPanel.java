@@ -6,6 +6,7 @@ import net.risingworld.api.objects.Player;
 import net.risingworld.api.ui.UIElement;
 import net.risingworld.api.ui.UILabel;
 import net.risingworld.api.ui.UIScrollView;
+import net.risingworld.api.ui.UITarget;
 import net.risingworld.api.ui.UIScrollView.ScrollViewMode;
 import net.risingworld.api.ui.style.Font;
 import net.risingworld.api.ui.style.Pivot;
@@ -46,10 +47,12 @@ public class PluginInfoStatusPanel extends OverlayBackPanel {
         if (player == null) {
             return;
         }
-        remove(player);
+        // Escape closes a native modal client-side, so this attribute can point
+        // to an already removed element. Do not send a late removal command:
+        // it can race and close the panel created below.
+        player.deleteAttribute(PLAYER_ATTRIBUTE);
         PluginInfoStatusPanel panel = new PluginInfoStatusPanel(player, pluginName, infoFactory, statusFactory);
-        CursorManager.show(player);
-        player.addUIElement(panel);
+        player.addUIElement(panel, UITarget.Modal);
         player.setAttribute(PLAYER_ATTRIBUTE, panel);
     }
 
@@ -61,7 +64,7 @@ public class PluginInfoStatusPanel extends OverlayBackPanel {
         if (panel != null) {
             player.removeUIElement(panel);
             player.deleteAttribute(PLAYER_ATTRIBUTE);
-            CursorManager.hide(player);
+            player.closeAllActiveUIWindows();
         }
     }
 
@@ -116,7 +119,7 @@ public class PluginInfoStatusPanel extends OverlayBackPanel {
     }
 
     private void addHeader(OZUIElement panel) {
-        UILabel title = new UILabel(t().get("TC_PLUGIN_INFO_STATUS_TITLE", uiPlayer)
+        UILabel title = new UILabel(t().get("tc.plugin.info.status.title", uiPlayer)
                 .replace("PH_PLUGIN_NAME", pluginName));
         title.setPivot(Pivot.UpperLeft);
         title.style.position.set(Position.Absolute);
@@ -156,8 +159,8 @@ public class PluginInfoStatusPanel extends OverlayBackPanel {
     }
 
     private void addTabs(OZUIElement panel) {
-        panel.addChild(tab(t().get("TC_PLUGIN_INFO_STATUS_TAB_INFO", uiPlayer), 24, Tab.INFO));
-        panel.addChild(tab(t().get("TC_PLUGIN_INFO_STATUS_TAB_STATUS", uiPlayer), 170, Tab.STATUS));
+        panel.addChild(tab(t().get("tc.plugin.info.status.tab.info", uiPlayer), 24, Tab.INFO));
+        panel.addChild(tab(t().get("tc.plugin.info.status.tab.status", uiPlayer), 170, Tab.STATUS));
     }
 
     private OZUIElement tab(String label, float x, Tab tab) {

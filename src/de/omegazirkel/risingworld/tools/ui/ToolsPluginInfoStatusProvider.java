@@ -22,7 +22,7 @@ public class ToolsPluginInfoStatusProvider implements PluginInfoStatusProvider {
 
     @Override
     public String getInfo(Player player) {
-        return t().get("TC_TOOLS_INFO_PANEL_INFO", player)
+        return t().get("tc.tools.info.panel.info", player)
                 .replace("PH_PLUGIN_NAME", pluginName)
                 .replace("PH_VERSION", pluginVersion)
                 .replace("PH_PLUGIN_CMD", pluginCommand);
@@ -30,7 +30,7 @@ public class ToolsPluginInfoStatusProvider implements PluginInfoStatusProvider {
 
     @Override
     public String getStatus(Player player) {
-        return t().get("TC_TOOLS_INFO_PANEL_STATUS", player);
+        return t().get("tc.tools.info.panel.status", player);
     }
 
     private static I18n t() {

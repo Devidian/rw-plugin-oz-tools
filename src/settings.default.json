@@ -1,0 +1,11 @@
+{
+  "logLevel": "ALL",
+  "logInternal": false,
+  "reloadOnChange": true,
+  "threadDiagnosticsEnabled": false,
+  "enablePluginWelcomeMessage": false,
+  "automaticPluginUpdateCheck": false,
+  "pluginUpdateCheckDelaySeconds": 30,
+  "pluginUpdateCheckDelayBetweenPluginsSeconds": 3,
+  "allowExternalPluginRepositories": false
+}

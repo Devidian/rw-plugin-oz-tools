@@ -9,6 +9,7 @@ import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
 import net.risingworld.api.assets.TextureAsset;
 import net.risingworld.api.objects.Player;
+import net.risingworld.api.ui.UITarget;
 
 public class PluginMenuManager {
     private static List<MenuItem> menuItems = new ArrayList<>();
@@ -33,17 +34,16 @@ public class PluginMenuManager {
     public static List<MenuItem> mainMenuItems(Player player) {
         List<MenuItem> menuItemsCopy = visiblePluginMenuItems(player);
         menuItemsCopy
-                .add(MenuItem.iconKey("menu-plugin-config", t().get("TC_MENU_SETTINGS", player),
+                .add(MenuItem.iconKey("menu-plugin-config", t().get("tc.menu.settings", player),
                         (p) -> {
                             p.hideRadialMenu(true);
                             PlayerPluginSettingsOverlay overlay = (PlayerPluginSettingsOverlay) p
                                     .getAttribute("tools.ui.overlay");
                             if (overlay != null) {
-                                overlay.close();
+                                p.deleteAttribute("tools.ui.overlay");
                             }
                             overlay = new PlayerPluginSettingsOverlay(p);
-                            CursorManager.show(p);
-                            p.addUIElement(overlay);
+                            p.addUIElement(overlay, UITarget.Modal);
                             p.setAttribute("tools.ui.overlay", overlay);
                         }));
         return menuItemsCopy;
@@ -62,15 +62,16 @@ public class PluginMenuManager {
     }
 
     public static void showMenu(Player p, List<MenuItem> items) {
-        TextureAsset[] icons = items.stream().map(item -> item.getIcon(p)).toArray(TextureAsset[]::new);
-        String[] labels = items.stream().map(MenuItem::getLabel).toArray(String[]::new);
+        List<MenuItem> visibleItems = items.stream().filter(item -> item.isVisible(p)).toList();
+        TextureAsset[] icons = visibleItems.stream().map(item -> item.getIcon(p)).toArray(TextureAsset[]::new);
+        String[] labels = visibleItems.stream().map(MenuItem::getLabel).toArray(String[]::new);
 
         p.showRadialMenu(icons, labels, null, false, i -> {
-            if (i < 0 || i >= items.size()) {
+            if (i < 0 || i >= visibleItems.size()) {
                 p.hideRadialMenu(false);
                 return;
             }
-            items.get(i).getAction().onCall(p);
+            visibleItems.get(i).getAction().onCall(p);
         });
     }
 

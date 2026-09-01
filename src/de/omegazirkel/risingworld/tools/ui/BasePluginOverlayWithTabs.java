@@ -42,7 +42,7 @@ public abstract class BasePluginOverlayWithTabs extends BasePluginOverlay {
         if (activeTab == null) {
             activeTab = Tab.DEFAULT;
         }
-        defaultTab = addTab(t().get("TC_UI_PLACEHOLDER_TAB_DEFAULT", uiPlayer), 180, activeTab == Tab.DEFAULT, () -> {
+        defaultTab = addTab(t().get("tc.ui.placeholder.tab.default", uiPlayer), 180, activeTab == Tab.DEFAULT, () -> {
             activeTab = Tab.DEFAULT;
             rebuild();
         });

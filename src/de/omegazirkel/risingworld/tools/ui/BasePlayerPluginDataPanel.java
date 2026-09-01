@@ -37,7 +37,7 @@ public abstract class BasePlayerPluginDataPanel extends OZUIElement {
     public void updateUI() {
         removeAllChilds();
 
-        UILabel titleLabel = new UILabel(t().get("TC_DATA_TITLE", uiPlayer).replace("PH_PLUGIN_NAME", title));
+        UILabel titleLabel = new UILabel(t().get("tc.data.title", uiPlayer).replace("PH_PLUGIN_NAME", title));
         titleLabel.setPivot(Pivot.UpperLeft);
         titleLabel.style.left.set(5, Unit.Percent);
         titleLabel.style.top.set(0, Unit.Pixel);
@@ -49,7 +49,7 @@ public abstract class BasePlayerPluginDataPanel extends OZUIElement {
         titleLabel.setTextAlign(TextAnchor.MiddleLeft);
         addChild(titleLabel);
 
-        UILabel descLabel = new UILabel(t().get("TC_DATA_DESC", uiPlayer).replace("PH_PLUGIN_NAME", title));
+        UILabel descLabel = new UILabel(t().get("tc.data.desc", uiPlayer).replace("PH_PLUGIN_NAME", title));
         descLabel.setPivot(Pivot.UpperLeft);
         descLabel.style.left.set(5, Unit.Percent);
         descLabel.style.top.set(12, Unit.Pixel);
@@ -93,7 +93,7 @@ public abstract class BasePlayerPluginDataPanel extends OZUIElement {
     }
 
     protected UILabel defaultEmptyStateLabel() {
-        UILabel placeholderLabel = new UILabel(t().get("TC_DATA_EMPTY", uiPlayer));
+        UILabel placeholderLabel = new UILabel(t().get("tc.data.empty", uiPlayer));
         placeholderLabel.setPivot(Pivot.UpperLeft);
         placeholderLabel.style.width.set(100, Unit.Percent);
         placeholderLabel.style.height.set(48, Unit.Pixel);

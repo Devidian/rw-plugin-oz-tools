@@ -43,7 +43,7 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         this.removeAllChilds();
 
         // add title label
-        UILabel titleLabel = new UILabel(t().get("TC_SETTINGS_TITLE", uiPlayer).replace("PH_PLUGIN_NAME", title));
+        UILabel titleLabel = new UILabel(t().get("tc.settings.title", uiPlayer).replace("PH_PLUGIN_NAME", title));
         titleLabel.setPivot(Pivot.UpperLeft);
         titleLabel.style.left.set(5, Unit.Percent);
         titleLabel.style.top.set(0, Unit.Pixel);
@@ -55,7 +55,7 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         titleLabel.setTextAlign(TextAnchor.MiddleLeft);
         this.addChild(titleLabel);
         // add description label
-        UILabel descLabel = new UILabel(t().get("TC_SETTINGS_DESC", uiPlayer).replace("PH_PLUGIN_NAME", title));
+        UILabel descLabel = new UILabel(t().get("tc.settings.desc", uiPlayer).replace("PH_PLUGIN_NAME", title));
         descLabel.setPivot(Pivot.UpperLeft);
         descLabel.style.left.set(5, Unit.Percent);
         descLabel.style.top.set(12, Unit.Pixel);
@@ -80,7 +80,7 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
 
     protected UIElement createIconStyleSettings() {
         OZUIElement bar = defaultSettingsContainer();
-        bar.addChild(defaultSettingsLabel(t().get("TC_TOOLS_SETTING_ICON_STYLE_GLOBAL", uiPlayer)));
+        bar.addChild(defaultSettingsLabel(t().get("tc.tools.setting.icon.style.global", uiPlayer)));
 
         UIElement buttons = switchButtons(
                 uiPlayer,
@@ -92,8 +92,8 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
                     ToolsPlayerPreferences.setIconStyle(uiPlayer, next);
                     redrawContent();
                 },
-                t().get("TC_TOOLS_ICON_STYLE_MODERN", uiPlayer),
-                t().get("TC_TOOLS_ICON_STYLE_CLASSIC", uiPlayer));
+                t().get("tc.tools.icon.style.modern", uiPlayer),
+                t().get("tc.tools.icon.style.classic", uiPlayer));
         buttons.setPivot(Pivot.LowerLeft);
         buttons.setPosition(0, 100, true);
         buttons.style.width.set(100, Unit.Percent);
@@ -133,8 +133,8 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
 
     protected UIElement switchButtons(Player uiPlayer, Boolean isEnabled,
             Callback<PlayerUIElementClickEvent> onSwitch) {
-        return switchButtons(uiPlayer, isEnabled, onSwitch, t().get("TC_UI_BTN_OFF", uiPlayer),
-                t().get("TC_UI_BTN_ON", uiPlayer));
+        return switchButtons(uiPlayer, isEnabled, onSwitch, t().get("tc.ui.btn.off", uiPlayer),
+                t().get("tc.ui.btn.on", uiPlayer));
     }
 
     protected UIElement switchButtons(Player uiPlayer, Boolean isEnabled,

@@ -20,6 +20,7 @@ public class PluginFileWatcher implements AutoCloseable {
     private final Map<WatchKey, Path> keyToPath = new HashMap<>();
     private final List<FileChangeListener> listeners = new ArrayList<>();
     private final Map<Path, FileChangeListener> settingsFiles = new HashMap<>();
+    private final Map<Path, FileChangeListener> settingsDirectories = new HashMap<>();
     private final PluginReloadDebouncer jarDebouncer;
     private final Consumer<Runnable> serverThreadDispatcher;
 
@@ -49,6 +50,15 @@ public class PluginFileWatcher implements AutoCloseable {
 
     public void addSettingsFile(Path path, FileChangeListener listener) {
         settingsFiles.put(path.toAbsolutePath(), listener);
+    }
+
+    /**
+     * Registers a plugin directory before its world-scoped settings JSON exists.
+     * The initial legacy-to-JSON migration creates that file after the watcher
+     * has started, so path-only registration would otherwise miss its reload.
+     */
+    public void addSettingsDirectory(Path path, FileChangeListener listener) {
+        settingsDirectories.put(path.toAbsolutePath(), listener);
     }
 
     private void registerAll(final Path start) throws IOException {
@@ -115,7 +125,7 @@ public class PluginFileWatcher implements AutoCloseable {
                 }
             }
         } catch (InterruptedException e) {
-            logger().fatal("InterruptedException: " + e.getMessage());
+            logger().debug("Plugin file watcher interrupted during shutdown.");
             Thread.currentThread().interrupt();
         } catch (IOException e) {
             logger().fatal("IOException: " + e.getMessage());
@@ -141,15 +151,18 @@ public class PluginFileWatcher implements AutoCloseable {
                 dispatch(() -> l.onJarChanged(path), "onJarChanged");
             }
         }
-        // check for settings.properties
-        else if (filename.equals("settings.properties")) {
-            FileChangeListener listener = settingsFiles.get(path.toAbsolutePath());
+        // JSON settings are world-scoped (settings.<world>.json); legacy
+        // settings.properties remains supported while plugins migrate.
+        else if (filename.equals("settings.properties")
+                || (filename.startsWith("settings.") && filename.endsWith(".json"))) {
+            FileChangeListener listener = settingsListenerFor(path, settingsFiles, settingsDirectories);
 
             if (listener != null) {
-                dispatch(() -> listener.onSettingsChanged(path), "onSettingsChanged");
+                FileChangeListener settingsListener = listener;
+                dispatch(() -> settingsListener.onSettingsChanged(path), "onSettingsChanged");
             } else {
                 // falls Settings-Datei nicht registriert ist → ignorieren
-                logger().info("ℹ️ Unknown settings.properties changed: " + path);
+                logger().info("ℹ️ Unknown settings file changed: " + path);
             }
         }
         // other files
@@ -158,6 +171,14 @@ public class PluginFileWatcher implements AutoCloseable {
                 dispatch(() -> l.onOtherFileChanged(path), "onOtherFileChanged");
             }
         }
+    }
+
+    static FileChangeListener settingsListenerFor(Path path, Map<Path, FileChangeListener> files,
+            Map<Path, FileChangeListener> directories) {
+        if (path == null) return null;
+        FileChangeListener listener = files.get(path.toAbsolutePath());
+        return listener != null || path.getParent() == null ? listener
+                : directories.get(path.getParent().toAbsolutePath());
     }
 
     private void dispatch(Runnable task, String operation) {

@@ -104,17 +104,18 @@ public class MenuItem {
 
     public static MenuItem closeMenu(Player player) {
         return MenuItem.iconKey(
+                "close-menu",
                 "menu-exit",
-                t().get("TC_MENU_CLOSE", player),
+                t().get("tc.menu.close", player),
                 (p) -> {
                     p.hideRadialMenu(false);
-                });
+                }, ignored -> false);
     }
 
     public static MenuItem backMenu(Player player, Callback<Player> action) {
         return MenuItem.iconKey(
                 "undo",
-                t().get("TC_MENU_BACK", player),
+                t().get("tc.menu.back", player),
                 action);
     }
 }

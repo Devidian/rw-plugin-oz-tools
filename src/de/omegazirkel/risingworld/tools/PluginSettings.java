@@ -1,21 +1,20 @@
 package de.omegazirkel.risingworld.tools;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.logging.log4j.Level;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.settings.AdminSettingsEntry;
 import de.omegazirkel.risingworld.tools.settings.AdminSettingsType;
+import de.omegazirkel.risingworld.tools.settings.JsonSettingsFile;
 import de.omegazirkel.risingworld.tools.settings.SettingsFileEditor;
+import net.risingworld.api.World;
 
 public class PluginSettings {
 	private static PluginSettings instance = null;
@@ -37,8 +36,8 @@ public class PluginSettings {
 	public int pluginUpdateCheckDelayBetweenPluginsSeconds = 3;
 	public boolean allowExternalPluginRepositories = false;
 	private Path settingsFile;
-	private Properties currentSettings = new Properties();
-	private Properties defaultSettings = new Properties();
+	private java.util.Map<String, String> currentSettings = new LinkedHashMap<>();
+	private java.util.Map<String, String> defaultSettings = new LinkedHashMap<>();
 
 	// END Settings
 
@@ -59,57 +58,39 @@ public class PluginSettings {
 	}
 
 	public void initSettings() {
-		initSettings((plugin.getPath() != null ? plugin.getPath() : ".") + "/settings.properties");
+		Path pluginPath = Path.of(plugin.getPath() != null ? plugin.getPath() : ".");
+		initSettings(pluginPath.resolve("settings." + safeWorldName() + ".json").toString());
 	}
 
 	public void initSettings(String filePath) {
-		settingsFile = Paths.get(filePath);
-		Path defaultSettingsFile = settingsFile.resolveSibling("settings.default.properties");
+		settingsFile = Path.of(filePath);
+		Path defaultSettingsFile = settingsFile.resolveSibling("settings.default.json");
+		Path legacySettingsFile = settingsFile.resolveSibling("settings.properties");
 
 		try {
-			if (Files.notExists(settingsFile) && Files.exists(defaultSettingsFile)) {
-				logger().info("settings.properties not found, copying from settings.default.properties...");
-				Files.copy(defaultSettingsFile, settingsFile);
-			}
-
-			Properties settings = new Properties();
-			Properties defaults = new Properties();
-			if (Files.exists(defaultSettingsFile)) {
-				try (FileInputStream in = new FileInputStream(defaultSettingsFile.toFile())) {
-					defaults.load(new InputStreamReader(in, "UTF8"));
-				}
-			}
-			if (Files.exists(settingsFile)) {
-				try (FileInputStream in = new FileInputStream(settingsFile.toFile())) {
-					settings.load(new InputStreamReader(in, "UTF8"));
-				}
-			} else {
-				logger().warn(
-						"⚠️ Neither settings.properties nor settings.default.properties found. Using default values.");
-			}
+			if (JsonSettingsFile.migrateLegacyProperties(legacySettingsFile, settingsFile))
+				logger().info("Migrated legacy settings.properties to " + settingsFile.getFileName());
+			if (Files.notExists(settingsFile) && Files.exists(defaultSettingsFile))
+				JsonSettingsFile.writeFlatAtomically(settingsFile, JsonSettingsFile.loadFlat(defaultSettingsFile));
+			java.util.Map<String, String> settings = JsonSettingsFile.loadFlat(settingsFile);
+			java.util.Map<String, String> defaults = JsonSettingsFile.loadFlat(defaultSettingsFile);
+			if (settings.isEmpty() && defaults.isEmpty()) logger().warn("No JSON settings files found. Using defaults.");
 			// fill global values
-			logLevel = settings.getProperty("logLevel", defaults.getProperty("logLevel", "ALL"));
-			logInternal = settings.getProperty("logInternal", defaults.getProperty("logInternal", "false"))
+			logLevel = value(settings, defaults, "logLevel", "ALL");
+			logInternal = value(settings, defaults, "logInternal", "false")
 					.contentEquals("true");
-			reloadOnChange = settings.getProperty("reloadOnChange", defaults.getProperty("reloadOnChange", "true"))
+			reloadOnChange = value(settings, defaults, "reloadOnChange", "true")
 					.contentEquals("true");
-			threadDiagnosticsEnabled = settings
-					.getProperty("threadDiagnosticsEnabled", defaults.getProperty("threadDiagnosticsEnabled", "false"))
+			threadDiagnosticsEnabled = value(settings, defaults, "threadDiagnosticsEnabled", "false")
 					.contentEquals("true");
-			automaticPluginUpdateCheck = settings.getProperty("automaticPluginUpdateCheck",
-					defaults.getProperty("automaticPluginUpdateCheck", "false")).contentEquals("true");
-			allowExternalPluginRepositories = settings.getProperty("allowExternalPluginRepositories",
-					defaults.getProperty("allowExternalPluginRepositories", "false")).contentEquals("true");
-			pluginUpdateCheckDelaySeconds = Integer.parseInt(settings.getProperty("pluginUpdateCheckDelaySeconds",
-					defaults.getProperty("pluginUpdateCheckDelaySeconds", "30")));
-			pluginUpdateCheckDelayBetweenPluginsSeconds = Math.max(0, Integer.parseInt(settings.getProperty(
-					"pluginUpdateCheckDelayBetweenPluginsSeconds", defaults.getProperty(
-							"pluginUpdateCheckDelayBetweenPluginsSeconds", "3"))));
+			automaticPluginUpdateCheck = value(settings, defaults, "automaticPluginUpdateCheck", "false").contentEquals("true");
+			allowExternalPluginRepositories = value(settings, defaults, "allowExternalPluginRepositories", "false").contentEquals("true");
+			pluginUpdateCheckDelaySeconds = Integer.parseInt(value(settings, defaults, "pluginUpdateCheckDelaySeconds", "30"));
+			pluginUpdateCheckDelayBetweenPluginsSeconds = Math.max(0, Integer.parseInt(value(settings, defaults,
+					"pluginUpdateCheckDelayBetweenPluginsSeconds", "3")));
 
 			// motd settings
-			enablePluginWelcomeMessage = settings
-					.getProperty("enablePluginWelcomeMessage",
-							defaults.getProperty("enablePluginWelcomeMessage", "false"))
+			enablePluginWelcomeMessage = value(settings, defaults, "enablePluginWelcomeMessage", "false")
 					.contentEquals("true");
 
 			logger().info(plugin.getName() + " Plugin settings loaded");
@@ -141,7 +122,8 @@ public class PluginSettings {
 				entry("threadDiagnosticsEnabled", "Thread diagnostics",
 						"If true, Tools samples and logs JVM-wide thread lifecycle information.",
 						AdminSettingsType.BOOLEAN),
-				AdminSettingsEntry.group("pluginUpdates", "Plugin updates"),
+				AdminSettingsEntry.group("pluginUpdates", "Plugin updates",
+						"Controls automatic checks and installation of public plugin updates."),
 				entry("automaticPluginUpdateCheck", "Automatic update check", "Checks public GitHub releases after startup.", AdminSettingsType.BOOLEAN),
 				entry("pluginUpdateCheckDelaySeconds", "Update-check delay", "Delay in seconds after startup.", AdminSettingsType.INTEGER),
 				entry("pluginUpdateCheckDelayBetweenPluginsSeconds", "Update-check interval",
@@ -157,10 +139,20 @@ public class PluginSettings {
 				key,
 				label,
 				description,
-				currentSettings.getProperty(key, defaultSettings.getProperty(key, "")),
-				defaultSettings.getProperty(key, ""),
+				currentSettings.getOrDefault(key, defaultSettings.getOrDefault(key, "")),
+				defaultSettings.getOrDefault(key, ""),
 				type,
 				false,
 				value -> SettingsFileEditor.writeValue(settingsFile, key, value));
+	}
+
+	private static String value(java.util.Map<String, String> settings, java.util.Map<String, String> defaults,
+			String key, String fallback) {
+		return settings.getOrDefault(key, defaults.getOrDefault(key, fallback));
+	}
+
+	private static String safeWorldName() {
+		String world = World.getName();
+		return (world == null || world.isBlank() ? "default" : world).replaceAll("[^A-Za-z0-9._-]", "_");
 	}
 }

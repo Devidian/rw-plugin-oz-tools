@@ -15,9 +15,13 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
     private static final float PANEL_HEIGHT_PIXELS = 620f;
     private static final float BODY_HEIGHT_PIXELS = 438f;
 
-    protected static String titleLabelKey = "TC_PLACEHOLDER_TITLE";
-    protected static String descLabelKey = "TC_PLACEHOLDER_DESC";
-    protected static String legendLabelKey = "TC_PLACEHOLDER_LEGEND";
+    protected float panelWidthPercent() { return PANEL_WIDTH_PERCENT; }
+    protected float panelHeightPixels() { return PANEL_HEIGHT_PIXELS; }
+    protected float bodyHeightPixels() { return BODY_HEIGHT_PIXELS; }
+
+    protected static String titleLabelKey = "tc.placeholder.title";
+    protected static String descLabelKey = "tc.placeholder.desc";
+    protected static String legendLabelKey = "tc.placeholder.legend";
 
     protected abstract I18n t();
 
@@ -41,7 +45,6 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
     public BasePluginOverlay(Player player, Callback<Player> onClose){
         super(player);
         this.onClose = onClose;
-        setClickable(false);
     }
 
     protected void rebuild() {
@@ -49,8 +52,8 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
         panel = new OZUIElement();
         panel.setPivot(Pivot.MiddleCenter);
         panel.setPosition(50f, 50f, true);
-        panel.style.width.set(PANEL_WIDTH_PERCENT, Unit.Percent);
-        panel.style.height.set(PANEL_HEIGHT_PIXELS, Unit.Pixel);
+        panel.style.width.set(panelWidthPercent(), Unit.Percent);
+        panel.style.height.set(panelHeightPixels(), Unit.Pixel);
         panel.setBackgroundColor(0, 0, 0, 0.86f);
         panel.setBorderColor(0.95f, 0.75f, 0.25f, 0.6f);
         panel.setBorder(1);
@@ -104,7 +107,7 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
         body.setPivot(Pivot.UpperLeft);
         body.setPosition(24, 124, false);
         body.style.width.set(96, Unit.Percent);
-        body.style.height.set(BODY_HEIGHT_PIXELS, Unit.Pixel);
+        body.style.height.set(bodyHeightPixels(), Unit.Pixel);
         body.setBackgroundColor(0.08f, 0.08f, 0.08f, 0.55f);
         body.setBorder(1);
         body.setBorderColor(0.95f, 0.75f, 0.25f, 0.48f);
@@ -115,14 +118,14 @@ public abstract class BasePluginOverlay extends OverlayBackPanel {
     private void setupFooter() {
         UILabel legend = new UILabel(legendText());
         legend.setPivot(Pivot.LowerLeft);
-        legend.setPosition(24, PANEL_HEIGHT_PIXELS - 18, false);
+        legend.setPosition(24, panelHeightPixels() - 18, false);
         legend.setFontSize(12);
         panel.addChild(legend);
     }
 
     protected void close() {
         uiPlayer.removeUIElement(this);
-        CursorManager.hide(uiPlayer);
+        uiPlayer.closeAllActiveUIWindows();
         onClose.onCall(uiPlayer);
     }
 }

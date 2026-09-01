@@ -33,7 +33,7 @@ public class ToolsPlayerPluginSettingsPanel extends BasePlayerPluginSettingsPane
         flexWrapper.addChild(createIconStyleSettings());
         flexWrapper.addChild(createLanguageSettings());
         OZUIElement labels = defaultSettingsContainer();
-        labels.addChild(defaultSettingsLabel(t().get("TC_TOOLS_SETTING_INVENTORY_LABELS", uiPlayer)));
+        labels.addChild(defaultSettingsLabel(t().get("tc.tools.setting.inventory.labels", uiPlayer)));
         labels.addChild(switchButtons(uiPlayer, ToolsPlayerPreferences.showInventoryShortcutLabels(uiPlayer), event -> {
             boolean next = !ToolsPlayerPreferences.showInventoryShortcutLabels(uiPlayer);
             ToolsPlayerPreferences.setShowInventoryShortcutLabels(uiPlayer, next);
@@ -49,15 +49,15 @@ public class ToolsPlayerPluginSettingsPanel extends BasePlayerPluginSettingsPane
         boolean custom = ToolsPlayerPreferences.LANGUAGE_SOURCE_CUSTOM
                 .equals(ToolsPlayerPreferences.languageSource(uiPlayer));
         container.style.height.set(custom ? 142 : 104, Unit.Pixel);
-        container.addChild(defaultSettingsLabel(t().get("TC_TOOLS_SETTING_LANGUAGE", uiPlayer)));
+        container.addChild(defaultSettingsLabel(t().get("tc.tools.setting.language", uiPlayer)));
 
         Dropdown source = new Dropdown(List.of(
                 new DropdownOption(ToolsPlayerPreferences.LANGUAGE_SOURCE_SYSTEM,
-                        t().get("TC_TOOLS_LANGUAGE_SYSTEM", uiPlayer)),
+                        t().get("tc.tools.language.system", uiPlayer)),
                 new DropdownOption(ToolsPlayerPreferences.LANGUAGE_SOURCE_GAME,
-                        t().get("TC_TOOLS_LANGUAGE_GAME", uiPlayer)),
+                        t().get("tc.tools.language.game", uiPlayer)),
                 new DropdownOption(ToolsPlayerPreferences.LANGUAGE_SOURCE_CUSTOM,
-                        t().get("TC_TOOLS_LANGUAGE_CUSTOM", uiPlayer))),
+                        t().get("tc.tools.language.custom", uiPlayer))),
                 ToolsPlayerPreferences.languageSource(uiPlayer), selected -> {
                     ToolsPlayerPreferences.setLanguageSource(uiPlayer, selected);
                     redrawContent();

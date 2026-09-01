@@ -1,0 +1,207 @@
+{
+  "tc": {
+    "btn": {
+      "cancel": "Cancel",
+      "close": "Close"
+    },
+    "cmd": {
+      "help": "Plugin help\nType \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD rk [KEY]\u003c/color\u003e to bind a key [KEY] to open the plugin menu.\nType \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD open\u003c/color\u003e to open plugin menu.",
+      "status": "🔎 Plugin Status\n➡️ Plugin version: PH_VERSION\n➡️ Installed languages: PH_LANG_AVAILABLE\n➡️ Your language: PH_LANGUAGE\n➡️ Used language: PH_USEDLANG\n➡️ Translated by: Devidian"
+    },
+    "data": {
+      "desc": "Here you can view stored data for the plugin PH_PLUGIN_NAME.",
+      "empty": "No stored player data is available for this plugin yet.",
+      "title": "Saved Data for PH_PLUGIN_NAME"
+    },
+    "menu": {
+      "back": "back",
+      "close": "close menu",
+      "settings": "Settings"
+    },
+    "msg": {
+      "plugin": {
+        "welcome": "➡️ \u003ccolor\u003d#F00000\u003ePH_PLUGIN_NAME\u003c/color\u003e | \u003ccolor\u003d#F0F000\u003evPH_PLUGIN_VERSION\u003c/color\u003e | \u003ccolor\u003d#C0C0C0\u003e/PH_PLUGIN_CMD\u003c/color\u003e | loaded!"
+      }
+    },
+    "plugin": {
+      "info": {
+        "status": {
+          "tab": {
+            "info": "Info",
+            "status": "Status"
+          },
+          "title": "Plugin: PH_PLUGIN_NAME"
+        }
+      },
+      "install": {
+        "message": "PH_PLUGIN_NAME will be installed. Plugins reload afterwards.",
+        "title": "Install plugin"
+      },
+      "settings": {
+        "default": "Default: PH_DEFAULT_VALUE",
+        "desc": "Admin-only settings loaded from the plugin settings file.",
+        "empty": "No admin settings metadata is registered for this plugin yet.",
+        "hidden": "Hidden",
+        "invalid": "Invalid value for PH_SETTING_KEY.",
+        "reload": "Reload",
+        "save": {
+          "$value": "Save",
+          "failed": "Could not save PH_SETTING_KEY."
+        },
+        "saved": "Saved PH_SETTING_KEY and reloaded settings.",
+        "title": "PluginSettings for PH_PLUGIN_NAME"
+      },
+      "update": {
+        "action": "Update",
+        "all": {
+          "action": "Update all",
+          "message": "PH_PLUGIN_COUNT plugins update one after another. Plugins reload once afterwards.",
+          "title": "Install all plugin updates"
+        },
+        "check": {
+          "action": "Check for updates",
+          "none": "Update check completed. No new updates are available.",
+          "plugin": {
+            "$value": "Checking PH_PLUGIN_NAME for a new version.",
+            "action": "Check this plugin",
+            "completed": "Update check for PH_PLUGIN_NAME completed."
+          },
+          "started": "Starting plugin update check.",
+          "updates": {
+            "available": "Update check completed. New plugin updates are available."
+          }
+        },
+        "installing": "Update in progress...",
+        "install": {
+          "action": "Install",
+          "completed": "Update completed. Reloading plugins.",
+          "confirm": "Install update",
+          "failed": {
+            "$value": "\u003ccolor\u003d#F0A000\u003ePlugin update failed. The installed plugin was kept unchanged.\u003c/color\u003e",
+            "untrusted": {
+              "source": "\u003ccolor\u003d#F0A000\u003eUpdate failed: untrusted source.\u003c/color\u003e"
+            }
+          },
+          "message": "PH_PLUGIN_NAME will update from vPH_INSTALLED_VERSION to vPH_LATEST_VERSION. Plugins reload afterwards.",
+          "started": "Updating PH_PLUGIN_NAME from vPH_INSTALLED_VERSION to vPH_LATEST_VERSION.",
+          "title": "Install plugin update"
+        },
+        "last": {
+          "checked": "Last check: PH_CHECKED_AT"
+        },
+        "release": {
+          "notes": {
+            "empty": "No release notes were provided for this release.",
+            "subtitle": "Release notes for plugin \u003ccolor\u003d#F2C766\u003ePH_PLUGIN_NAME\u003c/color\u003e \u003ccolor\u003d#F2C766\u003evPH_LATEST_VERSION\u003c/color\u003e",
+            "title": "Release notes"
+          }
+        }
+      }
+    },
+    "settings": {
+      "desc": "Here you can adjust the settings for the plugin PH_PLUGIN_NAME.",
+      "empty": "No settings page is available for PH_PLUGIN_NAME.",
+      "title": "Plugin Settings for PH_PLUGIN_NAME"
+    },
+    "setting": {
+      "allowexternalpluginrepositories": {
+        "desc": "Allow compatible public GitHub repositories outside OZ.",
+        "label": "Allow external repositories"
+      },
+      "automaticpluginupdatecheck": {
+        "desc": "Checks public GitHub releases after server startup.",
+        "label": "Automatic update check"
+      },
+      "enablepluginwelcomemessage": {
+        "desc": "If true, Tools sends a welcome message when a player joins.",
+        "label": "Welcome message"
+      },
+      "logging": {
+        "desc": "Logging output and verbosity.",
+        "label": "Logging"
+      },
+      "loginternal": {
+        "desc": "If true, log output is printed to the default console.",
+        "label": "Log internal"
+      },
+      "loglevel": {
+        "desc": "Controls Tools logging verbosity.",
+        "label": "Log level"
+      },
+      "playermessages": {
+        "desc": "Messages sent directly to players by Tools.",
+        "label": "Player messages"
+      },
+      "pluginupdatecheckdelaybetweenpluginsseconds": {
+        "desc": "Delay in seconds between public GitHub requests.",
+        "label": "Update-check interval"
+      },
+      "pluginupdatecheckdelayseconds": {
+        "desc": "Delay in seconds after server startup.",
+        "label": "Update-check delay"
+      },
+      "pluginupdates": {
+        "desc": "Controls automatic checks and installation of public plugin updates.",
+        "label": "Plugin updates"
+      },
+      "reloadonchange": {
+        "desc": "If true, jar changes trigger delayed plugin reloads.",
+        "label": "Reload on change"
+      },
+      "runtime": {
+        "desc": "Runtime reload and maintenance behavior.",
+        "label": "Runtime"
+      },
+      "threaddiagnosticsenabled": {
+        "desc": "If true, Tools samples and logs JVM-wide thread lifecycle information.",
+        "label": "Thread diagnostics"
+      }
+    },
+    "tab": {
+      "data": "Saved Data",
+      "plugin": {
+        "settings": "PluginSettings"
+      },
+      "release": {
+        "notes": "Release notes"
+      },
+      "settings": "Settings"
+    },
+    "tools": {
+      "icon": {
+        "style": {
+          "classic": "Classic",
+          "modern": "Modern"
+        }
+      },
+      "info": {
+        "panel": {
+          "info": "\u003cb\u003ePH_PLUGIN_NAME\u003c/b\u003e\nVersion: PH_VERSION\nCommand: \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD\u003c/color\u003e\n\nShared runtime foundation for Rising World plugins.\n\nProvides reusable i18n, logging, file watching, WebSocket, SQLite, settings, and UI helpers.",
+          "status": "\u003cb\u003eRuntime status\u003c/b\u003e\nShared provider registry: active"
+        }
+      },
+      "language": {
+        "custom": "Custom language",
+        "game": "Game language",
+        "system": "System language"
+      },
+      "setting": {
+        "icon": {
+          "style": {
+            "global": "Global icon style"
+          }
+        },
+        "inventory": {
+          "labels": "Show labels below inventory shortcut icons"
+        },
+        "language": "Language"
+      }
+    },
+    "ui": {
+      "btn": {
+        "off": "OFF",
+        "on": "ON"
+      }
+    }
+  }
+}
