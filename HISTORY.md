@@ -5,6 +5,7 @@
 - feat: provide authenticated, game-managed native web routes for compatible OZ plugins.
 - feat: add the authenticated Manager WebSocket connector with player-status support.
 - security: persist connector credentials separately and reject malformed connector errors without exposing payloads.
+- change: migrate runtime settings and localization resources to JSON with compatibility for existing server data.
 
 ## [0.23.14] - 2026-08-10 | Mail system-report bridge
 
