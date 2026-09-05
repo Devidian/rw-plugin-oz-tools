@@ -314,7 +314,6 @@
 									<directory>${basedir}/src</directory>
 									<includes>
 										<include>*.json</include>
-                                        <include>*.properties</include>
 									</includes>
 								</resource>
 							</resources>
@@ -334,7 +333,6 @@
 									<directory>${basedir}/src/assets</directory>
 									<includes>
 										<include>*.json</include>
-                                        <include>*.properties</include>
 									</includes>
 								</resource>
 							</resources>
@@ -353,7 +351,7 @@
 								<resource>
 									<directory>${basedir}/src/i18n</directory>
 									<includes>
-										<include>*.*</include>
+										<include>*.json</include>
 									</includes>
 								</resource>
 							</resources>

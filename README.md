@@ -49,8 +49,8 @@ Just extract the plugin into your `Plugins` folder. The jar path should look lik
         ├── Plugins
         │    ├── OZTools
         │    │    ├── i18n
-        │    │    │    ├── de.properties
-        │    │    │    ├── en.properties
+        │    │    │    ├── de.json
+        │    │    │    ├── en.json
         │    │    │    :
         │    │    ├── lib
         │    │    │    ├── *.jar
@@ -58,8 +58,8 @@ Just extract the plugin into your `Plugins` folder. The jar path should look lik
         │    │    ├── HISTORY.md
         │    │    ├── OZTools.jar
         │    │    ├── README.md
-        │    │    ├── settings.default.properties
-        │    │    └── settings.properties
+        │    │    ├── settings.default.json
+        │    │    └── settings.<world>.json
         :    :
 ```
 
@@ -67,7 +67,7 @@ Just extract the plugin into your `Plugins` folder. The jar path should look lik
 
 ## Thread diagnostics
 
-Set `threadDiagnosticsEnabled=true` in the Tools `settings.properties` to log
+Set `threadDiagnosticsEnabled=true` in the Tools `settings.<world>.json` to log
 new and disappeared JVM threads every five seconds and grouped summaries every
 minute through `OZ.ThreadDiagnostics`. The setting is disabled by default.
 
@@ -112,17 +112,24 @@ Use `OZTools.getPlayerLanguage(player)` whenever a plugin needs the language cod
 ### Translation files
 
 ```bash
-_/Plugins/YourPluigin/i18n/en.properties
-_/Plugins/YourPluigin/i18n/de.properties
-_/Plugins/YourPluigin/i18n/__anyotherlanguage__.properties
+_/Plugins/YourPluigin/i18n/en.json
+_/Plugins/YourPluigin/i18n/de.json
+_/Plugins/YourPluigin/i18n/__anyotherlanguage__.json
 
 ```
 
 ### Example File content
 
-```bash
-TC_MSG_PLUGIN_WELCOME=ℹ️ <color=#F00000>PH_PLUGIN_NAME</color> | <color=#F0F000>vPH_PLUGIN_VERSION</color> | <color=#C0C0C0>/PH_PLUGIN_CMD</color> | loaded!
-
+```json
+{
+  "tc": {
+    "msg": {
+      "plugin": {
+        "welcome": "ℹ️ PH_PLUGIN_NAME | vPH_PLUGIN_VERSION | /PH_PLUGIN_CMD | loaded!"
+      }
+    }
+  }
+}
 ```
 
 ## Logger
@@ -202,7 +209,7 @@ public class NewPlugin extends Plugin implements FileChangeListener{
     // Optional
     @Override
     public void onSettingsChanged(Path file) {
-        logger().debug("settings.properties changed: "+file.toString())
+        logger().debug("settings.<world>.json changed: "+file.toString())
         // this.initSettings();
     }
 
@@ -413,7 +420,7 @@ public class YourPluginPlayerPluginSettings extends PlayerPluginSettings {
 
 ### Admin PluginSettings tab
 
-Plugins can register admin-only `settings.properties` metadata for the shared
+Plugins can register admin-only `settings.<world>.json` metadata for the shared
 `PluginSettings` tab. Tools renders the tab only for admins and only for plugins
 that register metadata. Sensitive settings must be omitted or marked sensitive;
 editable values are limited to booleans, integers, and strings.
@@ -611,3 +618,13 @@ Rules:
 - Run `mvn -B -DskipTests package` and `mvn -B test` before release-facing changes are merged.
 - Use `RUNTIME_TESTING.md` and `scripts/docker-runtime-smoke.sh <PluginFolderName>` for runtime smoke tests when behavior changes need server validation.
 - Keep `README.md` and `HISTORY.md` current and use Conventional Commit titles for commits and PRs.
+
+## JSON-only distribution
+
+Settings defaults (`settings.default.json`) and translations (`i18n/*.json`)
+are shipped only as JSON. Legacy default and translation `.properties` files
+are no longer included. Runtime settings remain world-scoped as
+`settings.<world>.json`; migration of an existing `settings.properties` and
+its backup remains supported. Updating the package does not delete old files
+already present on the server. Use `mvn clean package` for a fresh local
+package; ZIP assembly also excludes stale legacy settings and translations.
