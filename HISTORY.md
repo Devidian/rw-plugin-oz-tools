@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.0] - 2026-09-05 | Native web security and Manager connector
+
+- feat: provide authenticated, game-managed native web routes for compatible OZ plugins.
+- feat: add the authenticated Manager WebSocket connector with player-status support.
+- security: persist connector credentials separately and reject malformed connector errors without exposing payloads.
+
 ## [0.23.14] - 2026-08-10 | Mail system-report bridge
 
 - feat: expose trusted, quota-exempt OZ Mail system-report delivery to sibling plugins.

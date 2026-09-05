@@ -2,6 +2,7 @@ package de.omegazirkel.risingworld;
 
 import java.nio.file.Path;
 import java.util.List;
+import com.google.gson.JsonElement;
 
 import de.omegazirkel.risingworld.tools.FileChangeListener;
 import de.omegazirkel.risingworld.tools.OZLogger;
@@ -41,7 +42,15 @@ public final class OZTools extends OZToolsRuntime implements Listener, FileChang
     public static OZLogger logger() { return OZToolsRuntime.logger(); }
     public static PluginSettings getSettings() { return OZToolsRuntime.getSettings(); }
     public static PlayerSettings playerSettings() { return OZToolsRuntime.playerSettings(); }
-
+    public static AutoCloseable registerGameConnectorFeature(String eventName) {
+        return OZToolsRuntime.registerGameConnectorFeature(eventName);
+    }
+    public static AutoCloseable registerGameConnectorFeature(String eventName, Runnable onReady) {
+        return OZToolsRuntime.registerGameConnectorFeature(eventName, onReady);
+    }
+    public static boolean publishGameConnectorEvent(String eventName, JsonElement data) {
+        return OZToolsRuntime.publishGameConnectorEvent(eventName, data);
+    }
     @Override
     public void onEnable() {
         super.onEnable();

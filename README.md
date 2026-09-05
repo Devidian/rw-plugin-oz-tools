@@ -238,6 +238,36 @@ rejects new and already-enqueued work after `close()`, and isolates task and
 enqueue exceptions. Callback producers should pass immutable values or stable
 identifiers instead of Rising World API objects.
 
+### Manager game connector
+
+Tools provisions its private Manager credential through the configured
+`web.wsTargetUrl` when no credential exists, even while
+`web.useWebsockets=false`. The default endpoint requires `wss`; credentials are
+not written to `settings.*.json` or exposed in the settings UI. On first start,
+Tools creates a private random local key beside its encrypted credential; no
+container or server environment variable is required. An optional
+`OZ_TOOLS_GAME_CONNECTOR_CREDENTIAL_KEY` of at least 32 characters overrides
+that generated key for deployments that manage their own secrets. When
+upgrading from an environment-key deployment, retain that environment variable
+until the existing connector credential has been reset and paired again;
+otherwise Tools deliberately refuses to replace its encryption key. Automatic
+provisioning identifies a server only through the trusted
+proxy's observed peer IP plus the runtime game port. Set
+`web.useWebsockets=true` only after the backend connector is available.
+
+Consumers declare their supported event names without opening a second socket:
+
+```java
+AutoCloseable registration = OZTools.registerGameConnectorFeature("playerStatus");
+// Close registration in the consumer lifecycle when the feature is unavailable.
+```
+
+Registration is a non-blocking no-op while Tools is not active. Payload
+delivery remains deliberately unavailable until the versioned event contract is
+released. Native plugin routes remain disabled by default through
+`web.allowUnsecureRequests=false`; consumer route guards are delivered with the
+consumer migration wave.
+
 ## Radial Main menu
 
 Plugins can register entries in the shared `/ozt` radial menu with

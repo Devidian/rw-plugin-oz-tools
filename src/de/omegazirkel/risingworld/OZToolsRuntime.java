@@ -7,6 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,6 +26,8 @@ import de.omegazirkel.risingworld.tools.ServerThreadDispatcher;
 import de.omegazirkel.risingworld.tools.ThreadDiagnostics;
 import de.omegazirkel.risingworld.tools.ToolsPlayerPreferences;
 import de.omegazirkel.risingworld.tools.WSClientEndpoint;
+import de.omegazirkel.risingworld.tools.GameConnectorService;
+import com.google.gson.JsonElement;
 import de.omegazirkel.risingworld.tools.db.SQLiteConnectionFactory;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
 import de.omegazirkel.risingworld.tools.ui.AdminPluginSettingsPanel;
@@ -41,6 +45,7 @@ import net.risingworld.api.Plugin;
 import net.risingworld.api.Server;
 import net.risingworld.api.events.player.PlayerCommandEvent;
 import net.risingworld.api.events.player.PlayerConnectEvent;
+import net.risingworld.api.events.general.HttpRequestEvent;
 import net.risingworld.api.events.player.PlayerDisconnectEvent;
 import net.risingworld.api.events.player.PlayerSpawnEvent;
 import net.risingworld.api.events.player.ui.PlayerToggleInventoryEvent;
@@ -60,8 +65,42 @@ class OZToolsRuntime extends Plugin {
     private ServerThreadDispatcher serverThreadDispatcher;
     private ThreadDiagnostics threadDiagnostics;
     private PluginUpdateService pluginUpdateService;
+    private GameConnectorService gameConnectorService;
     private static volatile PluginUpdateService activePluginUpdateService;
     private static volatile OZToolsRuntime activeTools;
+    private static final Set<GameConnectorFeatureRegistration> connectorFeatureRegistrations = ConcurrentHashMap.newKeySet();
+
+    private static final class GameConnectorFeatureRegistration implements AutoCloseable {
+        private final String eventName;
+        private final Runnable onReady;
+        private volatile AutoCloseable delegate = () -> { };
+
+        private GameConnectorFeatureRegistration(String eventName, Runnable onReady) {
+            this.eventName = eventName;
+            this.onReady = onReady;
+        }
+
+        private synchronized void bind(OZToolsRuntime runtime) {
+            try {
+                delegate.close();
+            } catch (Exception ignored) {
+                // The old connector may already have been stopped during settings reload.
+            }
+            delegate = runtime.gameConnectorService.registerFeature(eventName, () -> {
+                if (runtime.serverThreadDispatcher != null) runtime.serverThreadDispatcher.dispatch(onReady);
+            });
+        }
+
+        @Override
+        public synchronized void close() {
+            connectorFeatureRegistrations.remove(this);
+            try {
+                delegate.close();
+            } catch (Exception ignored) {
+                // Closing a feature declaration is best effort during plugin unload.
+            }
+        }
+    }
 
     public static void checkPluginUpdates() {
         PluginUpdateService service = activePluginUpdateService;
@@ -217,6 +256,9 @@ class OZToolsRuntime extends Plugin {
         pluginUpdateService = new PluginUpdateService((OZTools) this, sqliteCon);
         activePluginUpdateService = pluginUpdateService;
         activeTools = this;
+        gameConnectorService = new GameConnectorService((OZTools) this, s);
+        rebindGameConnectorFeatures();
+        gameConnectorService.start();
         if (s.automaticPluginUpdateCheck) {
             executeDelayed(Math.max(1, s.pluginUpdateCheckDelaySeconds), pluginUpdateService::checkAsync);
         }
@@ -300,6 +342,10 @@ class OZToolsRuntime extends Plugin {
             pluginUpdateService = null;
             activePluginUpdateService = null;
             activeTools = null;
+        }
+        if (gameConnectorService != null) {
+            gameConnectorService.stop();
+            gameConnectorService = null;
         }
 
         // 1. Close file watcher to prevent further actions
@@ -408,6 +454,12 @@ class OZToolsRuntime extends Plugin {
     public void onSettingsChanged(Path settingsPath) {
         s.initSettings(settingsPath.toString());
         configureThreadDiagnostics();
+        if (gameConnectorService != null) {
+            gameConnectorService.stop();
+            gameConnectorService = new GameConnectorService((OZTools) this, s);
+            rebindGameConnectorFeatures();
+            gameConnectorService.start();
+        }
     }
 
     private void configureThreadDiagnostics() {
@@ -425,5 +477,45 @@ class OZToolsRuntime extends Plugin {
 
     public static PlayerSettings playerSettings() {
         return playerSettings;
+    }
+
+    public static AutoCloseable registerGameConnectorFeature(String eventName) {
+        return registerGameConnectorFeature(eventName, () -> { });
+    }
+
+    public static AutoCloseable registerGameConnectorFeature(String eventName, Runnable onReady) {
+        OZToolsRuntime runtime = activeTools;
+        GameConnectorFeatureRegistration registration = new GameConnectorFeatureRegistration(eventName, onReady);
+        connectorFeatureRegistrations.add(registration);
+        // Plugins may be enabled before Tools during a full reload. Keep their
+        // declaration until Tools is available and binds it during onEnable.
+        if (runtime != null && runtime.gameConnectorService != null) registration.bind(runtime);
+        return registration;
+    }
+
+    private void rebindGameConnectorFeatures() {
+        for (GameConnectorFeatureRegistration registration : connectorFeatureRegistrations) {
+            registration.bind(this);
+        }
+    }
+
+    public static boolean publishGameConnectorEvent(String eventName, JsonElement data) {
+        OZToolsRuntime runtime = activeTools;
+        return runtime != null && runtime.gameConnectorService != null
+                && runtime.gameConnectorService.publishFeatureEvent(eventName, data);
+    }
+
+    static boolean authorizeNativeWebRequest(HttpRequestEvent event) {
+        OZToolsRuntime runtime = activeTools;
+        if (runtime != null && runtime.gameConnectorService != null) {
+            return runtime.gameConnectorService.authorizeRoute(event);
+        }
+        if (event != null) {
+            event.setResponseCode(401);
+            event.setResponseHeader("WWW-Authenticate", "Bearer");
+            event.setContentType("application/json; charset=utf-8");
+            event.setResponseBody("{\"error\":\"unauthorized\"}");
+        }
+        return false;
     }
 }

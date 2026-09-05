@@ -35,6 +35,10 @@ public class PluginSettings {
 	public int pluginUpdateCheckDelaySeconds = 30;
 	public int pluginUpdateCheckDelayBetweenPluginsSeconds = 3;
 	public boolean allowExternalPluginRepositories = false;
+	/** Native plugin HTTP routes are disabled unless an administrator explicitly opts in. */
+	public boolean webAllowUnsecureRequests = false;
+	public boolean webUseWebsockets = false;
+	public String webWsTargetUrl = "wss://rw-servers.omega-zirkel.de/ws";
 	private Path settingsFile;
 	private java.util.Map<String, String> currentSettings = new LinkedHashMap<>();
 	private java.util.Map<String, String> defaultSettings = new LinkedHashMap<>();
@@ -85,6 +89,9 @@ public class PluginSettings {
 					.contentEquals("true");
 			automaticPluginUpdateCheck = value(settings, defaults, "automaticPluginUpdateCheck", "false").contentEquals("true");
 			allowExternalPluginRepositories = value(settings, defaults, "allowExternalPluginRepositories", "false").contentEquals("true");
+			webAllowUnsecureRequests = value(settings, defaults, "web.allowUnsecureRequests", "false").contentEquals("true");
+			webUseWebsockets = value(settings, defaults, "web.useWebsockets", "false").contentEquals("true");
+			webWsTargetUrl = value(settings, defaults, "web.wsTargetUrl", "wss://rw-servers.omega-zirkel.de/ws");
 			pluginUpdateCheckDelaySeconds = Integer.parseInt(value(settings, defaults, "pluginUpdateCheckDelaySeconds", "30"));
 			pluginUpdateCheckDelayBetweenPluginsSeconds = Math.max(0, Integer.parseInt(value(settings, defaults,
 					"pluginUpdateCheckDelayBetweenPluginsSeconds", "3")));

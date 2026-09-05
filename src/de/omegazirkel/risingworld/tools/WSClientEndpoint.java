@@ -137,7 +137,9 @@ public class WSClientEndpoint {
 
 					@Override
 					public void onTextMessage(WebSocket websocket, String message) {
-						logger().info("📩 Received: " + message);
+						// Payloads can contain provisioning credentials. Handlers decide what
+						// domain-safe diagnostics to emit; transport never logs their content.
+						logger().debug("[WebSocket] Received text message");
 						if (handler != null)
 							handler.onTextMessage(message);
 					}
@@ -238,6 +240,7 @@ public class WSClientEndpoint {
 
 		isConnected.set(false);
 		isConnecting.set(false);
+		INSTANCES.remove(endpointUri.toString(), this);
 	}
 
 	/** Cleanly shuts down all managed WebSocket client instances. */

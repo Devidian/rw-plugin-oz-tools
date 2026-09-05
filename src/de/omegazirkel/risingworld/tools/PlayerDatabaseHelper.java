@@ -6,12 +6,14 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import de.omegazirkel.risingworld.OZTools;
 import net.risingworld.api.Plugin;
@@ -20,6 +22,7 @@ import net.risingworld.api.database.WorldDatabase;
 import net.risingworld.api.database.WorldDatabase.Target;
 
 public final class PlayerDatabaseHelper {
+    private static final Map<Plugin, WorldDatabase> PLAYER_DATABASES = Collections.synchronizedMap(new WeakHashMap<>());
 
     public static final class PlayerRecord {
         public final int dbId;
@@ -47,7 +50,7 @@ public final class PlayerDatabaseHelper {
             return List.of();
         }
 
-        WorldDatabase playersDatabase = plugin.getWorldDatabase(Target.Players);
+        WorldDatabase playersDatabase = playerDatabase(plugin);
         try {
             return findPlayersSeenSince(playersDatabase, cutoffEpochSeconds);
         } catch (UnsupportedOperationException ex) {
@@ -61,7 +64,7 @@ public final class PlayerDatabaseHelper {
             return Map.of();
         }
 
-        WorldDatabase playersDatabase = plugin.getWorldDatabase(Target.Players);
+        WorldDatabase playersDatabase = playerDatabase(plugin);
         try {
             return findPlayersByDbIds(playersDatabase, playerDbIds);
         } catch (UnsupportedOperationException ex) {
@@ -75,7 +78,7 @@ public final class PlayerDatabaseHelper {
         if (plugin == null || playerName == null || playerName.isBlank()) {
             return Optional.empty();
         }
-        WorldDatabase playersDatabase = plugin.getWorldDatabase(Target.Players);
+        WorldDatabase playersDatabase = playerDatabase(plugin);
         try {
             return findPlayerByExactName(playersDatabase, playerName.trim());
         } catch (UnsupportedOperationException ex) {
@@ -107,6 +110,12 @@ public final class PlayerDatabaseHelper {
         } catch (SQLException ex) {
             logger().error("Failed to find player by name: " + ex.getMessage());
             return Optional.empty();
+        }
+    }
+
+    private static WorldDatabase playerDatabase(Plugin plugin) {
+        synchronized (PLAYER_DATABASES) {
+            return PLAYER_DATABASES.computeIfAbsent(plugin, key -> key.getWorldDatabase(Target.Players));
         }
     }
 
