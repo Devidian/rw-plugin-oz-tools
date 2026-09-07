@@ -51,7 +51,6 @@ public final class GameConnectorService implements WebSocketHandler {
             return;
         }
         credential = loadCredential();
-        if (credential != null && !settings.webUseWebsockets) return;
         try {
             URI uri = URI.create(settings.webWsTargetUrl);
             if (!"wss".equalsIgnoreCase(uri.getScheme())) throw new IllegalArgumentException("web.wsTargetUrl must use wss");
@@ -85,13 +84,18 @@ public final class GameConnectorService implements WebSocketHandler {
                 String code = message.has("code") ? message.get("code").getAsString() : "unknown";
                 if (!code.matches("[a-z_]{1,64}")) code = "unknown";
                 OZTools.logger().warn("Game connector request rejected: " + code);
+                if ("unauthorized".equals(code) && credential != null) resetCredentialAndReconnect();
+                return;
+            }
+            if ("connector.reset".equals(type) && message.has("schemaVersion")
+                    && message.get("schemaVersion").getAsInt() == 1) {
+                resetCredentialAndReconnect();
                 return;
             }
             if ("connector.provisioned".equals(type) && message.has("credential")) {
                 String receivedCredential = message.get("credential").getAsString();
                 if (!storeCredential(receivedCredential)) return;
                 credential = receivedCredential;
-                if (!settings.webUseWebsockets && endpoint != null) endpoint.shutdown();
                 return;
             }
             if ("connector.authenticated".equals(type) && settings.webUseWebsockets && endpoint != null) {
@@ -119,6 +123,19 @@ public final class GameConnectorService implements WebSocketHandler {
     }
 
     public void stop() { if (endpoint != null) endpoint.shutdown(); }
+
+    /** Handles a reset request received over an authenticated Manager connector session. */
+    private void resetCredentialAndReconnect() {
+        try {
+            Files.deleteIfExists(credentialFile);
+            credential = null;
+            acceptedFeatureEvents.clear();
+            OZTools.logger().warn("Game connector credential reset requested; reprovisioning");
+            if (endpoint != null) endpoint.reconnect();
+        } catch (Exception ex) {
+            OZTools.logger().error("Failed to reset game connector credential: " + ex.getMessage());
+        }
+    }
 
     /** Applies the shared native-route credential contract before DTO parsing. */
     public boolean authorizeRoute(HttpRequestEvent event) {

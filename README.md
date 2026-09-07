@@ -20,6 +20,10 @@ This plugin has a set of utilities and libs used by different Plugins.
   refreshes that catalogue from this repository before update checks, so new
   trusted plugins do not require a Tools release. Administrators can manually
   check, install, and update catalogue plugins from the settings overlay.
+  On Windows servers, updates of installed plugins show a native warning and
+  are blocked before downloading or changing files, including batch updates.
+  New plugin installations, update checks and release notes remain available; updating requires the
+  server operator to stop the server and replace the plugin files.
   Release checks run serially with a configurable three-second request interval
   to avoid GitHub API rate limits.
 
@@ -247,9 +251,9 @@ identifiers instead of Rising World API objects.
 
 ### Manager game connector
 
-Tools provisions its private Manager credential through the configured
-`web.wsTargetUrl` when no credential exists, even while
-`web.useWebsockets=false`. The default endpoint requires `wss`; credentials are
+Tools maintains its private Manager connector through the configured
+`web.wsTargetUrl`, including while `web.useWebsockets=false`, so it can
+reprovision a rejected native-route credential. The default endpoint requires `wss`; credentials are
 not written to `settings.*.json` or exposed in the settings UI. On first start,
 Tools creates a private random local key beside its encrypted credential; no
 container or server environment variable is required. An optional
@@ -260,7 +264,12 @@ until the existing connector credential has been reset and paired again;
 otherwise Tools deliberately refuses to replace its encryption key. Automatic
 provisioning identifies a server only through the trusted
 proxy's observed peer IP plus the runtime game port. Set
-`web.useWebsockets=true` only after the backend connector is available.
+`web.useWebsockets=true` only after the backend connector is available; this
+enables feature negotiation, while the authenticated connector itself remains
+available for credential recovery.
+When the backend detects a rejected protected native-route credential on an
+authenticated connector session, Tools accepts its `connector.reset` command,
+deletes the private credential, and reconnects to provision a replacement.
 
 Consumers declare their supported event names without opening a second socket:
 

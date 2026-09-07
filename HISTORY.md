@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.1] - 2026-09-07 | Connector recovery and Windows update safety
+
+- fix: reset and reprovision the private Manager connector credential when the authenticated backend session rejects a protected native route with 401.
+- fix: block automatic updates of installed plugins on Windows servers while retaining new-plugin installation, update checks, and release notes.
+- build: ship JSON settings and translations only; retain existing-server migration and backups.
+
 ## [0.24.0] - 2026-09-05 | Native web security and Manager connector
 
 - feat: provide authenticated, game-managed native web routes for compatible OZ plugins.

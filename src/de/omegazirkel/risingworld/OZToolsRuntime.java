@@ -150,11 +150,20 @@ class OZToolsRuntime extends Plugin {
         return ToolsPlayerPreferences.language(player);
     }
 
+    private static boolean rejectWindowsInstallation(Player player) {
+        if (PluginUpdateService.isInstallationSupported(true)) return false;
+        if (player != null) player.showWarningMessageBox(t.get("tc.plugin.update.windows.title", player),
+                t.get("tc.plugin.update.windows.message", player));
+        return true;
+    }
+
     public static void installPluginUpdate(String pluginName, Player player, Runnable onStateChanged) {
         PluginUpdateService service = activePluginUpdateService;
         OZToolsRuntime tools = activeTools;
         if (service == null || tools == null) return;
         PluginUpdateService.Result result = pluginUpdateResult(pluginName);
+        if ((result == null || result.state() != PluginUpdateService.State.NOT_INSTALLED)
+                && rejectWindowsInstallation(player)) return;
         if (player != null && player.isAdmin() && result != null) {
             player.sendTextMessage(t.get("tc.plugin.update.install.started", player)
                     .replace("PH_PLUGIN_NAME", pluginName)
@@ -168,7 +177,8 @@ class OZToolsRuntime extends Plugin {
                     if (onStateChanged != null) onStateChanged.run();
                     tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
                 }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
-                    if (player != null) player.sendTextMessage(t.get("untrusted-release-source".equals(reason)
+                    if (player != null) player.sendTextMessage(t.get("unsupported-windows".equals(reason) ? "tc.plugin.update.windows.message"
+                            : "untrusted-release-source".equals(reason)
                             ? "tc.plugin.update.install.failed.untrusted.source" : "tc.plugin.update.install.failed", player));
                     if (onStateChanged != null) onStateChanged.run();
                 }));
@@ -181,6 +191,7 @@ class OZToolsRuntime extends Plugin {
         PluginUpdateService service = activePluginUpdateService;
         OZToolsRuntime tools = activeTools;
         if (service == null || tools == null || player == null || !player.isAdmin() || pluginNames == null) return;
+        if (rejectWindowsInstallation(player)) return;
         List<String> pending = pluginNames.stream()
                 .filter(name -> {
                     PluginUpdateService.Result result = pluginUpdateResult(name);
@@ -212,7 +223,8 @@ class OZToolsRuntime extends Plugin {
             if (onStateChanged != null) onStateChanged.run();
             installPluginUpdatesNext(service, tools, pending, index + 1, player, onStateChanged);
         }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
-            player.sendTextMessage(t.get("untrusted-release-source".equals(reason)
+            player.sendTextMessage(t.get("unsupported-windows".equals(reason) ? "tc.plugin.update.windows.message"
+                            : "untrusted-release-source".equals(reason)
                     ? "tc.plugin.update.install.failed.untrusted.source" : "tc.plugin.update.install.failed", player));
             if (onStateChanged != null) onStateChanged.run();
         }));

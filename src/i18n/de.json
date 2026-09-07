@@ -52,6 +52,10 @@
         "title": "PluginSettings für PH_PLUGIN_NAME"
       },
       "update": {
+        "windows": {
+          "title": "Plugin-Aktualisierung unter Windows",
+          "message": "Automatisches Aktualisieren bereits installierter Plugins wird auf Windows-Servern nicht unterstützt. Windows kann Dateien laufender Plugins sperren. Die Installation neuer Plugins, die Update-Prüfung und Versionshinweise bleiben verfügbar. Bitte wende dich für die Aktualisierung bei gestopptem Server an den Serverbetreiber."
+        },
         "action": "Update",
         "all": {
           "action": "Alle aktualisieren",

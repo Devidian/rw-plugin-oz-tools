@@ -476,8 +476,16 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         return uiPlayer.isAdmin() && pluginLabel != null;
     }
 
+    private boolean showWindowsInstallationWarning() {
+        if (PluginUpdateService.isInstallationSupported(true)) return false;
+        uiPlayer.showWarningMessageBox(t().get("tc.plugin.update.windows.title", uiPlayer),
+                t().get("tc.plugin.update.windows.message", uiPlayer));
+        return true;
+    }
+
     private void showUpdateConfirmation() {
         if (!uiPlayer.isAdmin() || (!updateAvailable(selectedPlugin) && !installAvailable(selectedPlugin))) return;
+        if (!installAvailable(selectedPlugin) && showWindowsInstallationWarning()) return;
         PluginUpdateService.Result result = OZTools.pluginUpdateResult(selectedPlugin);
         boolean install = installAvailable(selectedPlugin);
         OZUIElement dialog = new OZUIElement();
@@ -534,6 +542,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
     private void showAllUpdatesConfirmation(List<String> pluginLabels) {
         if (!uiPlayer.isAdmin() || pluginLabels == null || pluginLabels.size() < 2) return;
+        if (showWindowsInstallationWarning()) return;
         OZUIElement dialog = new OZUIElement();
         dialog.setPivot(Pivot.MiddleCenter);
         dialog.setPosition(50, 50, true);

@@ -16,6 +16,19 @@ import com.google.gson.JsonParser;
 
 public class PluginUpdateServiceTest {
     @Test
+    public void blocksOnlyWindowsUpdatesAndAllowsFreshInstallations() {
+        assertFalse(PluginUpdateService.isInstallationSupported("Windows 11", true));
+        assertFalse(PluginUpdateService.isInstallationSupported("Windows Server 2022", true));
+        assertFalse(PluginUpdateService.isInstallationSupported("WINDOWS 10", true));
+        assertTrue(PluginUpdateService.isInstallationSupported("Windows 11", false));
+        assertTrue(PluginUpdateService.isInstallationSupported("Windows Server 2022", false));
+        assertTrue(PluginUpdateService.isInstallationSupported("Linux", false));
+        assertTrue(PluginUpdateService.isInstallationSupported("Linux", true));
+        assertTrue(PluginUpdateService.isInstallationSupported("Darwin", true));
+        assertTrue(PluginUpdateService.isInstallationSupported("Mac OS X", true));
+    }
+
+    @Test
     public void extractsCanonicalGitHubRepositoriesOnly() {
         assertEquals("Devidian/rw-plugin-oz-tools", PluginUpdateService.repositoryFrom(
                 "https://api.github.com/repos/Devidian/rw-plugin-oz-tools/releases/latest"));

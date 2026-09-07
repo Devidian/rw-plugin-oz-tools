@@ -89,9 +89,24 @@ public final class PluginUpdateService implements AutoCloseable {
         });
     }
 
+    /** Detects the server operating system, independently of the player client. */
+    public static boolean isInstallationSupported(boolean alreadyInstalled) {
+        return isInstallationSupported(System.getProperty("os.name", ""), alreadyInstalled);
+    }
+
+    static boolean isInstallationSupported(String osName, boolean alreadyInstalled) {
+        return !alreadyInstalled || !osName.toLowerCase(java.util.Locale.ROOT).startsWith("windows");
+    }
+
     /** Called only after an administrator has confirmed the UI action. */
     public void installLatestAsync(String pluginName, Runnable onSuccess, Consumer<String> onFailure) {
         if (pluginName == null || pluginName.isBlank()) return;
+        boolean alreadyInstalled = tools.getAllPlugins().stream()
+                .anyMatch(plugin -> pluginName.equals(plugin.getDescription("name")));
+        if (!isInstallationSupported(alreadyInstalled)) {
+            if (onFailure != null) onFailure.accept("unsupported-windows");
+            return;
+        }
         Result previous = results.get(pluginName);
         if (previous != null) {
             updateResult(pluginName, new Result(previous.installedVersion(), previous.latestVersion(), previous.releaseUrl(),
@@ -118,10 +133,14 @@ public final class PluginUpdateService implements AutoCloseable {
             return;
         }
         try {
-            String assetUrl = selectZipAsset(releaseJson(repository));
             Path target = plugin == null ? Path.of(tools.getPath()).toAbsolutePath().normalize().getParent()
                     .resolve(catalogEntry.directory())
                     : Path.of(plugin.getPath()).toAbsolutePath().normalize();
+            if (!isInstallationSupported(plugin != null || Files.exists(target))) {
+                failInstallation(pluginName, previous, onFailure, "unsupported-windows");
+                return;
+            }
+            String assetUrl = selectZipAsset(releaseJson(repository));
             Path parent = target.getParent();
             if (parent == null || !Files.isDirectory(parent)) throw new IOException("Invalid plugin path: " + target);
             Path staging = Files.createTempDirectory(parent, ".oz-update-");

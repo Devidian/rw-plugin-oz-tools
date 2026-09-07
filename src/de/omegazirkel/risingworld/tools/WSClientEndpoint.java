@@ -223,6 +223,22 @@ public class WSClientEndpoint {
 		return isConnected.get();
 	}
 
+	/** Closes the current session and immediately starts a fresh connection attempt. */
+	public void reconnect() {
+		if (isShuttingDown.get()) return;
+		WebSocket current = socket;
+		isConnected.set(false);
+		if (current != null) {
+			try {
+				current.disconnect();
+			} catch (Exception ignored) {
+			}
+		}
+		// A reset can arrive while the original connect task is still unwinding.
+		// Delay one tick so its in-progress guard cannot suppress the replacement.
+		scheduler.schedule(this::ensureConnected, 1, TimeUnit.SECONDS);
+	}
+
 	/** Clean shutdown for onDisable() */
 	public void shutdown() {
 		logger().info("🛑 Shutting down WebSocket");

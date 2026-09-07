@@ -52,6 +52,10 @@
         "title": "PluginSettings for PH_PLUGIN_NAME"
       },
       "update": {
+        "windows": {
+          "title": "Plugin updates on Windows",
+          "message": "Automatic updates of installed plugins are not supported on Windows servers. Windows can lock files of running plugins. New plugin installations, update checks and release notes remain available. Please contact the server operator to update plugins while the server is stopped."
+        },
         "action": "Update",
         "all": {
           "action": "Update all",
