@@ -32,6 +32,7 @@ public final class OZTools extends OZToolsRuntime implements Listener, FileChang
     public static PluginUpdateService.Result pluginUpdateResult(String pluginName) {
         return OZToolsRuntime.pluginUpdateResult(pluginName);
     }
+    public static PluginUpdateService pluginUpdateService() { return OZToolsRuntime.pluginUpdateService(); }
     public static String getPlayerLanguage(Player player) { return OZToolsRuntime.getPlayerLanguage(player); }
     public static void installPluginUpdate(String pluginName, Player player, Runnable onStateChanged) {
         OZToolsRuntime.installPluginUpdate(pluginName, player, onStateChanged);

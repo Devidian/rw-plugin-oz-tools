@@ -24,6 +24,12 @@
       }
     },
     "plugin": {
+      "external": {
+        "github": "PH_PLUGIN_NAME is an external plugin. Its release notes are available on the Release notes tab. In-game updates require an approved external repository and a GitHub release URL in plugin.yml (website).",
+        "no": {
+          "github": "PH_PLUGIN_NAME is an external plugin. In-game updates are unavailable because plugin.yml (website) does not contain a valid GitHub release URL."
+        }
+      },
       "info": {
         "status": {
           "tab": {
@@ -54,7 +60,7 @@
       "update": {
         "windows": {
           "title": "Plugin updates on Windows",
-          "message": "Automatic updates of installed plugins are not supported on Windows servers. Windows can lock files of running plugins. New plugin installations, update checks and release notes remain available. Please contact the server operator to update plugins while the server is stopped."
+          "message": "Updates of installed plugins are disabled on Windows by default because running plugins can lock files. New plugin installations, update checks and release notes remain available. An administrator can opt in through allowWindowsUpdate; individual updates can still fail when a plugin file is locked."
         },
         "action": "Update",
         "all": {
@@ -168,6 +174,9 @@
       },
       "release": {
         "notes": "Release notes"
+      },
+      "external": {
+        "notes": "Notes"
       },
       "settings": "Settings"
     },

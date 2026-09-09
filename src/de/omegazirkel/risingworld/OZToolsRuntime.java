@@ -145,6 +145,8 @@ class OZToolsRuntime extends Plugin {
         return service == null ? null : service.results().get(pluginName);
     }
 
+    public static PluginUpdateService pluginUpdateService() { return activePluginUpdateService; }
+
     /** Resolves the configured player language for all OZ plugin translations. */
     public static String getPlayerLanguage(Player player) {
         return ToolsPlayerPreferences.language(player);

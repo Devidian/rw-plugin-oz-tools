@@ -8,6 +8,7 @@
   "pluginUpdateCheckDelaySeconds": 30,
   "pluginUpdateCheckDelayBetweenPluginsSeconds": 3,
   "allowExternalPluginRepositories": false,
+  "allowWindowsUpdate": false,
   "web.allowUnsecureRequests": false,
   "web.useWebsockets": false,
   "web.wsTargetUrl": "wss://rw-servers.omega-zirkel.de/ws"

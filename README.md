@@ -20,10 +20,16 @@ This plugin has a set of utilities and libs used by different Plugins.
   refreshes that catalogue from this repository before update checks, so new
   trusted plugins do not require a Tools release. Administrators can manually
   check, install, and update catalogue plugins from the settings overlay.
-  On Windows servers, updates of installed plugins show a native warning and
-  are blocked before downloading or changing files, including batch updates.
-  New plugin installations, update checks and release notes remain available; updating requires the
-  server operator to stop the server and replace the plugin files.
+  The overlay also lists installed external plugins with their declared version.
+  They show only an informational tab; release notes are available when their
+  `plugin.yml` `website` is a valid GitHub release URL. External update checks
+  and installation remain opt-in through the external-repositories setting.
+  On Windows servers, updates of installed plugins are disabled by default and
+  show a native warning before downloading or changing files, including batch
+  updates. Set `allowWindowsUpdate=true` deliberately to use an in-place
+  replacement with a file backup and rollback: some plugins permit replacement
+  while running, but locked files can still make an individual update fail.
+  New plugin installations, update checks and release notes remain available.
   Release checks run serially with a configurable three-second request interval
   to avoid GitHub API rate limits.
 

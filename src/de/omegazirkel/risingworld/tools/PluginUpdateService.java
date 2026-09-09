@@ -37,6 +37,8 @@ public final class PluginUpdateService implements AutoCloseable {
     public enum State { UNKNOWN, CURRENT, UPDATE_AVAILABLE, NOT_INSTALLED, INSTALLING, ERROR }
     public record Result(String installedVersion, String latestVersion, String releaseUrl, String releaseNotes,
             State state, long checkedAtEpochMillis) { }
+    /** Runtime metadata for installed plugins, including plugins not built on OZ Tools. */
+    public record InstalledPlugin(String name, String version, boolean external, boolean hasGitHubReleaseWebsite) { }
     private record ReleaseInfo(String version, String url, String notes) { }
     record CatalogEntry(String repository, String directory) { }
 
@@ -68,6 +70,26 @@ public final class PluginUpdateService implements AutoCloseable {
 
     public Map<String, Result> results() { return results; }
 
+    /**
+     * Returns every plugin visible to the server. Catalogue plugins and plugins
+     * that register an OZ Tools panel are handled by the overlay separately;
+     * all remaining plugins are external.
+     */
+    public Map<String, InstalledPlugin> installedPlugins(Set<String> registeredPluginNames) {
+        ensureBundledCatalog();
+        Map<String, InstalledPlugin> installed = new LinkedHashMap<>();
+        for (Plugin plugin : tools.getAllPlugins()) {
+            String name = plugin.getDescription("name");
+            if (name == null || name.isBlank()) continue;
+            String version = plugin.getDescription("version");
+            boolean registered = registeredPluginNames != null && registeredPluginNames.contains(name);
+            boolean external = !registered && !catalog.containsKey(name);
+            installed.put(name, new InstalledPlugin(name, version == null ? "" : version, external,
+                    repositoryFrom(plugin.getDescription("website")) != null));
+        }
+        return Collections.unmodifiableMap(installed);
+    }
+
     /** Records a successfully staged package as current before its plugin reload starts. */
     public void markInstalledLatest(String pluginName) {
         Result result = results.get(pluginName);
@@ -91,11 +113,17 @@ public final class PluginUpdateService implements AutoCloseable {
 
     /** Detects the server operating system, independently of the player client. */
     public static boolean isInstallationSupported(boolean alreadyInstalled) {
-        return isInstallationSupported(System.getProperty("os.name", ""), alreadyInstalled);
+        return isInstallationSupported(System.getProperty("os.name", ""), alreadyInstalled,
+                PluginSettings.getInstance().allowWindowsUpdate);
     }
 
     static boolean isInstallationSupported(String osName, boolean alreadyInstalled) {
-        return !alreadyInstalled || !osName.toLowerCase(java.util.Locale.ROOT).startsWith("windows");
+        return isInstallationSupported(osName, alreadyInstalled, false);
+    }
+
+    static boolean isInstallationSupported(String osName, boolean alreadyInstalled, boolean allowWindowsUpdate) {
+        return !alreadyInstalled || allowWindowsUpdate
+                || !osName.toLowerCase(java.util.Locale.ROOT).startsWith("windows");
     }
 
     /** Called only after an administrator has confirmed the UI action. */
@@ -158,17 +186,16 @@ public final class PluginUpdateService implements AutoCloseable {
                     }
                 }
                 if (Files.exists(target)) preserveLocalFiles(target, source);
-                Path backup = parent.resolve(target.getFileName() + ".oz-backup");
+                // Keep the rollback tree inside the already ignored staging directory.
+                // A sibling of Plugins would otherwise be discovered as a second plugin.
+                Path backup = staging.resolve("backup");
                 if (Files.exists(backup)) deleteTree(backup);
-                if (Files.exists(target)) Files.move(target, backup, StandardCopyOption.ATOMIC_MOVE);
-                try {
-                    Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
-                    deleteTree(backup);
-                    if (onSuccess != null) onSuccess.run();
-                } catch (Exception swapFailure) {
-                    if (Files.exists(backup)) Files.move(backup, target, StandardCopyOption.ATOMIC_MOVE);
-                    throw swapFailure;
+                if (usesWindowsInPlaceUpdate(target)) {
+                    replaceInPlace(target, source, backup);
+                } else {
+                    replaceAtomically(target, source, backup);
                 }
+                if (onSuccess != null) onSuccess.run();
             } finally {
                 try {
                     deleteTree(staging);
@@ -193,14 +220,97 @@ public final class PluginUpdateService implements AutoCloseable {
     static void preserveLocalFiles(Path installedPlugin, Path replacementPlugin) throws IOException {
         try (var paths = Files.walk(installedPlugin)) {
             for (Path file : paths.filter(Files::isRegularFile).toList()) {
-                String name = file.getFileName().toString();
                 Path relative = installedPlugin.relativize(file);
                 Path destination = replacementPlugin.resolve(relative);
-                boolean persistent = name.equals("settings.properties") || name.endsWith(".json") || name.endsWith(".db")
-                        || name.endsWith(".db-wal") || name.endsWith(".db-shm");
-                if (!persistent && Files.exists(destination)) continue;
+                if (!isPersistentPluginFile(relative) && Files.exists(destination)) continue;
                 Files.createDirectories(destination.getParent());
                 Files.copy(file, destination, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
+            }
+        }
+    }
+
+    private static boolean isPersistentPluginFile(Path relative) {
+        String name = relative.getFileName().toString();
+        return name.equals("settings.properties") || (name.endsWith(".json") && !name.endsWith(".default.json"))
+                || name.endsWith(".db") || name.endsWith(".db-wal") || name.endsWith(".db-shm");
+    }
+
+    /**
+     * Windows does not reliably allow a directory containing loaded plugin
+     * files to be renamed. The opt-in path therefore backs up and replaces
+     * individual files instead. A failed copy restores the original tree
+     * before reporting the installation failure.
+     */
+    static void replaceInPlace(Path target, Path source, Path backup) throws IOException {
+        copyTree(target, backup, true);
+        try {
+            copyTree(source, target, true);
+            deleteFilesMissingFrom(target, source, true);
+        } catch (IOException updateFailure) {
+            try {
+                copyTree(backup, target, false);
+                deleteFilesMissingFrom(target, backup, true);
+            } catch (IOException rollbackFailure) {
+                updateFailure.addSuppressed(rollbackFailure);
+            }
+            throw updateFailure;
+        }
+        try {
+            deleteTree(backup);
+        } catch (IOException cleanupFailure) {
+            OZTools.logger().warn("Plugin update completed but could not remove Windows backup " + backup + ": "
+                    + cleanupFailure.getMessage());
+        }
+    }
+
+    private static void replaceAtomically(Path target, Path source, Path backup) throws IOException {
+        if (Files.exists(target)) Files.move(target, backup, StandardCopyOption.ATOMIC_MOVE);
+        try {
+            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
+            deleteTree(backup);
+        } catch (IOException swapFailure) {
+            if (Files.exists(backup)) Files.move(backup, target, StandardCopyOption.ATOMIC_MOVE);
+            throw swapFailure;
+        }
+    }
+
+    private static boolean usesWindowsInPlaceUpdate(Path target) {
+        return Files.exists(target) && PluginSettings.getInstance().allowWindowsUpdate
+                && System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("windows");
+    }
+
+    private static void copyTree(Path source, Path target, boolean skipPersistentFiles) throws IOException {
+        try (var paths = Files.walk(source)) {
+            for (Path entry : paths.toList()) {
+                Path relative = source.relativize(entry);
+                if (skipPersistentFiles && Files.isRegularFile(entry) && isPersistentPluginFile(relative)) continue;
+                Path destination = target.resolve(relative);
+                if (Files.isDirectory(entry)) Files.createDirectories(destination);
+                else {
+                    Files.createDirectories(destination.getParent());
+                    Files.copy(entry, destination, StandardCopyOption.REPLACE_EXISTING,
+                            StandardCopyOption.COPY_ATTRIBUTES);
+                }
+            }
+        }
+    }
+
+    private static void deleteFilesMissingFrom(Path target, Path reference, boolean skipPersistentFiles) throws IOException {
+        try (var paths = Files.walk(target)) {
+            for (Path entry : paths.sorted(java.util.Comparator.reverseOrder()).toList()) {
+                if (entry.equals(target)) continue;
+                Path relative = target.relativize(entry);
+                if (skipPersistentFiles && Files.isRegularFile(entry) && isPersistentPluginFile(relative)) continue;
+                if (Files.exists(reference.resolve(relative))) continue;
+                if (Files.isDirectory(entry)) {
+                    try {
+                        Files.delete(entry);
+                    } catch (java.nio.file.DirectoryNotEmptyException ignored) {
+                        // The directory contains preserved data and must remain.
+                    }
+                } else {
+                    Files.delete(entry);
+                }
             }
         }
     }

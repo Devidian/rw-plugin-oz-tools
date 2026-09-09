@@ -24,6 +24,12 @@
       }
     },
     "plugin": {
+      "external": {
+        "github": "PH_PLUGIN_NAME ist ein externes Plugin. Seine Release-Hinweise stehen im Reiter Release-Hinweise. Updates im Spiel benötigen ein freigegebenes externes Repository und eine GitHub-Release-URL in plugin.yml (website).",
+        "no": {
+          "github": "PH_PLUGIN_NAME ist ein externes Plugin. Updates im Spiel sind nicht verfügbar, weil plugin.yml (website) keine gültige GitHub-Release-URL enthält."
+        }
+      },
       "info": {
         "status": {
           "tab": {
@@ -54,7 +60,7 @@
       "update": {
         "windows": {
           "title": "Plugin-Aktualisierung unter Windows",
-          "message": "Automatisches Aktualisieren bereits installierter Plugins wird auf Windows-Servern nicht unterstützt. Windows kann Dateien laufender Plugins sperren. Die Installation neuer Plugins, die Update-Prüfung und Versionshinweise bleiben verfügbar. Bitte wende dich für die Aktualisierung bei gestopptem Server an den Serverbetreiber."
+          "message": "Aktualisierungen bereits installierter Plugins sind unter Windows standardmäßig deaktiviert, da laufende Plugins Dateien sperren können. Neue Plugin-Installationen, Update-Prüfungen und Versionshinweise bleiben verfügbar. Ein Administrator kann mit allowWindowsUpdate bewusst zustimmen; einzelne Updates können bei einer Dateisperre trotzdem fehlschlagen."
         },
         "action": "Update",
         "all": {
@@ -168,6 +174,9 @@
       },
       "release": {
         "notes": "Release-Hinweise"
+      },
+      "external": {
+        "notes": "Hinweise"
       },
       "settings": "Einstellungen"
     },

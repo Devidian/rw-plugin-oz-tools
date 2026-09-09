@@ -29,6 +29,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     private static final String TAB_DATA = "data";
     private static final String TAB_RELEASE_NOTES = "releaseNotes";
     private static final String TAB_PLUGIN_SETTINGS = "pluginSettings";
+    private static final String TAB_EXTERNAL_NOTES = "externalNotes";
 
     private static I18n t() {
         return I18n.getInstance(OZTools.name);
@@ -105,6 +106,9 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             selectedTab = TAB_SETTINGS;
         }
         if (TAB_RELEASE_NOTES.equals(selectedTab) && !canShowReleaseNotesTab(selectedPlugin)) selectedTab = TAB_SETTINGS;
+        if (TAB_EXTERNAL_NOTES.equals(selectedTab) && !isExternalPlugin(selectedPlugin)) selectedTab = TAB_SETTINGS;
+        if (isExternalPlugin(selectedPlugin) && (TAB_SETTINGS.equals(selectedTab) || TAB_DATA.equals(selectedTab)
+                || TAB_PLUGIN_SETTINGS.equals(selectedTab))) selectedTab = TAB_EXTERNAL_NOTES;
         // fill navigation bar for every playerPluginSettings
         for (String pluginLabel : pluginLabels()) {
             AdvancedButton navButton = AdvancedButtonFactory.custom(new AdvancedButtonState(
@@ -141,7 +145,9 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             versionLabel.setTextAlign(TextAnchor.MiddleRight);
             navButton.setClickAction(event -> {
                 selectedPlugin = pluginLabel;
-                if (!playerPluginSettings.containsKey(pluginLabel) && canShowReleaseNotesTab(pluginLabel)) {
+                if (isExternalPlugin(pluginLabel)) {
+                    selectedTab = TAB_EXTERNAL_NOTES;
+                } else if (!playerPluginSettings.containsKey(pluginLabel) && canShowReleaseNotesTab(pluginLabel)) {
                     selectedTab = TAB_RELEASE_NOTES;
                 }
                 updateUI();
@@ -206,19 +212,30 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         closeButton.addChild(btnLabel);
         navSidebar.addChild(closeButton);
 
-        addTabButton(TAB_SETTINGS, t().get("tc.tab.settings", uiPlayer), 0);
-        addTabButton(TAB_DATA, t().get("tc.tab.data", uiPlayer), 150);
+        int tabPosition = 0;
+        if (isExternalPlugin(selectedPlugin)) {
+            addTabButton(TAB_EXTERNAL_NOTES, t().get("tc.tab.external.notes", uiPlayer), tabPosition);
+            tabPosition += 150;
+        } else {
+            addTabButton(TAB_SETTINGS, t().get("tc.tab.settings", uiPlayer), tabPosition);
+            tabPosition += 150;
+            addTabButton(TAB_DATA, t().get("tc.tab.data", uiPlayer), tabPosition);
+            tabPosition += 150;
+        }
         if (canShowReleaseNotesTab(selectedPlugin)) {
-            addTabButton(TAB_RELEASE_NOTES, t().get("tc.tab.release.notes", uiPlayer), 300);
+            addTabButton(TAB_RELEASE_NOTES, t().get("tc.tab.release.notes", uiPlayer), tabPosition);
+            tabPosition += 150;
         }
         if (canShowPluginSettingsTab(selectedPlugin)) {
-            addTabButton(TAB_PLUGIN_SETTINGS, t().get("tc.tab.plugin.settings", uiPlayer), 450);
+            addTabButton(TAB_PLUGIN_SETTINGS, t().get("tc.tab.plugin.settings", uiPlayer), tabPosition);
         }
 
         // clear content
         content.removeAllChilds();
         // select content
-        if (TAB_RELEASE_NOTES.equals(selectedTab)) {
+        if (TAB_EXTERNAL_NOTES.equals(selectedTab)) {
+            content.addChild(externalNotesContent(selectedPlugin));
+        } else if (TAB_RELEASE_NOTES.equals(selectedTab)) {
             content.addChild(releaseNotesContent(selectedPlugin));
         } else if (TAB_PLUGIN_SETTINGS.equals(selectedTab)) {
             PlayerPluginAdminSettings ppas = playerPluginAdminSettings.get(selectedPlugin);
@@ -311,6 +328,21 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         label.setPivot(Pivot.MiddleCenter);
         label.setPosition(50, 50, true);
         label.setFontSize(16);
+        label.setFontColor(0xC8C0B2FF);
+        label.setTextAlign(TextAnchor.MiddleCenter);
+        return label;
+    }
+
+    private UILabel externalNotesContent(String pluginLabel) {
+        PluginUpdateService.InstalledPlugin plugin = installedPlugin(pluginLabel);
+        String key = plugin != null && plugin.hasGitHubReleaseWebsite()
+                ? "tc.plugin.external.github" : "tc.plugin.external.no.github";
+        UILabel label = new UILabel(t().get(key, uiPlayer).replace("PH_PLUGIN_NAME", pluginLabel));
+        label.setPivot(Pivot.MiddleCenter);
+        label.setPosition(50, 50, true);
+        label.setSize(86, 48, true);
+        label.setFontSize(15);
+        label.setTextWrap(true);
         label.setFontColor(0xC8C0B2FF);
         label.setTextAlign(TextAnchor.MiddleCenter);
         return label;
@@ -418,6 +450,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         labels.addAll(playerPluginData.keySet());
         labels.addAll(playerPluginAdminSettings.keySet());
         labels.addAll(PluginUpdateService.managedPluginNames());
+        labels.addAll(installedPlugins().keySet());
         return labels;
     }
 
@@ -443,6 +476,8 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             }
         }
         if (pluginVersion == null || pluginVersion.isBlank()) {
+            PluginUpdateService.InstalledPlugin installed = installedPlugin(pluginLabel);
+            if (installed != null && !installed.version().isBlank()) return "v" + installed.version();
             PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
             return result != null && result.state() == PluginUpdateService.State.NOT_INSTALLED ? "N/A" : "";
         }
@@ -473,7 +508,28 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     }
 
     private boolean canShowReleaseNotesTab(String pluginLabel) {
-        return uiPlayer.isAdmin() && pluginLabel != null;
+        if (!uiPlayer.isAdmin() || pluginLabel == null) return false;
+        if (!isExternalPlugin(pluginLabel)) return true;
+        PluginUpdateService.InstalledPlugin plugin = installedPlugin(pluginLabel);
+        return plugin != null && plugin.hasGitHubReleaseWebsite();
+    }
+
+    private java.util.Map<String, PluginUpdateService.InstalledPlugin> installedPlugins() {
+        Set<String> registered = new java.util.HashSet<>();
+        registered.addAll(playerPluginSettings.keySet());
+        registered.addAll(playerPluginData.keySet());
+        registered.addAll(playerPluginAdminSettings.keySet());
+        PluginUpdateService service = OZTools.pluginUpdateService();
+        return service == null ? java.util.Map.of() : service.installedPlugins(registered);
+    }
+
+    private PluginUpdateService.InstalledPlugin installedPlugin(String pluginLabel) {
+        return installedPlugins().get(pluginLabel);
+    }
+
+    private boolean isExternalPlugin(String pluginLabel) {
+        PluginUpdateService.InstalledPlugin plugin = installedPlugin(pluginLabel);
+        return plugin != null && plugin.external();
     }
 
     private boolean showWindowsInstallationWarning() {

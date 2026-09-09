@@ -29,6 +29,13 @@ public class PluginUpdateServiceTest {
     }
 
     @Test
+    public void allowsWindowsUpdatesOnlyAfterExplicitOptIn() {
+        assertFalse(PluginUpdateService.isInstallationSupported("Windows Server 2022", true, false));
+        assertTrue(PluginUpdateService.isInstallationSupported("Windows Server 2022", true, true));
+        assertTrue(PluginUpdateService.isInstallationSupported("Linux", true, false));
+    }
+
+    @Test
     public void extractsCanonicalGitHubRepositoriesOnly() {
         assertEquals("Devidian/rw-plugin-oz-tools", PluginUpdateService.repositoryFrom(
                 "https://api.github.com/repos/Devidian/rw-plugin-oz-tools/releases/latest"));
@@ -126,6 +133,8 @@ public class PluginUpdateServiceTest {
         Files.writeString(installed.resolve("players.db"), "database");
         Files.writeString(installed.resolve("players.db-wal"), "wal");
         Files.writeString(installed.resolve("shop-zones.json"), "shops");
+        Files.writeString(installed.resolve("system-offers.default.json"), "old-defaults");
+        Files.writeString(replacement.resolve("system-offers.default.json"), "new-defaults");
         Files.writeString(installed.resolve("readme.txt"), "do-not-copy");
 
         PluginUpdateService.preserveLocalFiles(installed, replacement);
@@ -134,7 +143,33 @@ public class PluginUpdateServiceTest {
         assertEquals("database", Files.readString(replacement.resolve("players.db")));
         assertEquals("wal", Files.readString(replacement.resolve("players.db-wal")));
         assertEquals("shops", Files.readString(replacement.resolve("shop-zones.json")));
+        assertEquals("new-defaults", Files.readString(replacement.resolve("system-offers.default.json")));
         assertEquals("do-not-copy", Files.readString(replacement.resolve("readme.txt")));
+    }
+
+    @Test
+    public void replacesPluginFilesInPlaceAndRemovesObsoletePackageFiles() throws Exception {
+        Path installed = Files.createTempDirectory("installed-plugin");
+        Path replacement = Files.createTempDirectory("replacement-plugin");
+        Path backup = installed.resolveSibling("installed-plugin.oz-backup");
+        Files.writeString(installed.resolve("plugin.jar"), "old");
+        Files.createDirectories(installed.resolve("lib"));
+        Files.writeString(installed.resolve("lib/obsolete.jar"), "obsolete");
+        Files.writeString(installed.resolve("settings.world.json"), "configured=true");
+        Files.writeString(installed.resolve("wallet.db"), "persistent-data");
+        Files.writeString(replacement.resolve("plugin.jar"), "new");
+        Files.writeString(replacement.resolve("settings.world.json"), "configured=true");
+        Files.createDirectories(replacement.resolve("lib"));
+        Files.writeString(replacement.resolve("lib/current.jar"), "current");
+
+        PluginUpdateService.replaceInPlace(installed, replacement, backup);
+
+        assertEquals("new", Files.readString(installed.resolve("plugin.jar")));
+        assertEquals("configured=true", Files.readString(installed.resolve("settings.world.json")));
+        assertEquals("persistent-data", Files.readString(installed.resolve("wallet.db")));
+        assertEquals("current", Files.readString(installed.resolve("lib/current.jar")));
+        assertFalse(Files.exists(installed.resolve("lib/obsolete.jar")));
+        assertFalse(Files.exists(backup));
     }
 
     @Test

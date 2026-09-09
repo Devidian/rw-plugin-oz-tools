@@ -35,6 +35,8 @@ public class PluginSettings {
 	public int pluginUpdateCheckDelaySeconds = 30;
 	public int pluginUpdateCheckDelayBetweenPluginsSeconds = 3;
 	public boolean allowExternalPluginRepositories = false;
+	/** Allows opt-in attempts to replace installed plugin files on Windows. */
+	public boolean allowWindowsUpdate = false;
 	/** Native plugin HTTP routes are disabled unless an administrator explicitly opts in. */
 	public boolean webAllowUnsecureRequests = false;
 	public boolean webUseWebsockets = false;
@@ -89,6 +91,7 @@ public class PluginSettings {
 					.contentEquals("true");
 			automaticPluginUpdateCheck = value(settings, defaults, "automaticPluginUpdateCheck", "false").contentEquals("true");
 			allowExternalPluginRepositories = value(settings, defaults, "allowExternalPluginRepositories", "false").contentEquals("true");
+			allowWindowsUpdate = value(settings, defaults, "allowWindowsUpdate", "false").contentEquals("true");
 			webAllowUnsecureRequests = value(settings, defaults, "web.allowUnsecureRequests", "false").contentEquals("true");
 			webUseWebsockets = value(settings, defaults, "web.useWebsockets", "false").contentEquals("true");
 			webWsTargetUrl = value(settings, defaults, "web.wsTargetUrl", "wss://rw-servers.omega-zirkel.de/ws");
@@ -136,6 +139,9 @@ public class PluginSettings {
 				entry("pluginUpdateCheckDelayBetweenPluginsSeconds", "Update-check interval",
 						"Delay in seconds between public GitHub requests.", AdminSettingsType.INTEGER),
 				entry("allowExternalPluginRepositories", "Allow external repositories", "Allow public non-OZ GitHub repositories.", AdminSettingsType.BOOLEAN),
+				entry("allowWindowsUpdate", "Allow Windows updates",
+						"Attempt installed-plugin updates on Windows. Running plugins can still lock files and cause the update to fail.",
+						AdminSettingsType.BOOLEAN),
 				AdminSettingsEntry.group("playerMessages", "Player messages"),
 				entry("enablePluginWelcomeMessage", "Welcome message",
 						"If true, Tools sends a welcome message when a player joins.", AdminSettingsType.BOOLEAN));
