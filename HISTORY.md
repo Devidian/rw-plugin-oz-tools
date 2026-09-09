@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.2] - 2026-09-08 | External plugin manager and Windows update attempts
+
+- feat: show installed external plugins and their declared versions in the shared settings overlay, with release notes only for valid GitHub release URLs.
+- fix: retain world settings, JSON data, and SQLite files while refreshing package defaults during plugin updates.
+- feat: add default-disabled `allowWindowsUpdate` for guarded in-place update attempts with isolated backup and rollback; locked running JARs still fail safely.
+
 ## [0.24.1] - 2026-09-07 | Connector recovery and Windows update safety
 
 - fix: reset and reprovision the private Manager connector credential when the authenticated backend session rejects a protected native route with 401.
