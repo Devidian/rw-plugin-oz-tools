@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.24.3] - 2026-09-11 | Plugin-setting localization
+
+- fix: resolve dotted plugin-setting keys so translated settings and options render correctly.
+
 ## [0.24.2] - 2026-09-08 | External plugin manager and Windows update attempts
 
 - feat: show installed external plugins and their declared versions in the shared settings overlay, with release notes only for valid GitHub release URLs.
