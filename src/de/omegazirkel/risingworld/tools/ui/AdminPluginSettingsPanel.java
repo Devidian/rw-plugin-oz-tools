@@ -422,6 +422,11 @@ public class AdminPluginSettingsPanel extends OZUIElement {
     }
 
     private String settingText(AdminSettingsEntry entry, String suffix, String fallback) {
+        String canonicalKey = "tc.setting." + canonicalSettingKey(entry.getKey()) + "." + suffix.toLowerCase();
+        String canonicalText = pluginText(canonicalKey);
+        if (!canonicalKey.equals(canonicalText)) {
+            return canonicalText;
+        }
         String generatedKey = "tc.setting." + normalizeSettingKey(entry.getKey()).toLowerCase() + "."
                 + suffix.toLowerCase();
         String generatedText = pluginText(generatedKey);
@@ -433,6 +438,10 @@ public class AdminPluginSettingsPanel extends OZUIElement {
     }
 
     private String settingOptionText(AdminSettingsEntry entry, String option) {
+        String canonicalKey = "tc.setting." + canonicalSettingKey(entry.getKey()) + ".option."
+                + normalizeSettingKey(option).toLowerCase();
+        String canonicalText = pluginText(canonicalKey);
+        if (!canonicalKey.equals(canonicalText)) return canonicalText;
         String key = "tc.setting." + normalizeSettingKey(entry.getKey()).toLowerCase() + ".option."
                 + normalizeSettingKey(option).toLowerCase();
         String translated = pluginText(key);
@@ -441,6 +450,10 @@ public class AdminPluginSettingsPanel extends OZUIElement {
 
     private String normalizeSettingKey(String key) {
         return key == null ? "" : key.trim().replaceAll("[^A-Za-z0-9]+", "_").toUpperCase();
+    }
+
+    private String canonicalSettingKey(String key) {
+        return key == null ? "" : key.trim().replaceAll("[^A-Za-z0-9.]+", "_").toLowerCase();
     }
 
     static boolean isValidValue(AdminSettingsEntry entry, String value) {

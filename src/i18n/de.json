@@ -114,6 +114,7 @@
       "title": "Plugin Einstellungen für PH_PLUGIN_NAME"
     },
     "setting": {
+      "allowwindowsupdate": { "label": "Windows-Updates erlauben", "desc": "Erlaubt Plugin-Updates auf Windows-Servern, wenn Dateien nicht gesperrt sind." },
       "allowexternalpluginrepositories": {
         "desc": "Erlaubt kompatible öffentliche GitHub-Repositories außerhalb von OZ.",
         "label": "Externe Repositories erlauben"
