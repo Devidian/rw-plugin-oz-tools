@@ -133,8 +133,12 @@ public class PluginUpdateServiceTest {
         Files.writeString(installed.resolve("players.db"), "database");
         Files.writeString(installed.resolve("players.db-wal"), "wal");
         Files.writeString(installed.resolve("shop-zones.json"), "shops");
+        Files.createDirectories(installed.resolve("i18n"));
+        Files.writeString(installed.resolve("i18n/de.json"), "old translation");
         Files.writeString(installed.resolve("system-offers.default.json"), "old-defaults");
         Files.writeString(replacement.resolve("system-offers.default.json"), "new-defaults");
+        Files.createDirectories(replacement.resolve("i18n"));
+        Files.writeString(replacement.resolve("i18n/de.json"), "new translation");
         Files.writeString(installed.resolve("readme.txt"), "do-not-copy");
 
         PluginUpdateService.preserveLocalFiles(installed, replacement);
@@ -144,6 +148,7 @@ public class PluginUpdateServiceTest {
         assertEquals("wal", Files.readString(replacement.resolve("players.db-wal")));
         assertEquals("shops", Files.readString(replacement.resolve("shop-zones.json")));
         assertEquals("new-defaults", Files.readString(replacement.resolve("system-offers.default.json")));
+        assertEquals("new translation", Files.readString(replacement.resolve("i18n/de.json")));
         assertEquals("do-not-copy", Files.readString(replacement.resolve("readme.txt")));
     }
 
