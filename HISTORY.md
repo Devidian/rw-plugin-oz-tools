@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.24.4] - 2026-09-13 | Plugin-update translations
+
+- fix: refresh packaged JSON translation catalogues during plugin updates while retaining local settings and data.
+
 ## [0.24.3] - 2026-09-11 | Plugin-setting localization
 
 - fix: resolve dotted plugin-setting keys so translated settings and options render correctly.
