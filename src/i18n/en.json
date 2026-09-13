@@ -71,6 +71,9 @@
         "check": {
           "action": "Check for updates",
           "none": "Update check completed. No new updates are available.",
+          "rate": {
+            "limited": "GitHub is currently rate-limiting this server. Further plugin checks will resume after GitHub resets the limit."
+          },
           "plugin": {
             "$value": "Checking PH_PLUGIN_NAME for a new version.",
             "action": "Check this plugin",

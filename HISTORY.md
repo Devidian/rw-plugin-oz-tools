@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.24.6] - 2026-09-13 | GitHub update-check limits
+
+- fix: honor GitHub API rate-limit reset headers across plugin release checks, retaining prior release notes while requests are blocked.
+- feat: support an optional JSON-only `githubToken` for authenticated GitHub API requests.
+
 ## [0.24.5] - 2026-09-13 | Plugin reinstall and uninstall
 
 - feat: let administrators reinstall the current trusted plugin release while retaining settings and saved data.

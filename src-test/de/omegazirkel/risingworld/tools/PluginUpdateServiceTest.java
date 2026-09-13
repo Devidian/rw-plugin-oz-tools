@@ -9,6 +9,8 @@ import static org.junit.Assert.fail;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.net.http.HttpHeaders;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -221,6 +223,21 @@ public class PluginUpdateServiceTest {
                 ToolsPlayerPreferences.normalizeLanguageSource("GAME"));
         assertEquals("de", ToolsPlayerPreferences.normalizeLanguageCode("de-DE"));
         assertEquals("en", ToolsPlayerPreferences.normalizeLanguageCode("123"));
+    }
+
+    @Test
+    public void recognizesOnlyAReportedFutureGitHubRateLimit() {
+        long futureSeconds = (System.currentTimeMillis() / 1000L) + 60;
+        assertEquals(futureSeconds * 1000L, PluginUpdateService.rateLimitResetEpochMillis(
+                headers(Map.of("X-RateLimit-Remaining", "0", "X-RateLimit-Reset", String.valueOf(futureSeconds)))));
+        assertEquals(0L, PluginUpdateService.rateLimitResetEpochMillis(
+                headers(Map.of("X-RateLimit-Remaining", "1", "X-RateLimit-Reset", String.valueOf(futureSeconds)))));
+        assertEquals(0L, PluginUpdateService.rateLimitResetEpochMillis(headers(Map.of("X-RateLimit-Remaining", "0"))));
+    }
+
+    private static HttpHeaders headers(Map<String, String> values) {
+        return HttpHeaders.of(values.entrySet().stream().collect(java.util.stream.Collectors.toMap(
+                Map.Entry::getKey, entry -> java.util.List.of(entry.getValue()))), (name, value) -> true);
     }
 
     private static void assertInvalidCatalogue(String json) {

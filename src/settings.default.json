@@ -7,6 +7,7 @@
   "automaticPluginUpdateCheck": false,
   "pluginUpdateCheckDelaySeconds": 30,
   "pluginUpdateCheckDelayBetweenPluginsSeconds": 3,
+  "githubToken": "",
   "allowExternalPluginRepositories": false,
   "allowWindowsUpdate": false,
   "web.allowUnsecureRequests": false,

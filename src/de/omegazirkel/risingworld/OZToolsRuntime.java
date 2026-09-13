@@ -122,8 +122,8 @@ class OZToolsRuntime extends Plugin {
                     if (onCompleted != null) onCompleted.run();
                 }),
                 updatesAvailable -> tools.serverThreadDispatcher.dispatch(() -> {
-                    player.sendTextMessage(t.get(updatesAvailable ? "tc.plugin.update.check.updates.available"
-                            : "tc.plugin.update.check.none", player));
+                    player.sendTextMessage(t.get(service.isGitHubRateLimited() ? "tc.plugin.update.check.rate.limited"
+                            : updatesAvailable ? "tc.plugin.update.check.updates.available" : "tc.plugin.update.check.none", player));
                     if (onCompleted != null) onCompleted.run();
                 }));
     }
@@ -134,8 +134,9 @@ class OZToolsRuntime extends Plugin {
         if (service == null || tools == null || player == null || !player.isAdmin()) return;
         player.sendTextMessage(t.get("tc.plugin.update.check.plugin", player).replace("PH_PLUGIN_NAME", pluginName));
         service.checkPluginAsync(pluginName, ignored -> tools.serverThreadDispatcher.dispatch(() -> {
-            player.sendTextMessage(t.get("tc.plugin.update.check.plugin.completed", player)
-                    .replace("PH_PLUGIN_NAME", pluginName));
+            player.sendTextMessage(service.isGitHubRateLimited()
+                    ? t.get("tc.plugin.update.check.rate.limited", player)
+                    : t.get("tc.plugin.update.check.plugin.completed", player).replace("PH_PLUGIN_NAME", pluginName));
             if (onCompleted != null) onCompleted.run();
         }));
     }

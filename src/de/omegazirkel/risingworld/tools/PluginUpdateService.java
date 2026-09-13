@@ -8,6 +8,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -48,6 +49,8 @@ public final class PluginUpdateService implements AutoCloseable {
     private static final int MAX_CATALOG_BYTES = 64 * 1024;
     private static volatile Map<String, CatalogEntry> catalog = Map.of();
     private static volatile String bundledCatalogError;
+    private static final String GITHUB_RATE_LIMIT_RESET_HEADER = "X-RateLimit-Reset";
+    private static final String GITHUB_RATE_LIMIT_REMAINING_HEADER = "X-RateLimit-Remaining";
     private final OZTools tools;
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8))
             .followRedirects(HttpClient.Redirect.NORMAL).build();
@@ -57,6 +60,7 @@ public final class PluginUpdateService implements AutoCloseable {
     private volatile Map<String, Result> results = Map.of();
     private final AtomicBoolean checkQueued = new AtomicBoolean();
     private final PluginUpdateStore store;
+    private volatile long githubRateLimitResetEpochMillis;
 
     public PluginUpdateService(OZTools tools, Connection connection) {
         this.tools = tools;
@@ -69,6 +73,13 @@ public final class PluginUpdateService implements AutoCloseable {
     }
 
     public Map<String, Result> results() { return results; }
+
+    /** True while GitHub has instructed this server to wait before another API request. */
+    public boolean isGitHubRateLimited() {
+        return githubRateLimitResetEpochMillis > System.currentTimeMillis();
+    }
+
+    public long githubRateLimitResetEpochMillis() { return githubRateLimitResetEpochMillis; }
 
     /**
      * Returns every plugin visible to the server. Catalogue plugins and plugins
@@ -104,6 +115,10 @@ public final class PluginUpdateService implements AutoCloseable {
         if (!checkQueued.compareAndSet(false, true)) return;
         executor.execute(() -> {
             try {
+                if (isGitHubRateLimited()) {
+                    if (completed != null) completed.accept(false);
+                    return;
+                }
                 checkInstalled(checkedPlugin, resultUpdated, completed);
             } finally {
                 checkQueued.set(false);
@@ -411,10 +426,7 @@ public final class PluginUpdateService implements AutoCloseable {
     }
 
     private ReleaseInfo release(String repository) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder(URI.create(GITHUB_API_PREFIX + repository + "/releases/latest"))
-                .timeout(Duration.ofSeconds(12)).header("Accept", "application/vnd.github+json").GET().build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() != 200) throw new IOException("GitHub HTTP " + response.statusCode());
+        HttpResponse<String> response = githubApiRequest(GITHUB_API_PREFIX + repository + "/releases/latest");
         JsonObject release = JsonParser.parseString(response.body()).getAsJsonObject();
         if (!release.has("tag_name") || !release.has("html_url")) throw new IOException("Incomplete GitHub release metadata");
         return new ReleaseInfo(release.get("tag_name").getAsString().replaceFirst("^[vV]", ""),
@@ -456,6 +468,10 @@ public final class PluginUpdateService implements AutoCloseable {
     public void checkPluginAsync(String pluginName, Consumer<Result> completed) {
         if (pluginName == null || pluginName.isBlank()) return;
         executor.execute(() -> {
+            if (isGitHubRateLimited()) {
+                if (completed != null) completed.accept(results.get(pluginName));
+                return;
+            }
             refreshCatalog();
             Map<String, Result> checked = new LinkedHashMap<>(results);
             CheckSource source = checkSource(pluginName);
@@ -478,8 +494,10 @@ public final class PluginUpdateService implements AutoCloseable {
             String repository = catalogEntry.getValue().repository();
             String installedVersion = plugin == null ? "N/A" : plugin.getDescription("version");
             firstRequest = checkRepository(name, repository, installedVersion, plugin == null, checked, checkedPlugin, resultUpdated, firstRequest);
+            if (isGitHubRateLimited()) break;
         }
         for (Plugin plugin : installed.values()) {
+            if (isGitHubRateLimited()) break;
             String repository = repositoryFrom(plugin.getDescription("website"));
             if (!isTrustedRepository(plugin.getDescription("name"), repository)) continue;
             firstRequest = checkRepository(plugin.getDescription("name"), repository, plugin.getDescription("version"), false,
@@ -496,13 +514,20 @@ public final class PluginUpdateService implements AutoCloseable {
             return firstRequest;
         }
         try {
+            if (isGitHubRateLimited()) throw new GitHubRateLimitException(githubRateLimitResetEpochMillis);
             if (!firstRequest) pauseBetweenChecks();
+            if (isGitHubRateLimited()) throw new GitHubRateLimitException(githubRateLimitResetEpochMillis);
             if (checkedPlugin != null) checkedPlugin.accept(name);
             ReleaseInfo release = release(repository);
             publishResult(name, new Result(installedVersion, release.version(), release.url(), release.notes(),
                     notInstalled ? State.NOT_INSTALLED
                             : compare(release.version(), installedVersion) > 0 ? State.UPDATE_AVAILABLE : State.CURRENT,
                     System.currentTimeMillis()), checked, resultUpdated);
+        } catch (GitHubRateLimitException ex) {
+            Result previous = results.get(name);
+            if (previous != null) checked.put(name, previous);
+            OZTools.logger().warn("GitHub API rate limit reached; deferring further plugin checks until "
+                    + Instant.ofEpochMilli(ex.resetEpochMillis()));
         } catch (Exception ex) {
             publishResult(name, new Result(installedVersion, "", "", "", State.ERROR, System.currentTimeMillis()), checked, resultUpdated);
             OZTools.logger().warn("Plugin update check failed for " + name + ": " + ex.getMessage());
@@ -629,11 +654,50 @@ public final class PluginUpdateService implements AutoCloseable {
     }
 
     private JsonObject releaseJson(String repository) throws Exception {
-        HttpRequest request = HttpRequest.newBuilder(URI.create(GITHUB_API_PREFIX + repository + "/releases/latest"))
-                .timeout(Duration.ofSeconds(12)).header("Accept", "application/vnd.github+json").GET().build();
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() != 200) throw new IOException("GitHub HTTP " + response.statusCode());
+        HttpResponse<String> response = githubApiRequest(GITHUB_API_PREFIX + repository + "/releases/latest");
         return JsonParser.parseString(response.body()).getAsJsonObject();
+    }
+
+    private HttpResponse<String> githubApiRequest(String url) throws Exception {
+        if (isGitHubRateLimited()) throw new GitHubRateLimitException(githubRateLimitResetEpochMillis);
+        HttpRequest.Builder request = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(12))
+                .header("Accept", "application/vnd.github+json");
+        String token = PluginSettings.getInstance().githubToken;
+        if (token != null && !token.isBlank()) request.header("Authorization", "Bearer " + token);
+        HttpResponse<String> response = client.send(request.GET().build(), HttpResponse.BodyHandlers.ofString());
+        observeGitHubRateLimit(response);
+        if (response.statusCode() != 200) {
+            if (isGitHubRateLimited()) throw new GitHubRateLimitException(githubRateLimitResetEpochMillis);
+            throw new IOException("GitHub HTTP " + response.statusCode());
+        }
+        return response;
+    }
+
+    private void observeGitHubRateLimit(HttpResponse<?> response) {
+        long resetEpochMillis = rateLimitResetEpochMillis(response.headers());
+        if (resetEpochMillis > 0) githubRateLimitResetEpochMillis = resetEpochMillis;
+    }
+
+    static long rateLimitResetEpochMillis(java.net.http.HttpHeaders headers) {
+        String remaining = headers.firstValue(GITHUB_RATE_LIMIT_REMAINING_HEADER).orElse("");
+        String reset = headers.firstValue(GITHUB_RATE_LIMIT_RESET_HEADER).orElse("");
+        if (!"0".equals(remaining)) return 0;
+        try {
+            long resetEpochMillis = Long.parseLong(reset) * 1000L;
+            return resetEpochMillis > System.currentTimeMillis() ? resetEpochMillis : 0;
+        } catch (NumberFormatException ignored) {
+            // Without an explicit future reset timestamp a response cannot safely block later requests.
+            return 0;
+        }
+    }
+
+    static final class GitHubRateLimitException extends IOException {
+        private final long resetEpochMillis;
+        GitHubRateLimitException(long resetEpochMillis) {
+            super("GitHub API rate limit exceeded");
+            this.resetEpochMillis = resetEpochMillis;
+        }
+        long resetEpochMillis() { return resetEpochMillis; }
     }
 
     private void pauseBetweenChecks() {

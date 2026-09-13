@@ -71,6 +71,9 @@
         "check": {
           "action": "Auf Updates prüfen",
           "none": "Überprüfung abgeschlossen. Keine neuen Updates verfügbar.",
+          "rate": {
+            "limited": "GitHub begrenzt diesen Server derzeit. Weitere Plugin-Prüfungen werden nach dem Zurücksetzen des Limits durch GitHub fortgesetzt."
+          },
           "plugin": {
             "$value": "Prüfe PH_PLUGIN_NAME auf eine neue Version.",
             "action": "Dieses Plugin prüfen",

@@ -36,7 +36,11 @@ This plugin has a set of utilities and libs used by different Plugins.
   while running, but locked files can still make an individual update fail.
   New plugin installations, update checks and release notes remain available.
   Release checks run serially with a configurable three-second request interval
-  to avoid GitHub API rate limits.
+  to avoid GitHub API rate limits. When GitHub reports that its API limit is
+  exhausted, Tools retains the last successful release details and makes no
+  further GitHub API requests until GitHub's reported reset time. Operators may
+  optionally set `githubToken` in the local JSON settings file; it is sent as a
+  Bearer token only to GitHub and is intentionally not shown in the game UI.
 
 ## External libs
 

@@ -34,6 +34,8 @@ public class PluginSettings {
 	public boolean automaticPluginUpdateCheck = false;
 	public int pluginUpdateCheckDelaySeconds = 30;
 	public int pluginUpdateCheckDelayBetweenPluginsSeconds = 3;
+	/** Optional GitHub API token. Intentionally JSON-only: never expose secrets in the admin UI. */
+	public String githubToken = "";
 	public boolean allowExternalPluginRepositories = false;
 	/** Allows opt-in attempts to replace installed plugin files on Windows. */
 	public boolean allowWindowsUpdate = false;
@@ -98,6 +100,7 @@ public class PluginSettings {
 			pluginUpdateCheckDelaySeconds = Integer.parseInt(value(settings, defaults, "pluginUpdateCheckDelaySeconds", "30"));
 			pluginUpdateCheckDelayBetweenPluginsSeconds = Math.max(0, Integer.parseInt(value(settings, defaults,
 					"pluginUpdateCheckDelayBetweenPluginsSeconds", "3")));
+			githubToken = value(settings, defaults, "githubToken", "").trim();
 
 			// motd settings
 			enablePluginWelcomeMessage = value(settings, defaults, "enablePluginWelcomeMessage", "false")
