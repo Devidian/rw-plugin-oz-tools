@@ -11,6 +11,7 @@ import java.time.format.DateTimeFormatter;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
+import de.omegazirkel.risingworld.tools.PluginSettings;
 import de.omegazirkel.risingworld.tools.PluginUpdateService;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
 import net.risingworld.api.objects.Player;
@@ -412,11 +413,17 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         checkPlugin.setHoverBorderColor(0xD7AE55FF);
         panel.addChild(checkPlugin);
 
-        if (updateAvailable(pluginLabel) || installAvailable(pluginLabel) || installing(pluginLabel)) {
+        boolean primaryAction = updateAvailable(pluginLabel) || installAvailable(pluginLabel) || installing(pluginLabel)
+                || reinstallAvailable(pluginLabel);
+        if (primaryAction) {
             AdvancedButton updateButton = AdvancedButtonFactory.danger(installing(pluginLabel)
                     ? t().get("tc.plugin.update.installing", uiPlayer)
                     : installAvailable(pluginLabel) ? t().get("tc.plugin.update.install.action", uiPlayer)
-                            : t().get("tc.plugin.update.action", uiPlayer), event -> showUpdateConfirmation());
+                            : updateAvailable(pluginLabel) ? t().get("tc.plugin.update.action", uiPlayer)
+                                    : t().get("tc.plugin.update.reinstall.action", uiPlayer), event -> {
+                                        if (reinstallAvailable(pluginLabel)) showReinstallConfirmation();
+                                        else showUpdateConfirmation();
+                                    });
             updateButton.setPivot(Pivot.LowerLeft);
             updateButton.setPosition(0, 94, true);
             updateButton.style.left.set(290, Unit.Pixel);
@@ -428,6 +435,21 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             updateButton.setHoverBorderColor(0xF2C766FF);
             if (installing(pluginLabel)) updateButton.setClickable(false);
             panel.addChild(updateButton);
+        }
+
+        if (uninstallAvailable(pluginLabel)) {
+            AdvancedButton uninstallButton = AdvancedButtonFactory.danger(
+                    t().get("tc.plugin.update.uninstall.action", uiPlayer), event -> showUninstallConfirmation());
+            uninstallButton.setPivot(Pivot.LowerLeft);
+            uninstallButton.setPosition(0, 94, true);
+            uninstallButton.style.left.set(primaryAction ? 485 : 290, Unit.Pixel);
+            uninstallButton.setSize(180, 34, false);
+            uninstallButton.setBackgroundColor(0x7A3018E8);
+            uninstallButton.setHoverBackgroundColor(0xA84722FF);
+            uninstallButton.setBorder(1);
+            uninstallButton.setBorderColor(0xD7AE55FF);
+            uninstallButton.setHoverBorderColor(0xF2C766FF);
+            panel.addChild(uninstallButton);
         }
 
         UILabel checkedAt = new UILabel(t().get("tc.plugin.update.last.checked", uiPlayer)
@@ -507,6 +529,21 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         return result != null && result.state() == PluginUpdateService.State.INSTALLING;
     }
 
+    private boolean reinstallAvailable(String pluginLabel) {
+        PluginUpdateService.Result result = OZTools.pluginUpdateResult(pluginLabel);
+        return result != null && result.state() == PluginUpdateService.State.CURRENT && compatibleInstalledPlugin(pluginLabel);
+    }
+
+    private boolean uninstallAvailable(String pluginLabel) {
+        return compatibleInstalledPlugin(pluginLabel) && !installing(pluginLabel);
+    }
+
+    private boolean compatibleInstalledPlugin(String pluginLabel) {
+        PluginUpdateService.InstalledPlugin plugin = installedPlugin(pluginLabel);
+        return plugin != null && plugin.hasGitHubReleaseWebsite()
+                && (!plugin.external() || PluginSettings.getInstance().allowExternalPluginRepositories);
+    }
+
     private boolean canShowReleaseNotesTab(String pluginLabel) {
         if (!uiPlayer.isAdmin() || pluginLabel == null) return false;
         if (!isExternalPlugin(pluginLabel)) return true;
@@ -584,6 +621,67 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         confirm.setPosition(396, 154, false);
         confirm.setSize(170, 32, false);
         dialog.addChild(confirm);
+    }
+
+    private void showReinstallConfirmation() {
+        if (!uiPlayer.isAdmin() || !reinstallAvailable(selectedPlugin) || showWindowsInstallationWarning()) return;
+        PluginUpdateService.Result result = OZTools.pluginUpdateResult(selectedPlugin);
+        OZUIElement dialog = confirmationDialog("tc.plugin.update.reinstall.title", "tc.plugin.update.reinstall.message", result);
+        AdvancedButton confirm = AdvancedButtonFactory.danger(t().get("tc.plugin.update.reinstall.confirm", uiPlayer), event -> {
+            removeChild(dialog);
+            OZTools.reinstallPlugin(selectedPlugin, uiPlayer, this::updateUI);
+        });
+        confirm.setPivot(Pivot.UpperRight);
+        confirm.setPosition(396, 154, false);
+        confirm.setSize(170, 32, false);
+        dialog.addChild(confirm);
+    }
+
+    private void showUninstallConfirmation() {
+        if (!uiPlayer.isAdmin() || !uninstallAvailable(selectedPlugin) || showWindowsInstallationWarning()) return;
+        OZUIElement dialog = confirmationDialog("tc.plugin.update.uninstall.title", "tc.plugin.update.uninstall.message",
+                OZTools.pluginUpdateResult(selectedPlugin));
+        AdvancedButton confirm = AdvancedButtonFactory.danger(t().get("tc.plugin.update.uninstall.confirm", uiPlayer), event -> {
+            removeChild(dialog);
+            OZTools.uninstallPlugin(selectedPlugin, uiPlayer, this::updateUI);
+        });
+        confirm.setPivot(Pivot.UpperRight);
+        confirm.setPosition(396, 154, false);
+        confirm.setSize(170, 32, false);
+        dialog.addChild(confirm);
+    }
+
+    private OZUIElement confirmationDialog(String titleKey, String messageKey, PluginUpdateService.Result result) {
+        OZUIElement dialog = new OZUIElement();
+        dialog.setPivot(Pivot.MiddleCenter);
+        dialog.setPosition(50, 50, true);
+        dialog.setSize(420, 210, false);
+        dialog.setBackgroundColor(0x10100EF8);
+        dialog.setBorder(1);
+        dialog.setBorderColor(0xD7AE55FF);
+        addChild(dialog);
+        UILabel title = new UILabel(t().get(titleKey, uiPlayer));
+        title.setPivot(Pivot.UpperLeft);
+        title.setPosition(20, 18, false);
+        title.setSize(380, 28, false);
+        title.setFontSize(18);
+        title.setFontColor(0xF4F0E6FF);
+        dialog.addChild(title);
+        UILabel message = new UILabel(t().get(messageKey, uiPlayer).replace("PH_PLUGIN_NAME", selectedPlugin)
+                .replace("PH_LATEST_VERSION", result == null ? "?" : result.latestVersion()));
+        message.setPivot(Pivot.UpperLeft);
+        message.setPosition(20, 58, false);
+        message.setSize(380, 68, false);
+        message.setFontSize(13);
+        message.setTextWrap(true);
+        message.setFontColor(0xE0D8C8FF);
+        dialog.addChild(message);
+        AdvancedButton cancel = AdvancedButtonFactory.cancel(t().get("tc.btn.cancel", uiPlayer), event -> removeChild(dialog));
+        cancel.setPivot(Pivot.UpperLeft);
+        cancel.setPosition(24, 154, false);
+        cancel.setSize(140, 32, false);
+        dialog.addChild(cancel);
+        return dialog;
     }
 
     private List<String> pendingUpdates() {

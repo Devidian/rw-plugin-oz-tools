@@ -96,6 +96,23 @@
           "started": "Aktualisiere PH_PLUGIN_NAME von vPH_INSTALLED_VERSION auf vPH_LATEST_VERSION.",
           "title": "Plugin-Update installieren"
         },
+        "reinstall": {
+          "action": "Neuinstallieren",
+          "completed": "Neuinstallation abgeschlossen. Lade Plugins neu.",
+          "confirm": "Neu installieren",
+          "message": "PH_PLUGIN_NAME wird in der aktuellen Release-Version vPH_LATEST_VERSION neu installiert. Einstellungen und gespeicherte Daten bleiben erhalten. Anschließend werden die Plugins neu geladen.",
+          "started": "Installiere PH_PLUGIN_NAME in Version vPH_LATEST_VERSION neu.",
+          "title": "Plugin neu installieren"
+        },
+        "uninstall": {
+          "action": "Deinstallieren",
+          "completed": "Plugin deinstalliert. Lade Plugins neu.",
+          "confirm": "Endgültig deinstallieren",
+          "failed": "<color=#F0A000>Plugin-Deinstallation fehlgeschlagen. Das installierte Plugin wurde nicht verändert.</color>",
+          "message": "PH_PLUGIN_NAME wird vollständig aus den geladenen Plugins entfernt. Alle Dateien, Einstellungen und Daten werden zur Wiederherstellung in einen versteckten .oz-uninstalled-Ordner verschoben. Anschließend werden die Plugins neu geladen.",
+          "started": "Deinstalliere PH_PLUGIN_NAME und sichere alle Dateien.",
+          "title": "Plugin deinstallieren"
+        },
         "last": {
           "checked": "Letzte Prüfung: PH_CHECKED_AT"
         },

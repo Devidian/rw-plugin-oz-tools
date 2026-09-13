@@ -190,9 +190,26 @@ public class PluginUpdateServiceTest {
     }
 
     @Test
+    public void movesCompletePluginDirectoryToHiddenRollbackFolder() throws Exception {
+        Path plugins = Files.createTempDirectory("plugins");
+        Path installed = plugins.resolve("OZExample");
+        Files.createDirectories(installed);
+        Files.writeString(installed.resolve("plugin.jar"), "plugin");
+        Files.writeString(installed.resolve("settings.world.json"), "configured=true");
+
+        Path archived = PluginUpdateService.moveToUninstalled(installed, plugins.resolve(".oz-uninstalled"));
+
+        assertFalse(Files.exists(installed));
+        assertTrue(archived.startsWith(plugins.resolve(".oz-uninstalled")));
+        assertEquals("plugin", Files.readString(archived.resolve("plugin.jar")));
+        assertEquals("configured=true", Files.readString(archived.resolve("settings.world.json")));
+    }
+
+    @Test
     public void excludesTemporaryUpdateDirectoriesFromWatching() {
         assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/.oz-update-123/content/OZGPS")));
         assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS.oz-backup/settings.properties")));
+        assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/.oz-uninstalled/OZGPS-1/OZGPS.jar")));
         assertFalse(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS/settings.properties")));
     }
 

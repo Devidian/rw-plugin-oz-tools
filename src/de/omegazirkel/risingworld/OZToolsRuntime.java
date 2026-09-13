@@ -187,6 +187,42 @@ class OZToolsRuntime extends Plugin {
         if (onStateChanged != null) onStateChanged.run();
     }
 
+    public static void reinstallPlugin(String pluginName, Player player, Runnable onStateChanged) {
+        PluginUpdateService service = activePluginUpdateService;
+        OZToolsRuntime tools = activeTools;
+        PluginUpdateService.Result result = pluginUpdateResult(pluginName);
+        if (service == null || tools == null || player == null || !player.isAdmin() || result == null
+                || result.state() != PluginUpdateService.State.CURRENT || rejectWindowsInstallation(player)) return;
+        player.sendTextMessage(t.get("tc.plugin.update.reinstall.started", player).replace("PH_PLUGIN_NAME", pluginName)
+                .replace("PH_LATEST_VERSION", result.latestVersion()));
+        service.reinstallLatestAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() -> {
+            service.markInstalledLatest(pluginName);
+            player.sendTextMessage(t.get("tc.plugin.update.reinstall.completed", player));
+            if (onStateChanged != null) onStateChanged.run();
+            tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
+        }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
+            player.sendTextMessage(t.get("tc.plugin.update.install.failed", player));
+            if (onStateChanged != null) onStateChanged.run();
+        }));
+        if (onStateChanged != null) onStateChanged.run();
+    }
+
+    public static void uninstallPlugin(String pluginName, Player player, Runnable onStateChanged) {
+        PluginUpdateService service = activePluginUpdateService;
+        OZToolsRuntime tools = activeTools;
+        if (service == null || tools == null || player == null || !player.isAdmin() || rejectWindowsInstallation(player)) return;
+        player.sendTextMessage(t.get("tc.plugin.update.uninstall.started", player).replace("PH_PLUGIN_NAME", pluginName));
+        service.uninstallAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() -> {
+            player.sendTextMessage(t.get("tc.plugin.update.uninstall.completed", player));
+            if (onStateChanged != null) onStateChanged.run();
+            tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
+        }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
+            player.sendTextMessage(t.get("tc.plugin.update.uninstall.failed", player));
+            if (onStateChanged != null) onStateChanged.run();
+        }));
+        if (onStateChanged != null) onStateChanged.run();
+    }
+
     /** Installs confirmed releases one after another and reloads only after the
      * complete batch has been staged successfully. */
     public static void installPluginUpdates(List<String> pluginNames, Player player, Runnable onStateChanged) {

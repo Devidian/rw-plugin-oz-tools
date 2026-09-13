@@ -96,6 +96,23 @@
           "started": "Updating PH_PLUGIN_NAME from vPH_INSTALLED_VERSION to vPH_LATEST_VERSION.",
           "title": "Install plugin update"
         },
+        "reinstall": {
+          "action": "Reinstall",
+          "completed": "Reinstall completed. Reloading plugins.",
+          "confirm": "Reinstall plugin",
+          "message": "PH_PLUGIN_NAME will be reinstalled at the current release version vPH_LATEST_VERSION. Settings and stored data are retained. Plugins will then reload.",
+          "started": "Reinstalling PH_PLUGIN_NAME at version vPH_LATEST_VERSION.",
+          "title": "Reinstall plugin"
+        },
+        "uninstall": {
+          "action": "Uninstall",
+          "completed": "Plugin uninstalled. Reloading plugins.",
+          "confirm": "Uninstall permanently",
+          "failed": "<color=#F0A000>Plugin uninstall failed. The installed plugin was not changed.</color>",
+          "message": "PH_PLUGIN_NAME will be removed completely from loaded plugins. All files, settings, and data will be moved to a hidden .oz-uninstalled folder for recovery. Plugins will then reload.",
+          "started": "Uninstalling PH_PLUGIN_NAME and securing all files.",
+          "title": "Uninstall plugin"
+        },
         "last": {
           "checked": "Last check: PH_CHECKED_AT"
         },

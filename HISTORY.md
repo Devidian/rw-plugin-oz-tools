@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.24.5] - 2026-09-13 | Plugin reinstall and uninstall
+
+- feat: let administrators reinstall the current trusted plugin release while retaining settings and saved data.
+- feat: let administrators reversibly uninstall compatible plugins by moving their complete directory to `.oz-uninstalled` before reloading plugins.
+
 ## [0.24.4] - 2026-09-13 | Plugin-update translations
 
 - fix: refresh packaged JSON translation catalogues during plugin updates while retaining local settings and data.

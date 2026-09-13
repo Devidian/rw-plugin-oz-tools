@@ -195,7 +195,7 @@ public class PluginFileWatcher implements AutoCloseable {
         if (path == null) return false;
         for (Path segment : path) {
             String name = segment.toString().toLowerCase(Locale.ROOT);
-            if (name.startsWith(".oz-update-") || name.endsWith(".oz-backup")) return true;
+            if (name.startsWith(".oz-update-") || name.endsWith(".oz-backup") || name.equals(".oz-uninstalled")) return true;
         }
         return false;
     }

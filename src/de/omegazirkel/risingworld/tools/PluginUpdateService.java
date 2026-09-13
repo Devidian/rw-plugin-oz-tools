@@ -34,7 +34,7 @@ import net.risingworld.api.Plugin;
 /** Bounded public-GitHub release checks. Package installation deliberately uses
  * the same allow-list decision as checking and is only exposed to admins. */
 public final class PluginUpdateService implements AutoCloseable {
-    public enum State { UNKNOWN, CURRENT, UPDATE_AVAILABLE, NOT_INSTALLED, INSTALLING, ERROR }
+    public enum State { UNKNOWN, CURRENT, UPDATE_AVAILABLE, NOT_INSTALLED, INSTALLING, UNINSTALLING, ERROR }
     public record Result(String installedVersion, String latestVersion, String releaseUrl, String releaseNotes,
             State state, long checkedAtEpochMillis) { }
     /** Runtime metadata for installed plugins, including plugins not built on OZ Tools. */
@@ -143,6 +143,24 @@ public final class PluginUpdateService implements AutoCloseable {
         executor.execute(() -> installLatest(pluginName, onSuccess, onFailure, previous));
     }
 
+    /** Reinstalls the checked public release using the same data-preserving
+     * replacement path as an update. */
+    public void reinstallLatestAsync(String pluginName, Runnable onSuccess, Consumer<String> onFailure) {
+        installLatestAsync(pluginName, onSuccess, onFailure);
+    }
+
+    /** Moves a compatible installed plugin to a hidden rollback directory;
+     * the caller reloads plugins only after this operation succeeds. */
+    public void uninstallAsync(String pluginName, Runnable onSuccess, Consumer<String> onFailure) {
+        if (pluginName == null || pluginName.isBlank()) return;
+        Result previous = results.get(pluginName);
+        if (previous != null) {
+            updateResult(pluginName, new Result(previous.installedVersion(), previous.latestVersion(), previous.releaseUrl(),
+                    previous.releaseNotes(), State.UNINSTALLING, previous.checkedAtEpochMillis()));
+        }
+        executor.execute(() -> uninstall(pluginName, onSuccess, onFailure, previous));
+    }
+
     private void installLatest(String pluginName, Runnable onSuccess, Consumer<String> onFailure, Result previous) {
         refreshCatalog();
         Plugin plugin = null;
@@ -215,6 +233,60 @@ public final class PluginUpdateService implements AutoCloseable {
         if (previous != null) updateResult(pluginName, previous);
         OZTools.logger().warn("Plugin installation rejected: " + reason + " for " + pluginName);
         if (onFailure != null) onFailure.accept(reason);
+    }
+
+    private void uninstall(String pluginName, Runnable onSuccess, Consumer<String> onFailure, Result previous) {
+        refreshCatalog();
+        Plugin plugin = tools.getAllPlugins().stream()
+                .filter(candidate -> pluginName.equals(candidate.getDescription("name"))).findFirst().orElse(null);
+        if (plugin == null) {
+            failInstallation(pluginName, previous, onFailure, "unknown-plugin");
+            return;
+        }
+        CatalogEntry catalogEntry = catalog.get(pluginName);
+        String repository = catalogEntry != null ? catalogEntry.repository()
+                : repositoryFrom(plugin.getDescription("website"));
+        if (!isTrustedRepository(pluginName, repository)) {
+            failInstallation(pluginName, previous, onFailure, "untrusted-release-source");
+            return;
+        }
+        try {
+            Path target = Path.of(plugin.getPath()).toAbsolutePath().normalize();
+            if (!isInstallationSupported(true)) {
+                failInstallation(pluginName, previous, onFailure, "unsupported-windows");
+                return;
+            }
+            Path parent = target.getParent();
+            if (parent == null || !Files.isDirectory(parent)) throw new IOException("Invalid plugin path: " + target);
+            moveToUninstalled(target, parent.resolve(".oz-uninstalled"));
+            if (previous != null) {
+                updateResult(pluginName, new Result("N/A", previous.latestVersion(), previous.releaseUrl(),
+                        previous.releaseNotes(), State.NOT_INSTALLED, previous.checkedAtEpochMillis()));
+            }
+            if (onSuccess != null) onSuccess.run();
+        } catch (Exception ex) {
+            if (previous != null) updateResult(pluginName, previous);
+            OZTools.logger().error("Plugin uninstall failed for " + pluginName + ": " + ex.getMessage());
+            if (onFailure != null) onFailure.accept(ex.getMessage());
+        }
+    }
+
+    static Path moveToUninstalled(Path target, Path rollbackRoot) throws IOException {
+        Path installed = target.toAbsolutePath().normalize();
+        Path parent = installed.getParent();
+        Path rollback = rollbackRoot.toAbsolutePath().normalize();
+        if (parent == null || !Files.isDirectory(installed) || !rollback.getParent().equals(parent)) {
+            throw new IOException("Invalid plugin uninstall path: " + target);
+        }
+        Files.createDirectories(rollback);
+        String directoryName = installed.getFileName().toString();
+        Path destination = rollback.resolve(directoryName + "-" + System.currentTimeMillis()).normalize();
+        if (!destination.startsWith(rollback)) throw new IOException("Invalid uninstall rollback path");
+        try {
+            return Files.move(installed, destination, StandardCopyOption.ATOMIC_MOVE);
+        } catch (java.nio.file.AtomicMoveNotSupportedException ignored) {
+            return Files.move(installed, destination);
+        }
     }
 
     static void preserveLocalFiles(Path installedPlugin, Path replacementPlugin) throws IOException {

@@ -19,11 +19,16 @@ This plugin has a set of utilities and libs used by different Plugins.
   [`plugin-catalog.json`](src/main/resources/plugin-catalog.json). OZ Tools
   refreshes that catalogue from this repository before update checks, so new
   trusted plugins do not require a Tools release. Administrators can manually
-  check, install, and update catalogue plugins from the settings overlay.
+  check, install, update, reinstall, and uninstall catalogue plugins from the
+  settings overlay. Reinstallation uses the current release package while
+  retaining settings and persisted data. Uninstallation moves the whole plugin
+  directory, including data, to `Plugins/.oz-uninstalled/` for manual recovery
+  before reloading plugins.
   The overlay also lists installed external plugins with their declared version.
   They show only an informational tab; release notes are available when their
   `plugin.yml` `website` is a valid GitHub release URL. External update checks
-  and installation remain opt-in through the external-repositories setting.
+  installation, reinstallation, and uninstallation remain opt-in through the
+  external-repositories setting.
   On Windows servers, updates of installed plugins are disabled by default and
   show a native warning before downloading or changing files, including batch
   updates. Set `allowWindowsUpdate=true` deliberately to use an in-place
