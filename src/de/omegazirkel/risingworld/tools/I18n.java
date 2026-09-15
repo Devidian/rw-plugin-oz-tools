@@ -19,8 +19,7 @@ import net.risingworld.api.objects.Player;
 
 public class I18n {
     private static ConcurrentHashMap<String, I18n> instanceMap = new ConcurrentHashMap<String, I18n>();
-    private Map<String, Map<String, String>> language = new HashMap<String, Map<String, String>>();
-    private String loadedPluginPath;
+    private volatile Map<String, Map<String, String>> language = new HashMap<String, Map<String, String>>();
     private static final String defaultLanguage = "en";
 
     public static OZLogger logger() {
@@ -50,27 +49,20 @@ public class I18n {
         logger().setLevel(s.logLevel);
 
         I18n instance = getInstance(plugin.getDescription("name"));
-        instance.loadLanguageDataOnce(plugin.getPath());
+        instance.loadLanguageData(plugin.getPath());
         return instance;
     }
 
-    private synchronized void loadLanguageDataOnce(String pluginPath) {
-        if (pluginPath == null || pluginPath.isBlank() || pluginPath.equals(loadedPluginPath)) {
+    /** Reloads a plugin catalogue when its runtime is initialized again. */
+    private synchronized void loadLanguageData(String pluginPath) {
+        if (pluginPath == null || pluginPath.isBlank()) {
             return;
         }
-        loadLanguageData(pluginPath);
-        loadedPluginPath = pluginPath;
-    }
-
-    /**
-     *
-     * @param pluginPath
-     */
-    private void loadLanguageData(String pluginPath) {
         logger().debug("Loading language files from " + pluginPath + "/i18n'");
         File folder = new File(pluginPath + "/i18n");
         File[] listOfFiles = folder.listFiles();
         FileInputStream in;
+        Map<String, Map<String, String>> loadedLanguage = new HashMap<String, Map<String, String>>();
         try {
             logger().debug("Files found: " + listOfFiles.length);
             for (File f : listOfFiles) {
@@ -84,7 +76,7 @@ public class I18n {
                         if (!root.isJsonObject()) throw new IOException("Translation root must be an object");
                         Map<String, String> entries = new HashMap<String, String>();
                         flatten("", root.getAsJsonObject(), entries);
-                        this.language.put(lang.toLowerCase(), entries);
+                        loadedLanguage.put(lang.toLowerCase(), entries);
                     } catch (FileNotFoundException e) {
                         logger().fatal("FileNotFoundException: " + e.getMessage());
                         e.printStackTrace();
@@ -94,6 +86,7 @@ public class I18n {
                     }
                 }
             }
+            language = loadedLanguage;
         } catch (Exception e) {
             logger().fatal("Exception: " + e.getMessage());
             e.printStackTrace();

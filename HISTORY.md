@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.24.7] - 2026-09-15 | Runtime translation refresh
+
+- fix: reload JSON translation catalogues whenever a plugin runtime is initialized, including after reloads at the same path.
+
 ## [0.24.6] - 2026-09-13 | GitHub update-check limits
 
 - fix: honor GitHub API rate-limit reset headers across plugin release checks, retaining prior release notes while requests are blocked.
