@@ -43,8 +43,30 @@ public final class JsonSettingsFile {
 
     public static Properties loadProperties(Path file) throws IOException {
         Properties properties = new Properties();
-        loadFlat(file).forEach(properties::setProperty);
+        try {
+            loadFlat(file).forEach(properties::setProperty);
+        } catch (IOException | RuntimeException ex) {
+            recoverCorruptSettingsFile(file, ex);
+            loadFlat(file).forEach(properties::setProperty);
+        }
         return properties;
+    }
+
+    /** Keeps an invalid world settings file for diagnosis and restores the packaged default. */
+    private static void recoverCorruptSettingsFile(Path file, Exception cause) throws IOException {
+        Path defaultFile = file.resolveSibling("settings.default.json");
+        if (Files.notExists(file) || Files.notExists(defaultFile)) {
+            throw cause instanceof IOException io ? io : new IOException("Invalid JSON settings: " + file, cause);
+        }
+        Path backup = file.resolveSibling(file.getFileName() + ".corrupt-" + Instant.now().toEpochMilli());
+        try {
+            Files.move(file, backup, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException ex) {
+            Files.move(file, backup);
+        }
+        copyAtomically(defaultFile, file);
+        System.err.println("ERROR: Invalid JSON settings " + file + " were moved to " + backup
+                + "; restored defaults from " + defaultFile + ". Cause: " + cause.getMessage());
     }
 
     public static Path worldSettingsFile(String pluginPath) {

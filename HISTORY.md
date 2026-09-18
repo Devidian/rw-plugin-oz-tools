@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.24.8] - 2026-09-18 | Corrupt settings recovery
+
+- fix: preserve malformed world JSON settings as timestamped diagnostics and restore the packaged defaults so plugins can start again.
+
 ## [0.24.7] - 2026-09-15 | Runtime translation refresh
 
 - fix: reload JSON translation catalogues whenever a plugin runtime is initialized, including after reloads at the same path.
