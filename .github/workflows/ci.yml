@@ -79,7 +79,7 @@ jobs:
             -Dfile=libs/PluginAPI.jar \
             -DgroupId=net.risingworld \
             -DartifactId=PluginAPI \
-            -Dversion=0.9.3 \
+            -Dversion=0.9.3.2 \
             -Dpackaging=jar
 
       - name: Check API helper
@@ -162,7 +162,7 @@ jobs:
             -Dfile=libs/PluginAPI.jar \
             -DgroupId=net.risingworld \
             -DartifactId=PluginAPI \
-            -Dversion=0.9.3 \
+            -Dversion=0.9.3.2 \
             -Dpackaging=jar
 
       - name: Verify tag, POM, and plugin.yml versions match

@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.24.9] - 2026-09-18 | Release pipeline compatibility
+
+- fix: install PluginAPI 0.9.3.2 in release validation and publishing workflows.
+
 ## [0.24.8] - 2026-09-18 | Corrupt settings recovery
 
 - fix: preserve malformed world JSON settings as timestamped diagnostics and restore the packaged defaults so plugins can start again.
