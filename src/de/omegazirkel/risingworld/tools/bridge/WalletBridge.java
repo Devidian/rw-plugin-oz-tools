@@ -144,6 +144,15 @@ public class WalletBridge {
         return transferResult(response);
     }
 
+    /** Issues a durable, idempotent credit to a system account owned by the calling plugin. */
+    public WalletTransferCallResult creditSystemAccountIdempotent(String accountId, long value, String reason,
+            String currencyIdentifier, String pluginIdentifier, String correlationId) {
+        Object response = call("creditSystemAccountIdempotent",
+                new Class<?>[] { String.class, long.class, String.class, String.class, String.class, String.class },
+                accountId, value, reason, currencyIdentifier, pluginIdentifier, correlationId);
+        return transferResult(response);
+    }
+
     public WalletTransferCallResult reverseAccountTransferIdempotent(String originalCorrelationId,
             String reversalCorrelationId, String reason, String pluginIdentifier) {
         Object response = call("reverseAccountTransferIdempotent",

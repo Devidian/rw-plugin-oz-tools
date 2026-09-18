@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.24.11] - 2026-09-19 | Cleanup Wallet bridge
+
+- feat: expose idempotent system-account credits through the optional Wallet bridge for durable plugin-owned cleanup payouts.
+
 ## [0.24.9] - 2026-09-18 | Release pipeline compatibility
 
 - fix: install PluginAPI 0.9.3.2 in release validation and publishing workflows.
