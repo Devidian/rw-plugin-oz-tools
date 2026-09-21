@@ -69,6 +69,19 @@ public class WalletBridge {
                 string(field(response, "message")));
     }
 
+    /** Whether Wallet exposes the atomic player-to-player transfer contract. */
+    public boolean hasPlayerTransferApi() {
+        Plugin wallet = wallet();
+        if (wallet == null) return false;
+        try {
+            wallet.getClass().getMethod("transferIdempotent", int.class, int.class, long.class, String.class,
+                    String.class, String.class, String.class);
+            return true;
+        } catch (NoSuchMethodException ex) {
+            return false;
+        }
+    }
+
     public boolean hasSystemAccountApi() {
         Plugin wallet = wallet();
         if (wallet == null) return false;
