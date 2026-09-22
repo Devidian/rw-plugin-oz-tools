@@ -4,6 +4,7 @@
 
 - feat: add the optional reflection-only FactionBridge for faction identity,
   roles, accounts, balances and total capacity licenses.
+- feat: add OZ - Factions to the trusted in-game plugin catalogue.
 - fix: do not establish the Manager connector WebSocket unless the root
   `server.properties` explicitly enables `Server_WebserverExposePlugins=true`.
 
