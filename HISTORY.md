@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.25.0] - 2026-09-22 | Faction bridge and connector exposure
+
+- feat: add the optional reflection-only FactionBridge for faction identity,
+  roles, accounts, balances and total capacity licenses.
+- fix: do not establish the Manager connector WebSocket unless the root
+  `server.properties` explicitly enables `Server_WebserverExposePlugins=true`.
+
 ## [0.24.11] - 2026-09-19 | Cleanup Wallet bridge
 
 - feat: expose idempotent system-account credits through the optional Wallet bridge for durable plugin-owned cleanup payouts.

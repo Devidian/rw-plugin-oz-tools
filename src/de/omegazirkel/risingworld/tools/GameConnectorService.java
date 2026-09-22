@@ -11,6 +11,7 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.crypto.Cipher;
@@ -46,6 +47,10 @@ public final class GameConnectorService implements WebSocketHandler {
     }
 
     public void start() {
+        if (!pluginWebExposureEnabled(plugin.getPath())) {
+            OZTools.logger().info("Game connector disabled: Server_WebserverExposePlugins is not enabled in server.properties");
+            return;
+        }
         if (credentialEncryptionKey == null) {
             OZTools.logger().warn("Game connector disabled: local credential key could not be initialized");
             return;
@@ -58,6 +63,22 @@ public final class GameConnectorService implements WebSocketHandler {
             endpoint.init();
         } catch (RuntimeException ex) {
             OZTools.logger().warn("Game connector disabled: " + ex.getMessage());
+        }
+    }
+
+    /** Server-level guard: the Manager connector is meaningful only with plugin web exposure enabled. */
+    static boolean pluginWebExposureEnabled(String pluginPath) {
+        if (pluginPath == null || pluginPath.isBlank()) return false;
+        Path pluginDirectory=Path.of(pluginPath).toAbsolutePath().normalize();
+        Path pluginsDirectory=pluginDirectory.getParent();
+        Path serverDirectory=pluginsDirectory == null ? null : pluginsDirectory.getParent();
+        if (serverDirectory == null) return false;
+        Properties properties=new Properties();
+        try (var input=Files.newInputStream(serverDirectory.resolve("server.properties"))) {
+            properties.load(input);
+            return "true".equalsIgnoreCase(properties.getProperty("Server_WebserverExposePlugins", "").trim());
+        } catch (Exception ex) {
+            return false;
         }
     }
 

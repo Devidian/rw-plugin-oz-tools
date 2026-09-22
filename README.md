@@ -14,6 +14,7 @@ This plugin has a set of utilities and libs used by different Plugins.
 - Player database lookup helper for recently seen players, persisted exact-name lookup, and best-effort player records
 - Opt-in JVM thread lifecycle diagnostics and reusable diagnostic thread factory
 - Reflection-only Mail bridge API v2 for text mail, mailbox capacity, and trusted plugin attachments
+- Optional reflection-only FactionBridge for faction roles, accounts and total capacity licenses
 - Opt-in public GitHub release checks for installed plugins, restricted by
   default to the maintained
   [`plugin-catalog.json`](src/main/resources/plugin-catalog.json). OZ Tools
