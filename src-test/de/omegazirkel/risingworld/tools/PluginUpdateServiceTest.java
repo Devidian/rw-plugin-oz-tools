@@ -66,8 +66,9 @@ public class PluginUpdateServiceTest {
     }
 
     @Test
-    public void bundledCatalogueIncludesBosses() {
+    public void bundledCatalogueIncludesBossesAndFactions() {
         assertTrue(PluginUpdateService.managedPluginNames().contains("OZ - Bosses"));
+        assertTrue(PluginUpdateService.managedPluginNames().contains("OZ - Factions"));
     }
 
     @Test

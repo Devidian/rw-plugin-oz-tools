@@ -7,6 +7,11 @@
       "directory": "OZTools"
     },
     {
+      "name": "OZ - Factions",
+      "repository": "Devidian/rw-plugin-oz-factions",
+      "directory": "OZPlayerFactions"
+    },
+    {
       "name": "OZ - Marketplace",
       "repository": "Devidian/rw-plugin-oz-marketplace",
       "directory": "OZMarketplace"
