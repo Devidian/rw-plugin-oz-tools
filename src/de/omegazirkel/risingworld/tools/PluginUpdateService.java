@@ -321,7 +321,7 @@ public final class PluginUpdateService implements AutoCloseable {
         // silently retain stale player-facing text after a plugin update.
         if (relative.getNameCount() > 1 && "i18n".equals(relative.getName(0).toString())) return false;
         String name = relative.getFileName().toString();
-        return name.equals("settings.properties") || (name.endsWith(".json") && !name.endsWith(".default.json"))
+        return (name.endsWith(".json") && !name.endsWith(".default.json"))
                 || name.endsWith(".db") || name.endsWith(".db-wal") || name.endsWith(".db-shm");
     }
 

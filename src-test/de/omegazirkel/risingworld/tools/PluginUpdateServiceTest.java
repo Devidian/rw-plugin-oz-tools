@@ -132,7 +132,7 @@ public class PluginUpdateServiceTest {
     public void preservesSettingsAndSqliteFilesDuringReplacement() throws Exception {
         Path installed = Files.createTempDirectory("installed-plugin");
         Path replacement = Files.createTempDirectory("replacement-plugin");
-        Files.writeString(installed.resolve("settings.properties"), "configured=true");
+        Files.writeString(installed.resolve("settings.world.json"), "{\"configured\":true}");
         Files.writeString(installed.resolve("players.db"), "database");
         Files.writeString(installed.resolve("players.db-wal"), "wal");
         Files.writeString(installed.resolve("shop-zones.json"), "shops");
@@ -146,7 +146,7 @@ public class PluginUpdateServiceTest {
 
         PluginUpdateService.preserveLocalFiles(installed, replacement);
 
-        assertEquals("configured=true", Files.readString(replacement.resolve("settings.properties")));
+        assertEquals("{\"configured\":true}", Files.readString(replacement.resolve("settings.world.json")));
         assertEquals("database", Files.readString(replacement.resolve("players.db")));
         assertEquals("wal", Files.readString(replacement.resolve("players.db-wal")));
         assertEquals("shops", Files.readString(replacement.resolve("shop-zones.json")));
@@ -211,9 +211,9 @@ public class PluginUpdateServiceTest {
     @Test
     public void excludesTemporaryUpdateDirectoriesFromWatching() {
         assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/.oz-update-123/content/OZGPS")));
-        assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS.oz-backup/settings.properties")));
+        assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS.oz-backup/settings.world.json")));
         assertTrue(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/.oz-uninstalled/OZGPS-1/OZGPS.jar")));
-        assertFalse(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS/settings.properties")));
+        assertFalse(PluginFileWatcher.isTransientUpdatePath(Path.of("Plugins/OZGPS/settings.world.json")));
     }
 
     @Test

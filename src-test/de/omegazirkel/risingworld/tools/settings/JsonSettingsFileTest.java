@@ -25,16 +25,17 @@ public class JsonSettingsFileTest {
     }
 
     @Test
-    public void migratesLegacyPropertiesOnlyWhenJsonDoesNotExist() throws Exception {
+    public void createsJsonDefaultsAndLeavesLegacyPropertiesUntouched() throws Exception {
         Path directory = Files.createTempDirectory("json-settings-migration");
         Path legacy = directory.resolve("settings.properties");
         Path json = directory.resolve("settings.world.json");
+        Path defaults = directory.resolve("settings.default.json");
         Files.writeString(legacy, "market.maxSlots=10\nenabled=false\n", StandardCharsets.UTF_8);
+        Files.writeString(defaults, "{ \"market\": { \"maxSlots\": 20 } }", StandardCharsets.UTF_8);
 
-        assertTrue(JsonSettingsFile.migrateLegacyProperties(legacy, json));
-        assertFalse(Files.exists(legacy));
-        assertEquals("10", JsonSettingsFile.loadFlat(json).get("market.maxSlots"));
-        assertFalse(JsonSettingsFile.migrateLegacyProperties(legacy, json));
+        JsonSettingsFile.prepareWorldSettings(json);
+        assertTrue(Files.exists(legacy));
+        assertEquals("20", JsonSettingsFile.loadFlat(json).get("market.maxSlots"));
     }
 
     @Test

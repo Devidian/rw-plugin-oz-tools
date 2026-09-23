@@ -11,7 +11,6 @@ import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import net.risingworld.api.World;
 
@@ -23,7 +22,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonParser;
 
-/** JSON configuration reader/writer with one-time legacy-properties migration. */
+/** JSON-only configuration reader/writer. */
 public final class JsonSettingsFile {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
@@ -41,15 +40,31 @@ public final class JsonSettingsFile {
         }
     }
 
-    public static Properties loadProperties(Path file) throws IOException {
-        Properties properties = new Properties();
+    public static java.util.Properties loadProperties(Path file) throws IOException {
+        java.util.Properties properties = new java.util.Properties();
         try {
             loadFlat(file).forEach(properties::setProperty);
         } catch (IOException | RuntimeException ex) {
             recoverCorruptSettingsFile(file, ex);
             loadFlat(file).forEach(properties::setProperty);
         }
+        addFlatAccessPaths(properties);
         return properties;
+    }
+
+    /**
+     * Creates the world-scoped settings file from the packaged JSON defaults.
+     * A legacy properties file is deliberately ignored: administrators must
+     * transfer its values to the JSON file themselves.
+     */
+    public static void prepareWorldSettings(Path settingsFile) throws IOException {
+        Path defaults = settingsFile.resolveSibling("settings.default.json");
+        Path legacy = settingsFile.resolveSibling("settings.properties");
+        if (Files.notExists(settingsFile) && Files.exists(defaults)) copyAtomically(defaults, settingsFile);
+        if (Files.exists(legacy)) {
+            System.err.println("WARN: Ignoring legacy settings.properties at " + legacy
+                    + ". Copy required values manually to " + settingsFile.getFileName() + ".");
+        }
     }
 
     /** Keeps an invalid world settings file for diagnosis and restores the packaged default. */
@@ -137,21 +152,6 @@ public final class JsonSettingsFile {
         return true;
     }
 
-    public static boolean migrateLegacyProperties(Path legacyFile, Path jsonFile) throws IOException {
-        if (Files.exists(jsonFile) || Files.notExists(legacyFile)) return false;
-        Properties properties = new Properties();
-        try (Reader reader = Files.newBufferedReader(legacyFile, StandardCharsets.UTF_8)) {
-            properties.load(reader);
-        }
-        Map<String, String> flat = new LinkedHashMap<>();
-        properties.stringPropertyNames().stream().sorted()
-                .forEach(key -> flat.put(key, properties.getProperty(key)));
-        writeFlatAtomically(jsonFile, flat);
-        Path backup = legacyFile.resolveSibling(legacyFile.getFileName() + ".migrated-" + Instant.now().toEpochMilli());
-        Files.move(legacyFile, backup, StandardCopyOption.REPLACE_EXISTING);
-        return true;
-    }
-
     /**
      * Replaces former flat setting names with their canonical JSON paths without
      * changing the configured values. Existing canonical values always win.
@@ -170,20 +170,6 @@ public final class JsonSettingsFile {
             }
         }
         if (changed) writeFlatAtomically(file, values);
-        return changed;
-    }
-
-    public static boolean normalizePaths(Path file) throws IOException {
-        if (Files.notExists(file) || file.getFileName().toString().endsWith(".properties")) return false;
-        Map<String, String> values = loadFlat(file);
-        Map<String, String> normalized = new LinkedHashMap<>();
-        boolean changed = false;
-        for (Map.Entry<String, String> entry : values.entrySet()) {
-            String canonical = canonicalPath(entry.getKey());
-            normalized.putIfAbsent(canonical, entry.getValue());
-            changed |= !canonical.equals(entry.getKey());
-        }
-        if (changed) writeFlatAtomically(file, normalized);
         return changed;
     }
 
@@ -208,50 +194,37 @@ public final class JsonSettingsFile {
         return "general." + key;
     }
 
-    public static void addCompatibilityAliases(Properties properties) {
-        Map<String, String> aliases = new LinkedHashMap<>();
-        for (String canonical : properties.stringPropertyNames()) {
-            String legacy = legacyPath(canonical);
-            if (legacy != null) aliases.put(legacy, canonical);
+    /* Consumers still expose their established setting keys; JSON remains the
+     * only file format while those lookups resolve to the nested JSON paths. */
+    private static void addFlatAccessPaths(java.util.Properties properties) {
+        Map<String, String> additions = new LinkedHashMap<>();
+        for (String path : properties.stringPropertyNames()) {
+            String flat = flatPath(path);
+            if (flat != null && !properties.containsKey(flat)) additions.put(flat, properties.getProperty(path));
         }
-        addCompatibilityAliases(properties, aliases);
+        additions.forEach(properties::setProperty);
     }
 
-    private static String legacyPath(String canonical) {
-        if (canonical.startsWith("general.")) return canonical.substring(8);
-        if ("feature.colorizeChat".equals(canonical)) return "colorizeChat";
-        if (canonical.startsWith("feature.")) return "enable" + capitalize(canonical.substring(8));
-        if (canonical.startsWith("expose.")) return "expose" + capitalize(canonical.substring(7));
-        if (canonical.startsWith("discord.")) return "discord" + capitalize(canonical.substring(8));
-        if (canonical.startsWith("color.")) return "color" + capitalize(canonical.substring(6));
-        if (canonical.startsWith("botCMD.")) return "botCMD" + canonical.substring(7);
-        if (canonical.startsWith("teleportToken.")) return "teleportToken" + capitalize(canonical.substring(14));
-        if (canonical.startsWith("useMarker.")) return "use" + capitalize(canonical.substring(10));
-        if (canonical.startsWith("restrictToSector.")) return "restrict" + capitalize(canonical.substring(17)) + "ToSector";
+    private static String flatPath(String path) {
+        if (path.startsWith("general.")) return path.substring(8);
+        if ("feature.colorizeChat".equals(path)) return "colorizeChat";
+        if (path.startsWith("feature.")) return "enable" + capitalize(path.substring(8));
+        if (path.startsWith("expose.")) return "expose" + capitalize(path.substring(7));
+        if (path.startsWith("discord.")) return "discord" + capitalize(path.substring(8));
+        if (path.startsWith("color.")) return "color" + capitalize(path.substring(6));
+        if (path.startsWith("botCMD.")) return "botCMD" + path.substring(7);
+        if (path.startsWith("teleportToken.")) return "teleportToken" + capitalize(path.substring(14));
+        if (path.startsWith("useMarker.")) return "use" + capitalize(path.substring(10));
+        if (path.startsWith("restrictToSector.")) return "restrict" + capitalize(path.substring(17)) + "ToSector";
         return null;
-    }
-
-    private static String decapitalize(String value) {
-        return Character.toLowerCase(value.charAt(0)) + value.substring(1);
     }
 
     private static String capitalize(String value) {
         return Character.toUpperCase(value.charAt(0)) + value.substring(1);
     }
 
-    /**
-     * Provides compatibility aliases for consumers that still use the former
-     * properties names while the JSON document is stored using canonical paths.
-     */
-    public static void addCompatibilityAliases(Properties properties, Map<String, String> legacyToCanonical) {
-        for (Map.Entry<String, String> entry : legacyToCanonical.entrySet()) {
-            String legacy = entry.getKey();
-            String canonical = entry.getValue();
-            String canonicalValue = properties.getProperty(canonical);
-            String legacyValue = properties.getProperty(legacy);
-            if (canonicalValue == null && legacyValue != null) properties.setProperty(canonical, legacyValue);
-            if (legacyValue == null && canonicalValue != null) properties.setProperty(legacy, canonicalValue);
-        }
+    private static String decapitalize(String value) {
+        return Character.toLowerCase(value.charAt(0)) + value.substring(1);
     }
 
     private static void flatten(String prefix, JsonObject object, Map<String, String> flat) {

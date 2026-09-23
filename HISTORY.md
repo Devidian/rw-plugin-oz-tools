@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.26.0] - 2026-09-23 | JSON-only settings runtime
+
+- change: stop reading, migrating, watching, and preserving legacy plugin `settings.properties` files.
+- change: create missing world-scoped JSON settings from packaged defaults and warn administrators to transfer any legacy values manually.
+
 ## [0.25.0] - 2026-09-22 | Faction bridge and connector exposure
 
 - feat: add the optional reflection-only FactionBridge for faction identity,

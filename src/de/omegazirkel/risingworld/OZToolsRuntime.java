@@ -323,7 +323,7 @@ class OZToolsRuntime extends Plugin {
         // Debounce: reload all plugins after 10 seconds from the last jar change
         debouncer = new PluginReloadDebouncer(() -> {
             if (!s.reloadOnChange) {
-                logger().warn("⚠️ jar changed but plugin reloading on change is deactivated, see settings.properties");
+                logger().warn("⚠️ jar changed but plugin reloading on change is deactivated; see world-specific JSON settings.");
                 return;
             }
             logger().info("ℹ️ Detected jar changes, reloading all plugins...");
@@ -346,8 +346,7 @@ class OZToolsRuntime extends Plugin {
                         List<Path> settings = files
                                 .filter(path -> {
                                     String name = path.getFileName().toString();
-                                    return name.equals("settings.properties")
-                                            || (name.startsWith("settings.") && name.endsWith(".json"));
+                                    return name.startsWith("settings.") && name.endsWith(".json");
                                 })
                                 .toList();
                         for (Path setting : settings) fileWatcher.addSettingsFile(setting, listener);

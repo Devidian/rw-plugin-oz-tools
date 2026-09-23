@@ -151,10 +151,8 @@ public class PluginFileWatcher implements AutoCloseable {
                 dispatch(() -> l.onJarChanged(path), "onJarChanged");
             }
         }
-        // JSON settings are world-scoped (settings.<world>.json); legacy
-        // settings.properties remains supported while plugins migrate.
-        else if (filename.equals("settings.properties")
-                || (filename.startsWith("settings.") && filename.endsWith(".json"))) {
+        // JSON settings are world-scoped (settings.<world>.json).
+        else if (filename.startsWith("settings.") && filename.endsWith(".json")) {
             FileChangeListener listener = settingsListenerFor(path, settingsFiles, settingsDirectories);
 
             if (listener != null) {
