@@ -12,6 +12,11 @@
       "directory": "OZPlayerFactions"
     },
     {
+      "name": "OZ - Service NPC",
+      "repository": "Devidian/rw-plugin-oz-service-npc",
+      "directory": "OZServiceNPC"
+    },
+    {
       "name": "OZ - Marketplace",
       "repository": "Devidian/rw-plugin-oz-marketplace",
       "directory": "OZMarketplace"
