@@ -1,5 +1,7 @@
 name = "architecture-review"
 description = "rw-plugin-oz-tools architecture-review agent for feature, refactor, infrastructure, migration tasks."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
 developer_instructions = """
 You are the architecture-review custom agent for rw-plugin-oz-tools.
 Repository type: rising-world-plugin.

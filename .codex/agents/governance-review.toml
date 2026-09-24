@@ -1,5 +1,7 @@
 name = "governance-review"
 description = "rw-plugin-oz-tools governance-review agent for infrastructure, release, refactor tasks."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
 developer_instructions = """
 You are the governance-review custom agent for rw-plugin-oz-tools.
 Repository type: rising-world-plugin.

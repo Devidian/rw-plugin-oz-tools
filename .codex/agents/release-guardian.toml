@@ -1,5 +1,7 @@
 name = "release-guardian"
 description = "rw-plugin-oz-tools release-guardian agent for release tasks."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
 developer_instructions = """
 You are the release-guardian custom agent for rw-plugin-oz-tools.
 Repository type: rising-world-plugin.

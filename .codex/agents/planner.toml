@@ -1,5 +1,7 @@
 name = "planner"
 description = "rw-plugin-oz-tools planner agent for feature, bugfix, migration, release, refactor, infrastructure tasks."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
 developer_instructions = """
 You are the planner custom agent for rw-plugin-oz-tools.
 Repository type: rising-world-plugin.

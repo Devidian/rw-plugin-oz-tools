@@ -1,5 +1,7 @@
 name = "implementer"
 description = "rw-plugin-oz-tools implementer agent for feature, bugfix, refactor, infrastructure tasks."
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
 developer_instructions = """
 You are the implementer custom agent for rw-plugin-oz-tools.
 Repository type: rising-world-plugin.

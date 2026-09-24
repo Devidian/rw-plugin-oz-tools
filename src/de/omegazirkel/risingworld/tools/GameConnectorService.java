@@ -13,6 +13,7 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
@@ -35,6 +36,7 @@ public final class GameConnectorService implements WebSocketHandler {
     private final Set<String> featureEvents = ConcurrentHashMap.newKeySet();
     private final Set<String> acceptedFeatureEvents = ConcurrentHashMap.newKeySet();
     private final ConcurrentHashMap<String, Set<Runnable>> featureReadyCallbacks = new ConcurrentHashMap<>();
+    private final AtomicLong eventSequence = new AtomicLong();
     private WSClientEndpoint endpoint;
     private volatile String credential;
 
@@ -84,6 +86,7 @@ public final class GameConnectorService implements WebSocketHandler {
 
     @Override public void onConnected(WSClientEndpoint client) {
         acceptedFeatureEvents.clear();
+        eventSequence.set(0);
         JsonObject message = new JsonObject();
         message.addProperty("schemaVersion", 1);
         if (credential == null) {
@@ -217,6 +220,7 @@ public final class GameConnectorService implements WebSocketHandler {
         message.addProperty("type", "connector.event");
         message.addProperty("schemaVersion", 1);
         message.addProperty("event", eventName);
+        message.addProperty("sequence", eventSequence.incrementAndGet());
         message.add("data", data);
         return endpoint.send(message.toString());
     }
