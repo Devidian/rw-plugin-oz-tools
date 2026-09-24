@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.26.2] - 2026-09-24 | Reliable radial-menu actions
+
+- fix: execute each radial-menu selection only once, preventing duplicate
+  actions such as renaming or expanding a land claim.
+
 ## [0.26.1] - 2026-09-24 | Mail subject-limit bridge
 
 - feat: expose OZ Mail's active subject-length limit through `MailBridge` so consumers can create compatible mail subjects.
