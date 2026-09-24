@@ -7,7 +7,8 @@ import net.risingworld.api.Plugin;
 
 /** Optional consumer-side reflection bridge for trusted OZ Mail delivery. */
 public class MailBridge {
-    public static final int API_VERSION = 2;
+    public static final int API_VERSION = 3;
+    public static final int DEFAULT_MAX_SUBJECT_LENGTH = 50;
     private final Plugin owner;
 
     public MailBridge(Plugin owner) {
@@ -60,6 +61,24 @@ public class MailBridge {
             return Boolean.TRUE.equals(method.invoke(mailPlugin, recipientDbId));
         } catch (ReflectiveOperationException ex) {
             return false;
+        }
+    }
+
+    /**
+     * Returns OZ Mail's active subject limit so callers can preserve as much
+     * player-facing context as the target server allows. Older Mail versions
+     * fall back to the current Mail default.
+     */
+    public int maxSubjectLength() {
+        if (owner == null) return DEFAULT_MAX_SUBJECT_LENGTH;
+        Plugin mailPlugin = owner.getPluginByName("OZ - Mail");
+        if (mailPlugin == null) return DEFAULT_MAX_SUBJECT_LENGTH;
+        try {
+            Object result = mailPlugin.getClass().getMethod("getPluginMailMaxSubjectLength").invoke(mailPlugin);
+            return result instanceof Number value && value.intValue() > 0 ? value.intValue()
+                    : DEFAULT_MAX_SUBJECT_LENGTH;
+        } catch (ReflectiveOperationException ex) {
+            return DEFAULT_MAX_SUBJECT_LENGTH;
         }
     }
 

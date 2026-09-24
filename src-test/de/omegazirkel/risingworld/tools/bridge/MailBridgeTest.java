@@ -11,6 +11,11 @@ import org.junit.Test;
 
 public class MailBridgeTest {
     @Test
+    public void mailSubjectFallbackMatchesTheCurrentMailDefault() {
+        assertEquals(50, MailBridge.DEFAULT_MAX_SUBJECT_LENGTH);
+    }
+
+    @Test
     public void attachmentRequestRequiresCompleteTrustedBoundaryData() {
         MailBridge.PluginAttachment attachment =
                 new MailBridge.PluginAttachment("wood", 0, 2, 100, (short) 0, "", 0);

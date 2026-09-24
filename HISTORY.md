@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.26.1] - 2026-09-24 | Mail subject-limit bridge
+
+- feat: expose OZ Mail's active subject-length limit through `MailBridge` so consumers can create compatible mail subjects.
+
 ## [0.26.0] - 2026-09-23 | JSON-only settings runtime
 
 - change: stop reading, migrating, watching, and preserving legacy plugin `settings.properties` files.
