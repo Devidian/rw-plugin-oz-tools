@@ -14,14 +14,14 @@ The work depends on the protocol agreed in the root coordination plan and on the
 
 ## Checklist
 
-- [ ] Inspect existing settings, private persistence, native handler and lifecycle APIs; retain the entry-class listener-only architecture.
+- [x] Inspect existing settings, private persistence, native handler and lifecycle APIs; retain the entry-class listener-only architecture.
 - [x] Add defaulted `web.allowUnsecureRequests=false`, `web.useWebsockets=false` and the documented WSS target through the existing settings/i18n model; exclude credentials and pairing codes from PluginSettings UI, exports and reload diagnostics.
 - [x] Implement durable private credential storage, with atomic installation only after the backend's authenticated provisioning response. Tools creates its private random at-rest key automatically on first start; `OZ_TOOLS_GAME_CONNECTOR_CREDENTIAL_KEY` remains an optional 32+ character deployment override. Existing environment-key credentials are not silently re-keyed: retain that variable until a deliberate credential reset and re-pair.
 - [x] Start a lifecycle-owned outbound provisioning WSS connection while no credential exists, independent of `web.useWebsockets`; accept credentials only from the configured TLS-authenticated backend and reject a replacement when already paired.
-- [~] Add a reusable handler guard that validates the agreed Authorization scheme before plugin DTO work and produces uniform `401` responses; focused header contract tests remain.
-- [ ] Provide typed, bounded publish/subscribe registration and live feature registry APIs; declared-feature registration is bounded and live, while payload publish/subscribe remains for the event-delivery milestone.
-- [ ] Implement lifecycle-owned WSS connection, auth, heartbeat, bounded reconnect/backoff and feature renegotiation. Connection/reload/shutdown handling is implemented; heartbeat, bounded backoff and feature registry remain.
-- [~] Document the public shared API and configuration; release migration and local credential-reset procedure remain.
+- [~] Add a reusable handler guard that validates the agreed Authorization scheme before plugin DTO work and produces uniform 401 responses. The guard exists; focused valid/invalid/missing-header contract tests remain.
+- [~] Provide typed, bounded publish/subscribe registration and live feature registry APIs. Feature registration, negotiated acceptance and bounded event publication are live; consumer-facing API documentation remains.
+- [~] Implement lifecycle-owned WSS connection, auth, heartbeat, bounded reconnect/backoff and feature renegotiation. Connection/auth/reload/shutdown and feature renegotiation are live; heartbeat and bounded backoff remain.
+- [~] Document the public shared API and configuration. Backend migration and local credential-reset operation are documented; consumer API guidance remains.
 
 ## Risks, Rollback and Validation
 

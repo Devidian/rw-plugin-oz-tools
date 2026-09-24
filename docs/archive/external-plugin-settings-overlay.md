@@ -38,15 +38,12 @@ package content and are refreshed.
 - [x] Preserve local data while allowing `*.default.json` package updates.
 - [x] Run `mvn -B -Dmaven.repo.local=/tmp/oz-tools-external-plugin-m2 test`
       (28 tests) and the matching `-DskipTests package` build.
-- [ ] Upload only OZ Tools to `rw-server-dev` and confirm its reload/startup
-      log evidence. The attempted SSH deployment requires explicit approval in
-      this environment and was not performed.
-- [blocked] Local Windows runtime install attempted on 2026-09-08. The running
-      server denied replacement-file creation for `OZTools.jar`, i18n, and
-      libraries, so the new JAR checksum is not installed. Its obsolete
-      `.properties` i18n files were removed by the package cleanup; retained
-      `settings.properties`, SQLite data, and JSON configuration were not
-      changed. Stop the local server before a retry, then verify its startup.
+- [x] Upload only OZ Tools to Development and confirm reload/startup evidence:
+      the 2026-09-24 deployment completed and the server logged
+      RELOADED ALL PLUGINS.
+- [x] Record the Windows replacement failure as resolved by the later stopped-
+      server installation and the opt-in in-place update path below; persisted
+      settings, SQLite data, and JSON configuration remain preserved.
 - [x] Install the validated package into the stopped local Dedicated Server at
       `J:\SteamM2\steamapps\common\RisingWorldDedicatedServer`. WSL file
       replacement is denied by its NTFS bridge even while stopped, so the

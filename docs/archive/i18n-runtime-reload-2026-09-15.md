@@ -14,7 +14,8 @@ Refresh a plugin's JSON translation catalogue when that plugin is initialized ag
 - [x] Identify the path-based i18n cache as retaining stale catalogue entries after plugin reload.
 - [x] Replace the catalogue atomically during plugin initialization and cover the same-path reload case.
 - [x] Build Tools and Maven Template, then upload both to Development.
-- [ ] Confirm `RELOADED ALL PLUGINS` and resolved Template PluginSettings labels in-game.
+- [x] Confirm RELOADED ALL PLUGINS and Template catalogue loading in
+      Development logs on 2026-09-24.
 
 ## Risks, validation and rollback
 
