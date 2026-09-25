@@ -3,7 +3,6 @@ package de.omegazirkel.risingworld.tools.ui;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
@@ -236,7 +235,7 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         }
 
         if (entry.getType() == AdminSettingsType.SELECT) {
-            row.addChild(selectDropdown(entry));
+            addChoiceGrid(row, entry);
             return row;
         }
 
@@ -269,7 +268,8 @@ public class AdminPluginSettingsPanel extends OZUIElement {
 
     private int rowHeight(AdminSettingsEntry entry) {
         if (entry.getType() == AdminSettingsType.SELECT) {
-            return 224;
+            int columns = choiceGridColumns(entry);
+            return Math.max(74, 11 + ((entry.getOptions().size() + columns - 1) / columns) * 31);
         }
         if (entry.getType() == AdminSettingsType.TEXT) {
             return 154;
@@ -277,32 +277,43 @@ public class AdminPluginSettingsPanel extends OZUIElement {
         return 74;
     }
 
-    private Dropdown selectDropdown(AdminSettingsEntry entry) {
-        List<DropdownOption> options = entry.getOptions().stream()
-                .map(option -> new DropdownOption(option, settingOptionText(entry, option)))
-                .collect(Collectors.toList());
-        Dropdown dropdown = new Dropdown(options, entry.getValue(), selected -> {
-            if (!isValidValue(entry, selected)) {
-                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.invalid", uiPlayer)
-                        .replace("PH_SETTING_KEY", entry.getKey()));
-                return;
-            }
-            if (entry.write(writeValue(entry, selected))) {
-                adminSettings.reload();
-                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.saved", uiPlayer)
-                        .replace("PH_SETTING_KEY", entry.getKey()));
-            } else {
-                uiPlayer.sendTextMessage(t().get("tc.plugin.settings.save.failed", uiPlayer)
-                        .replace("PH_SETTING_KEY", entry.getKey()));
-            }
-        });
-        dropdown.setPivot(Pivot.MiddleRight);
-        dropdown.style.position.set(Position.Absolute);
-        dropdown.style.right.set(1, Unit.Pixel);
-        dropdown.style.top.set(16, Unit.Pixel);
-        dropdown.style.width.set(25, Unit.Percent);
-        dropdown.style.height.set(34, Unit.Pixel);
-        return dropdown;
+    private int choiceGridColumns(AdminSettingsEntry entry) {
+        List<String> options = entry.getOptions();
+        if (options.isEmpty()) return 1;
+        if (options.stream().anyMatch(option -> settingOptionText(entry, option).length() > 12)) return 2;
+        return Math.min(4, options.size());
+    }
+
+    private void addChoiceGrid(OZUIElement row, AdminSettingsEntry entry) {
+        List<String> options = entry.getOptions();
+        int columns = choiceGridColumns(entry);
+        float cellWidth = 52f / columns;
+        for (int index = 0; index < options.size(); index++) {
+            String option = options.get(index);
+            boolean selected = option.equals(entry.getValue());
+            AdvancedButton button = selected
+                    ? AdvancedButtonFactory.ok(settingOptionText(entry, option), null)
+                    : AdvancedButtonFactory.defaultButton(settingOptionText(entry, option), null);
+            button.setPivot(Pivot.UpperLeft);
+            button.style.position.set(Position.Absolute);
+            button.style.left.set(46 + (index % columns) * cellWidth, Unit.Percent);
+            button.style.top.set(7 + (index / columns) * 31, Unit.Pixel);
+            button.style.width.set(cellWidth - 1, Unit.Percent);
+            button.style.height.set(27, Unit.Pixel);
+            button.setClickAction(event -> {
+                if (selected) return;
+                if (entry.write(option)) {
+                    adminSettings.reload();
+                    refreshOverlay.run();
+                    uiPlayer.sendTextMessage(t().get("tc.plugin.settings.saved", uiPlayer)
+                            .replace("PH_SETTING_KEY", entry.getKey()));
+                } else {
+                    uiPlayer.sendTextMessage(t().get("tc.plugin.settings.save.failed", uiPlayer)
+                            .replace("PH_SETTING_KEY", entry.getKey()));
+                }
+            });
+            row.addChild(button);
+        }
     }
 
     private SwitchButton booleanSwitch(AdminSettingsEntry entry) {

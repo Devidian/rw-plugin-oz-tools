@@ -121,7 +121,11 @@ public class PluginSettings {
 	public List<AdminSettingsEntry> adminSettingsEntries() {
 		return Arrays.asList(
 				AdminSettingsEntry.group("logging", "Logging"),
-				entry("logLevel", "Log level", "Controls Tools logging verbosity.", AdminSettingsType.STRING),
+				new AdminSettingsEntry("logLevel", "Log level", "Controls Tools logging verbosity.",
+						currentSettings.getOrDefault("logLevel", defaultSettings.getOrDefault("logLevel", "ALL")),
+						defaultSettings.getOrDefault("logLevel", "ALL"), AdminSettingsType.SELECT, false,
+						value -> SettingsFileEditor.writeValue(settingsFile, "logLevel", value),
+						List.of("ALL", "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "OFF")),
 				entry("logInternal", "Log internal", "If true, log output is printed to the default console.",
 						AdminSettingsType.BOOLEAN),
 				AdminSettingsEntry.group("runtime", "Runtime"),

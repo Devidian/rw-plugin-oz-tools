@@ -2,6 +2,8 @@
 
 This plugin has a set of utilities and libs used by different Plugins.
 
+The admin settings panel renders selection settings, including log levels, in a compact button grid.
+
 ## Core Features
 
 - Plugin Translation (i18n)

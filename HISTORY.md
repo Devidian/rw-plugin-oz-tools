@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+## [0.26.3] - 2026-09-25 | Compact admin settings choices
+
+- change: show the available Tools log levels in a compact admin settings button grid.
+- change: render every plugin admin `SELECT` setting with an adaptive button grid.
+
 ## [0.26.2] - 2026-09-24 | Reliable radial-menu actions
 
 - fix: execute each radial-menu selection only once, preventing duplicate
