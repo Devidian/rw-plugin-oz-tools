@@ -16,8 +16,8 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 import de.omegazirkel.risingworld.OZTools;
+import de.omegazirkel.risingworld.tools.db.ReadOnlyWorldDatabase;
 import net.risingworld.api.Plugin;
-import net.risingworld.api.database.Database;
 import net.risingworld.api.database.WorldDatabase;
 import net.risingworld.api.database.WorldDatabase.Target;
 
@@ -124,11 +124,8 @@ public final class PlayerDatabaseHelper {
         if (playersDatabase == null || playersDatabase.getPath() == null || playersDatabase.getPath().isBlank()) {
             return Optional.empty();
         }
-        try (Database db = plugin.getSQLiteConnection(playersDatabase.getPath())) {
-            if (db == null) {
-                return Optional.empty();
-            }
-            try (PreparedStatement probe = db.getConnection().prepareStatement("SELECT * FROM player LIMIT 1");
+        try (Connection db = ReadOnlyWorldDatabase.open(playersDatabase.getPath())) {
+            try (PreparedStatement probe = db.prepareStatement("SELECT * FROM player LIMIT 1");
                     ResultSet probeResult = probe.executeQuery()) {
                 ResultSetMetaData metaData = probeResult.getMetaData();
                 String playerIdColumn = resolvePlayerIdColumn(metaData);
@@ -138,7 +135,7 @@ public final class PlayerDatabaseHelper {
                 }
                 String lastSeenColumn = resolveFirstColumn(metaData, "lastseen", "last_seen", "lastonline");
                 String playTimeColumn = resolveFirstColumn(metaData, "playtime", "totalplaytime", "total_playtime");
-                try (PreparedStatement statement = db.getConnection().prepareStatement(
+                try (PreparedStatement statement = db.prepareStatement(
                         "SELECT * FROM player WHERE LOWER(" + nameColumn + ") = LOWER(?) LIMIT 1")) {
                     statement.setString(1, playerName);
                     try (ResultSet result = statement.executeQuery()) {
@@ -216,12 +213,8 @@ public final class PlayerDatabaseHelper {
             return List.of();
         }
 
-        try (Database db = plugin.getSQLiteConnection(playersDatabase.getPath())) {
-            if (db == null) {
-                return List.of();
-            }
-
-            String playerIdColumn = resolvePlayerIdColumn(db.getConnection());
+        try (Connection db = ReadOnlyWorldDatabase.open(playersDatabase.getPath())) {
+            String playerIdColumn = resolvePlayerIdColumn(db);
             if (playerIdColumn == null) {
                 logger().warn("Players database table `player` has no supported player id column.");
                 return List.of();
@@ -229,7 +222,7 @@ public final class PlayerDatabaseHelper {
 
             String sql = "SELECT " + playerIdColumn + " FROM player WHERE lastseen >= ? ORDER BY lastseen DESC";
             Set<Integer> playerIds = new LinkedHashSet<>();
-            try (PreparedStatement ps = db.getConnection().prepareStatement(sql)) {
+            try (PreparedStatement ps = db.prepareStatement(sql)) {
                 ps.setLong(1, cutoffEpochSeconds);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
@@ -252,12 +245,8 @@ public final class PlayerDatabaseHelper {
             return Map.of();
         }
 
-        try (Database db = plugin.getSQLiteConnection(playersDatabase.getPath())) {
-            if (db == null) {
-                return Map.of();
-            }
-
-            try (PreparedStatement probe = db.getConnection().prepareStatement("SELECT * FROM player LIMIT 1");
+        try (Connection db = ReadOnlyWorldDatabase.open(playersDatabase.getPath())) {
+            try (PreparedStatement probe = db.prepareStatement("SELECT * FROM player LIMIT 1");
                     ResultSet probeResult = probe.executeQuery()) {
                 ResultSetMetaData metaData = probeResult.getMetaData();
                 String playerIdColumn = resolvePlayerIdColumn(metaData);
@@ -270,7 +259,7 @@ public final class PlayerDatabaseHelper {
                 String playTimeColumn = resolveFirstColumn(metaData, "playtime", "totalplaytime", "total_playtime");
 
                 String sql = "SELECT * FROM player WHERE " + playerIdColumn + " IN (" + idList(playerDbIds) + ")";
-                try (PreparedStatement ps = db.getConnection().prepareStatement(sql);
+                try (PreparedStatement ps = db.prepareStatement(sql);
                         ResultSet rs = ps.executeQuery()) {
                     return readPlayerRecords(rs, playerIdColumn, nameColumn, lastSeenColumn, playTimeColumn);
                 }

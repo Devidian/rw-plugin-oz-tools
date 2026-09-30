@@ -68,6 +68,16 @@ class OZToolsRuntime extends Plugin {
     private GameConnectorService gameConnectorService;
     private static volatile PluginUpdateService activePluginUpdateService;
     private static volatile OZToolsRuntime activeTools;
+
+    static void runAfterModalClose(Player player, Runnable action) {
+        OZToolsRuntime tools = activeTools;
+        if (tools == null || player == null || action == null) return;
+        // The client applies closeAllActiveUIWindows asynchronously. Open the
+        // selected plugin UI after that close has reached the client.
+        tools.executeDelayed(0.2f, () -> {
+            if (activeTools == tools && player.isConnected()) action.run();
+        });
+    }
     private static final Set<GameConnectorFeatureRegistration> connectorFeatureRegistrations = ConcurrentHashMap.newKeySet();
 
     private static final class GameConnectorFeatureRegistration implements AutoCloseable {

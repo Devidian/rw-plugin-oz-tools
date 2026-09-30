@@ -1,5 +1,7 @@
 # OZTools (Tools for other plugins)
 
+`/ozt open` displays a centered shortcut grid. The inventory shortcut grid fits 16 icons or 12 labeled entries per row and moves to the left edge when more entries are visible.
+
 This plugin has a set of utilities and libs used by different Plugins.
 
 The admin settings panel renders selection settings, including log levels, in a compact button grid.
@@ -252,6 +254,10 @@ Use `SQLiteConnectionFactory.open(plugin)` for world-scoped plugin SQLite access
 The old `tools.db.SQLite` wrapper has been removed; plugin code should keep ownership
 of its domain schema and pass the shared `Connection` into `PlayerSettings` or
 plugin-local stores as needed.
+For reads of the game-owned `Player.db`, use
+`ReadOnlyWorldDatabase.open(worldDatabase.getPath())`. The SQLite fallback in
+`PlayerDatabaseHelper` uses this connection so a reader cannot checkpoint or
+remove the native player's WAL file.
 
 ## WebSocket
 

@@ -27,10 +27,7 @@ public class PluginMenuManager {
     }
 
     public static void showMainMenu(Player player) {
-        List<MenuItem> menuItemsCopy = mainMenuItems(player);
-        menuItemsCopy.add(MenuItem.closeMenu(player));
-
-        showMenu(player, menuItemsCopy);
+        InventoryOverlayPanel.showMenu(player);
     }
 
     public static List<MenuItem> mainMenuItems(Player player) {

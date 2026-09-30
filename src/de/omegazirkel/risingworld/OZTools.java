@@ -21,6 +21,9 @@ import net.risingworld.api.objects.Player;
 
 /** Rising World entry point; shared runtime behavior lives in {@link OZToolsRuntime}. */
 public final class OZTools extends OZToolsRuntime implements Listener, FileChangeListener {
+    public static void runAfterModalClose(Player player, Runnable action) {
+        OZToolsRuntime.runAfterModalClose(player, action);
+    }
     public static void checkPluginUpdates() { OZToolsRuntime.checkPluginUpdates(); }
     public static void checkPluginUpdates(Player player) { OZToolsRuntime.checkPluginUpdates(player); }
     public static void checkPluginUpdates(Player player, Runnable onCompleted) {

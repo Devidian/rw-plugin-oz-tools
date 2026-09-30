@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [0.27.0] - 2026-09-30 | Shortcut panels and read-only player lookups
+
+- fix: release the native modal cursor before opening the selected `/ozt open` shortcut, so directly opened plugin overlays remain visible.
+- change: replace the /ozt radial entry with a centered shortcut grid and adjust inventory shortcut row capacity and overflow placement.
+
+- fix: open fallback reads of the game-owned player database in SQLite
+  read-only mode, preserving the native WAL while other plugins query players.
+
 ## [0.26.3] - 2026-09-25 | Compact admin settings choices
 
 - change: show the available Tools log levels in a compact admin settings button grid.
