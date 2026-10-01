@@ -82,6 +82,9 @@ public class InventoryOverlayPanel extends OZUIElement {
         setSize(100, 100, true);
         setBackgroundColor(0, 0, 0, 0);
         setClickable(false);
+        // The inventory target covers the item slots. A transparent element is
+        // still pickable by default, even when it is not clickable.
+        if (!modal) setPickable(false);
 
         boolean showLabel = ToolsPlayerPreferences.showInventoryShortcutLabels(player);
         int perRow = showLabel ? LABELS_PER_ROW : ICONS_PER_ROW;
@@ -108,6 +111,7 @@ public class InventoryOverlayPanel extends OZUIElement {
         container.style.paddingLeft.set(4);
         container.style.paddingRight.set(4);
         container.setBackgroundColor(0, 0, 0, 0);
+        if (!modal) container.setPickable(false);
 
         for (MenuItem button : buttons) {
             container.addChild(buttonElement(player, button, modal));
