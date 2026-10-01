@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.27.1] - 2026-10-01 | Inventory interaction fix
+
+- fix: let inventory item slots receive pointer input beneath the transparent shortcut panel.
+
 ## [0.27.0] - 2026-09-30 | Shortcut panels and read-only player lookups
 
 - fix: release the native modal cursor before opening the selected `/ozt open` shortcut, so directly opened plugin overlays remain visible.
