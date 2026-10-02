@@ -1,6 +1,6 @@
 # OZTools (Tools for other plugins)
 
-`/ozt open` displays a centered shortcut grid. The inventory shortcut grid fits 16 icons or 12 labeled entries per row and moves to the left edge when more entries are visible.
+`/ozt open` displays a centered shortcut grid. The inventory shortcut grid fits 16 icons or 12 labeled entries in one centered row. With more entries, it wraps into 7-icon or 5-label rows in the left inventory area.
 
 This plugin has a set of utilities and libs used by different Plugins.
 
@@ -28,7 +28,8 @@ The admin settings panel renders selection settings, including log levels, in a 
   settings overlay. Reinstallation uses the current release package while
   retaining settings and persisted data. Uninstallation moves the whole plugin
   directory, including data, to `Plugins/.oz-uninstalled/` for manual recovery
-  before reloading plugins.
+  before reloading plugins. The plugin list scrolls independently of the
+  update and close actions when many plugins are installed.
   The overlay also lists installed external plugins with their declared version.
   They show only an informational tab; release notes are available when their
   `plugin.yml` `website` is a valid GitHub release URL. External update checks

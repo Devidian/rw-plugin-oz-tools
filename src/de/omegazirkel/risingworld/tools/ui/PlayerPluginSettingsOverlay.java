@@ -41,6 +41,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     private static ConcurrentHashMap<String, PlayerPluginAdminSettings> playerPluginAdminSettings = new ConcurrentHashMap<>();
 
     private UIElement navSidebar;
+    private UIScrollView navList;
     private UIElement tabBar;
     private UIElement content;
 
@@ -71,6 +72,13 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         this.navSidebar.style.borderRightColor.set(0x8A6A2DFF);
         containerPanel.addChild(this.navSidebar);
 
+        this.navList = new UIScrollView(ScrollViewMode.Vertical);
+        this.navList.setPivot(Pivot.UpperLeft);
+        this.navList.style.position.set(Position.Absolute);
+        this.navList.setSize(100, 86, true);
+        this.navList.style.maxHeight.set(660, Unit.Pixel);
+        this.navSidebar.addChild(this.navList);
+
         // content panel
         UIElement contentPanel = new UIElement();
         contentPanel.setPivot(Pivot.UpperLeft);
@@ -99,6 +107,8 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     public void updateUI() {
         // 1. clear navigation bar
         navSidebar.removeAllChilds();
+        navList.removeAllChilds();
+        navSidebar.addChild(navList);
         tabBar.removeAllChilds();
         if (selectedPlugin == null || !pluginLabels().contains(selectedPlugin)) {
             selectedPlugin = firstPluginLabel();
@@ -111,6 +121,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         if (isExternalPlugin(selectedPlugin) && (TAB_SETTINGS.equals(selectedTab) || TAB_DATA.equals(selectedTab)
                 || TAB_PLUGIN_SETTINGS.equals(selectedTab))) selectedTab = TAB_EXTERNAL_NOTES;
         // fill navigation bar for every playerPluginSettings
+        int navIndex = 0;
         for (String pluginLabel : pluginLabels()) {
             AdvancedButton navButton = AdvancedButtonFactory.custom(new AdvancedButtonState(
                     AdvancedBaseButton.State.DEFAULT,
@@ -118,6 +129,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
                     pluginLabel.equals(selectedPlugin) ? 0x3A2D18D8 : 0x181713C8,
                     0xF4F0E6FF, 0xD7AE55FF, 0x2A2419E8, "", null));
             navButton.setPivot(Pivot.UpperLeft);
+            navButton.setPosition(0, navIndex++ * 44, false);
             navButton.style.width.set(100, Unit.Percent);
             navButton.style.height.set(38, Unit.Pixel);
             navButton.setBackgroundColor(pluginLabel.equals(selectedPlugin) ? 0x3A2D18D8 : 0x181713C8);
@@ -155,7 +167,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             });
             navButton.addChild(btnLabel);
             navButton.addChild(versionLabel);
-            navSidebar.addChild(navButton);
+            navList.addChild(navButton);
         }
         if (uiPlayer.isAdmin()) {
             List<String> pendingUpdates = pendingUpdates();

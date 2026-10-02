@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## [0.27.2] - 2026-10-02 | Settings and inventory shortcut layout
+
+- fix: scroll the plugin list in the settings overlay while keeping the action buttons visible.
+- fix: wrap overflowing inventory shortcuts inside the left inventory area, aligned with the inventory's top edge.
+
 ## [0.27.1] - 2026-10-01 | Inventory interaction fix
 
 - fix: let inventory item slots receive pointer input beneath the transparent shortcut panel.

@@ -28,6 +28,8 @@ public class InventoryOverlayPanel extends OZUIElement {
     private static final float WIDTH_WITH_LABEL = 75;
     private static final int ICONS_PER_ROW = 16;
     private static final int LABELS_PER_ROW = 12;
+    private static final int OVERFLOW_ICONS_PER_ROW = 7;
+    private static final int OVERFLOW_LABELS_PER_ROW = 5;
     private final AtomicBoolean activated = new AtomicBoolean();
 
     public static void show(Player player) {
@@ -87,17 +89,20 @@ public class InventoryOverlayPanel extends OZUIElement {
         if (!modal) setPickable(false);
 
         boolean showLabel = ToolsPlayerPreferences.showInventoryShortcutLabels(player);
-        int perRow = showLabel ? LABELS_PER_ROW : ICONS_PER_ROW;
+        int singleRowCapacity = showLabel ? LABELS_PER_ROW : ICONS_PER_ROW;
+        boolean overflow = !modal && buttons.size() > singleRowCapacity;
+        int perRow = overflow ? (showLabel ? OVERFLOW_LABELS_PER_ROW : OVERFLOW_ICONS_PER_ROW)
+                : singleRowCapacity;
         int rowHeight = showLabel ? 74 : 60;
         int rows = (buttons.size() + perRow - 1) / perRow;
         OZUIElement container = new OZUIElement();
-        container.setPivot(modal ? Pivot.MiddleCenter : buttons.size() > perRow ? Pivot.UpperLeft : Pivot.UpperCenter);
+        container.setPivot(modal ? Pivot.MiddleCenter : overflow ? Pivot.UpperLeft : Pivot.UpperCenter);
         if (modal) container.setPosition(50, 50, true);
-        else if (buttons.size() > perRow) {
+        else if (overflow) {
             container.style.left.set(16, Unit.Pixel);
-            container.style.top.set(80, Unit.Percent);
+            container.style.top.set(19, Unit.Percent);
         } else container.setPosition(50, 80, true);
-        container.style.width.set(showLabel ? 1004 : 968, Unit.Pixel);
+        container.style.width.set(overflow ? (showLabel ? 423 : 428) : (showLabel ? 1004 : 968), Unit.Pixel);
         container.style.height.set(rows * rowHeight + 8, Unit.Pixel);
         container.style.position.set(Position.Absolute);
         container.style.display.set(DisplayStyle.Flex);
