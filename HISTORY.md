@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add OZ - Stargate to the trusted plugin installation catalogue after its public release.
+
 ## [0.27.2] - 2026-10-02 | Settings and inventory shortcut layout
 
 - fix: scroll the plugin list in the settings overlay while keeping the action buttons visible.

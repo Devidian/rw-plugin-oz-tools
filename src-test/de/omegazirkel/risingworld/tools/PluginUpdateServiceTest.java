@@ -66,9 +66,10 @@ public class PluginUpdateServiceTest {
     }
 
     @Test
-    public void bundledCatalogueIncludesBossesAndFactions() {
+    public void bundledCatalogueIncludesBossesFactionsAndStargate() {
         assertTrue(PluginUpdateService.managedPluginNames().contains("OZ - Bosses"));
         assertTrue(PluginUpdateService.managedPluginNames().contains("OZ - Factions"));
+        assertTrue(PluginUpdateService.managedPluginNames().contains("OZ - Stargate"));
     }
 
     @Test
