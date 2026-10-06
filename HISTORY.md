@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## [0.27.3] - 2026-10-06 | Scaled quick menu
+
+- fix: keep plugin navigation buttons inside the settings sidebar without a scrollbar.
+- feat: save x1, x2, or x3 button size for the dedicated quick menu per player.
+- fix: fit enlarged quick-menu buttons to the screen and scroll vertically only when needed.
 - Add OZ - Stargate to the trusted plugin installation catalogue after its public release.
 
 ## [0.27.2] - 2026-10-02 | Settings and inventory shortcut layout

@@ -32,6 +32,30 @@ public class ToolsPlayerPluginSettingsPanel extends BasePlayerPluginSettingsPane
         flexWrapper.removeAllChilds();
         flexWrapper.addChild(createIconStyleSettings());
         flexWrapper.addChild(createLanguageSettings());
+        OZUIElement quickMenu = defaultSettingsContainer();
+        quickMenu.style.height.set(104, Unit.Pixel);
+        quickMenu.addChild(defaultSettingsLabel(t().get("tc.tools.setting.quick.menu.scale", uiPlayer)));
+        int selectedScale = ToolsPlayerPreferences.quickMenuScale(uiPlayer);
+        for (int value = 1; value <= 3; value++) {
+            final int nextScale = value;
+            boolean selected = value == selectedScale;
+            AdvancedButton button = AdvancedButtonFactory.custom(new AdvancedButtonState(
+                    AdvancedBaseButton.State.DEFAULT,
+                    selected ? 0xD7AE55FF : 0x7A5D2AFF,
+                    selected ? 0x1D4D2AFF : 0x182F20FF,
+                    selected ? 0xF2C766FF : 0xD8D0C0FF,
+                    0xD7AE55FF, selected ? 0x286B39FF : 0x244D30FF,
+                    "x" + value, event -> {
+                        if (ToolsPlayerPreferences.quickMenuScale(uiPlayer) == nextScale) return;
+                        ToolsPlayerPreferences.setQuickMenuScale(uiPlayer, nextScale);
+                        redrawContent();
+                    }));
+            button.setPivot(Pivot.UpperLeft);
+            button.setPosition(10 + (value - 1) * 78, 56, false);
+            button.setSize(72, 28, false);
+            quickMenu.addChild(button);
+        }
+        flexWrapper.addChild(quickMenu);
         OZUIElement labels = defaultSettingsContainer();
         labels.addChild(defaultSettingsLabel(t().get("tc.tools.setting.inventory.labels", uiPlayer)));
         labels.addChild(switchButtons(uiPlayer, ToolsPlayerPreferences.showInventoryShortcutLabels(uiPlayer), event -> {

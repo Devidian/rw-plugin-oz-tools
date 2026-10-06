@@ -130,7 +130,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
                     0xF4F0E6FF, 0xD7AE55FF, 0x2A2419E8, "", null));
             navButton.setPivot(Pivot.UpperLeft);
             navButton.setPosition(0, navIndex++ * 44, false);
-            navButton.style.width.set(100, Unit.Percent);
+            navButton.style.width.set(96, Unit.Percent);
             navButton.style.height.set(38, Unit.Pixel);
             navButton.setBackgroundColor(pluginLabel.equals(selectedPlugin) ? 0x3A2D18D8 : 0x181713C8);
             navButton.setHoverBackgroundColor(0x2A2419E8);

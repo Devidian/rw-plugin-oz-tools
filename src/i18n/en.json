@@ -228,7 +228,8 @@
         "inventory": {
           "labels": "Show labels below inventory shortcut icons"
         },
-        "language": "Language"
+        "language": "Language",
+        "quick": {"menu": {"scale": "Quick menu button size"}}
       }
     },
     "ui": {

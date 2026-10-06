@@ -228,7 +228,8 @@
         "inventory": {
           "labels": "Labels unter Inventar-Shortcut-Icons anzeigen"
         },
-        "language": "Sprache"
+        "language": "Sprache",
+        "quick": {"menu": {"scale": "Button-Größe im Quick-Menü"}}
       }
     },
     "ui": {

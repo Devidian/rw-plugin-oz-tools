@@ -6,6 +6,7 @@ import net.risingworld.api.objects.Player;
 
 public final class ToolsPlayerPreferences {
     public static final String SHOW_INVENTORY_SHORTCUT_LABELS = "oztools.inventoryShortcutLabels.visible";
+    public static final String QUICK_MENU_SCALE = "oztools.quickMenu.scale";
     public static final String ICON_STYLE = "oztools.iconStyle";
     public static final String ICON_STYLE_MODERN = "modern";
     public static final String ICON_STYLE_CLASSIC = "classic";
@@ -16,6 +17,28 @@ public final class ToolsPlayerPreferences {
     public static final String LANGUAGE_SOURCE_CUSTOM = "custom";
 
     private ToolsPlayerPreferences() {
+    }
+
+    public static int quickMenuScale(Player player) {
+        PlayerSettings settings = de.omegazirkel.risingworld.OZTools.playerSettings();
+        if (player == null || settings == null) return 1;
+        try {
+            return normalizeQuickMenuScale(settings.getInt(player.getDbID(), QUICK_MENU_SCALE).orElse(1));
+        } catch (RuntimeException ex) {
+            de.omegazirkel.risingworld.OZTools.logger().warn("Failed to read quick menu scale: " + ex.getMessage());
+            return 1;
+        }
+    }
+
+    public static void setQuickMenuScale(Player player, int scale) {
+        PlayerSettings settings = de.omegazirkel.risingworld.OZTools.playerSettings();
+        if (player != null && settings != null) {
+            settings.setInt(player.getDbID(), QUICK_MENU_SCALE, normalizeQuickMenuScale(scale));
+        }
+    }
+
+    public static int normalizeQuickMenuScale(int scale) {
+        return scale >= 1 && scale <= 3 ? scale : 1;
     }
 
     public static boolean showInventoryShortcutLabels(Player player) {

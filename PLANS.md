@@ -1,6 +1,7 @@
 # PLANS.md
 
 - [ ] Validate the next-300926 change on Development with a controlled player check.
+- [ ] Validate quick-menu button sizes and plugin navigation width with a player on Development.
 
 Planning is stored in repository-local docs.
 

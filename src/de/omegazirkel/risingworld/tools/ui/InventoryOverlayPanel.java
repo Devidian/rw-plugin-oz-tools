@@ -9,6 +9,7 @@ import net.risingworld.api.Server;
 import net.risingworld.api.assets.TextureAsset;
 import net.risingworld.api.objects.Player;
 import net.risingworld.api.ui.UILabel;
+import net.risingworld.api.ui.UIScrollView;
 import net.risingworld.api.ui.UITarget;
 import net.risingworld.api.ui.style.Align;
 import net.risingworld.api.ui.style.DisplayStyle;
@@ -26,6 +27,7 @@ public class InventoryOverlayPanel extends OZUIElement {
     private static final String PLAYER_ATTRIBUTE = "tools.ui.inventoryOverlayPanel";
     private static final String MENU_ATTRIBUTE = "tools.ui.shortcutMenuPanel";
     private static final float WIDTH_WITH_LABEL = 75;
+    private static final int LARGE_MENU_WIDTH_PERCENT = 95;
     private static final int ICONS_PER_ROW = 16;
     private static final int LABELS_PER_ROW = 12;
     private static final int OVERFLOW_ICONS_PER_ROW = 7;
@@ -89,21 +91,38 @@ public class InventoryOverlayPanel extends OZUIElement {
         if (!modal) setPickable(false);
 
         boolean showLabel = ToolsPlayerPreferences.showInventoryShortcutLabels(player);
+        int scale = modal ? ToolsPlayerPreferences.quickMenuScale(player) : 1;
+        boolean largeMenu = modal && scale > 1;
         int singleRowCapacity = showLabel ? LABELS_PER_ROW : ICONS_PER_ROW;
         boolean overflow = !modal && buttons.size() > singleRowCapacity;
-        int perRow = overflow ? (showLabel ? OVERFLOW_LABELS_PER_ROW : OVERFLOW_ICONS_PER_ROW)
+        int largeMenuColumns = 3;
+        if (largeMenu && player.getScreenResolutionX() > 0) {
+            int cardWidth = (int) ((showLabel ? WIDTH_WITH_LABEL : 52) + 8) * scale;
+            int usableWidth = (int) (player.getScreenResolutionX() * LARGE_MENU_WIDTH_PERCENT / 100f * 0.99f) - 8;
+            // Flex wrapping uses the full available width. The height must use
+            // the same column count or it creates empty scrollable rows.
+            largeMenuColumns = Math.max(1, usableWidth / cardWidth);
+        }
+        int perRow = largeMenu ? largeMenuColumns
+                : overflow ? (showLabel ? OVERFLOW_LABELS_PER_ROW : OVERFLOW_ICONS_PER_ROW)
                 : singleRowCapacity;
-        int rowHeight = showLabel ? 74 : 60;
+        int rowHeight = (showLabel ? 74 : 60) * scale;
         int rows = (buttons.size() + perRow - 1) / perRow;
+        int contentHeight = rows * rowHeight + 8;
+        int screenHeight = player.getScreenResolutionY() > 0 ? player.getScreenResolutionY() : 720;
+        boolean scrollMenu = largeMenu && contentHeight + 8 > screenHeight * 0.85f;
         OZUIElement container = new OZUIElement();
-        container.setPivot(modal ? Pivot.MiddleCenter : overflow ? Pivot.UpperLeft : Pivot.UpperCenter);
-        if (modal) container.setPosition(50, 50, true);
+        container.setPivot(scrollMenu ? Pivot.UpperLeft : modal ? Pivot.MiddleCenter : overflow ? Pivot.UpperLeft : Pivot.UpperCenter);
+        if (scrollMenu) container.setPosition(0, 0, false);
+        else if (modal) container.setPosition(50, 50, true);
         else if (overflow) {
             container.style.left.set(16, Unit.Pixel);
             container.style.top.set(19, Unit.Percent);
         } else container.setPosition(50, 80, true);
-        container.style.width.set(overflow ? (showLabel ? 423 : 428) : (showLabel ? 1004 : 968), Unit.Pixel);
-        container.style.height.set(rows * rowHeight + 8, Unit.Pixel);
+        // Leave room for padding and rounding inside the vertical scroll view.
+        if (largeMenu) container.style.width.set(scrollMenu ? 99 : LARGE_MENU_WIDTH_PERCENT, Unit.Percent);
+        else container.style.width.set(overflow ? (showLabel ? 423 : 428) : (showLabel ? 1004 : 968), Unit.Pixel);
+        container.style.height.set(contentHeight, Unit.Pixel);
         container.style.position.set(Position.Absolute);
         container.style.display.set(DisplayStyle.Flex);
         container.style.alignContent.set(Align.FlexStart);
@@ -119,13 +138,22 @@ public class InventoryOverlayPanel extends OZUIElement {
         if (!modal) container.setPickable(false);
 
         for (MenuItem button : buttons) {
-            container.addChild(buttonElement(player, button, modal));
+            container.addChild(buttonElement(player, button, modal, scale));
         }
 
-        addChild(container);
+        if (scrollMenu) {
+            UIScrollView viewport = new UIScrollView(UIScrollView.ScrollViewMode.Vertical);
+            viewport.setPivot(Pivot.MiddleCenter);
+            viewport.setPosition(50, 50, true);
+            viewport.setSize(LARGE_MENU_WIDTH_PERCENT, 90, true);
+            viewport.setHorizontalScrollerVisibility(UIScrollView.ScrollerVisibility.Hidden);
+            viewport.setVerticalScrollerVisibility(UIScrollView.ScrollerVisibility.Auto);
+            viewport.addChild(container);
+            addChild(viewport);
+        } else addChild(container);
     }
 
-    private AdvancedButton buttonElement(Player player, MenuItem registration, boolean modal) {
+    private AdvancedButton buttonElement(Player player, MenuItem registration, boolean modal, int scale) {
         boolean showLabel = ToolsPlayerPreferences.showInventoryShortcutLabels(player);
         AdvancedButton button = AdvancedButtonFactory.custom(new AdvancedButtonState(
                 AdvancedBaseButton.State.DEFAULT, 0xD7AE5577, 0x141414AA, 0xE8DDC6FF,
@@ -145,12 +173,12 @@ public class InventoryOverlayPanel extends OZUIElement {
                 }));
         button.setPivot(Pivot.UpperLeft);
         button.style.position.set(Position.Relative);
-        button.style.width.set(showLabel ? WIDTH_WITH_LABEL : 52, Unit.Pixel);
-        button.style.height.set(showLabel ? 52 + 14 : 52, Unit.Pixel);
-        button.style.marginLeft.set(4);
-        button.style.marginRight.set(4);
-        button.style.marginTop.set(4);
-        button.style.marginBottom.set(4);
+        button.style.width.set((showLabel ? WIDTH_WITH_LABEL : 52) * scale, Unit.Pixel);
+        button.style.height.set((showLabel ? 52 + 14 : 52) * scale, Unit.Pixel);
+        button.style.marginLeft.set(4 * scale);
+        button.style.marginRight.set(4 * scale);
+        button.style.marginTop.set(4 * scale);
+        button.style.marginBottom.set(4 * scale);
         button.setHoverBorderWidth(1);
         button.setBorderEdgeRadius(4, false);
 
@@ -164,12 +192,12 @@ public class InventoryOverlayPanel extends OZUIElement {
             iconElement.style.position.set(Position.Absolute);
             iconElement.style.left.set(50, Unit.Percent);
             if (showLabel) {
-                iconElement.style.top.set(4, Unit.Pixel);
+                iconElement.style.top.set(4 * scale, Unit.Pixel);
             } else {
                 iconElement.style.top.set(50, Unit.Percent);
             }
-            iconElement.style.width.set(36, Unit.Pixel);
-            iconElement.style.height.set(36, Unit.Pixel);
+            iconElement.style.width.set(36 * scale, Unit.Pixel);
+            iconElement.style.height.set(36 * scale, Unit.Pixel);
             iconElement.style.backgroundImage.set(icon);
             iconElement.style.backgroundImageScaleMode.set(ScaleMode.ScaleToFit);
             button.addChild(iconElement);
@@ -180,11 +208,11 @@ public class InventoryOverlayPanel extends OZUIElement {
             label.setPivot(Pivot.UpperCenter);
             label.style.position.set(Position.Absolute);
             label.style.left.set(50, Unit.Percent);
-            label.style.bottom.set(1, Unit.Pixel);
-            label.style.width.set(WIDTH_WITH_LABEL - 4, Unit.Pixel);
-            label.style.height.set(14, Unit.Pixel);
+            label.style.bottom.set(scale, Unit.Pixel);
+            label.style.width.set((WIDTH_WITH_LABEL - 4) * scale, Unit.Pixel);
+            label.style.height.set(14 * scale, Unit.Pixel);
             label.setFont(Font.Default);
-            label.setFontSize(9);
+            label.setFontSize(9 * scale);
             label.setFontColor(0xE8DDC6FF);
             label.setTextAlign(TextAnchor.MiddleCenter);
             label.setTextWrap(false);
