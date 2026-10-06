@@ -24,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  JAVA_VERSION: "20"
+  JAVA_VERSION: "25"
 
 jobs:
   validate:

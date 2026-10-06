@@ -17,7 +17,7 @@ Does not own:
 - workspace-root orchestration rules
 
 ## Mandatory Workflow Rules
-- Preserve the Java 20 baseline.
+- Preserve the Java 25 baseline.
 - Preserve Maven build and GitHub tag-release behavior.
 - Keep dependencies minimal and runtime-safe.
 - Reject business logic leakage into this shared library.

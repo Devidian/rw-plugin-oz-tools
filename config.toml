@@ -7,7 +7,7 @@ family = "rw-plugin-oz-*"
 baseline_template = "rw-plugin-maven-template"
 language = "java"
 build_tool = "maven"
-java_version = 20
+java_version = 25
 release_strategy = "github-tags"
 release_tag_pattern = "v*"
 
@@ -60,7 +60,7 @@ inputs = ["Issue/Request", "README", "pom.xml", "plugin.yml", "AGENTS.md", "PLAN
 outputs = ["Plan summary", "File impact list", "Risk notes", "Validation checklist", "README/HISTORY impact note", "Commit-message convention note"]
 
 [agents.api_guardian]
-objective = "Verify Rising World API usage and Java 20 compliance"
+objective = "Verify Rising World API usage and Java 25 compliance"
 prompt_template = ".codex/skills/repository-skills.md"
 must_do = [
   "Validate new API calls against PluginAPI",

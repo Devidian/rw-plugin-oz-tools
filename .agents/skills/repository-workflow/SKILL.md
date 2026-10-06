@@ -25,6 +25,6 @@ description: "Use for repository-local workflows, validation, migrations, runtim
 - Document versioning, fallback, and failure behavior.
 
 ## release-validation
-- Preserve Java 20, Maven packaging, artifact names, and GitHub tag-release behavior.
+- Preserve Java 25, Maven packaging, artifact names, and GitHub tag-release behavior.
 - Check `HISTORY.md` and release workflow changes together.
 - Never require workspace-root files for a repository release.

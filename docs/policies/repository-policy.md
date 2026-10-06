@@ -1,8 +1,8 @@
 # Repository Policy
 
 ## Runtime Policy
-- Java 20 is the baseline for Rising World Unity plugin repositories.
-- Do not lower Maven compiler source, target, or release settings below 20.
+- Java 25 is the baseline for Rising World Unity plugin repositories.
+- Do not lower Maven compiler source, target, or release settings below 25.
 - Runtime/tooling changes must be reflected in `README.md`, `HISTORY.md`, CI, and packaging files when affected.
 
 ## Plugin Entry-Point Policy

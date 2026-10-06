@@ -1,0 +1,1 @@
+- build: compile with Java 25 and refresh the bundled Rising World PluginAPI 0.9.3.2 JAR.
