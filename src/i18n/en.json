@@ -226,7 +226,8 @@
           }
         },
         "inventory": {
-          "labels": "Show labels below inventory shortcut icons"
+          "labels": "Show labels below inventory shortcut icons",
+          "shortcuts": "Show plugin shortcuts in inventory"
         },
         "language": "Language",
         "quick": {"menu": {"scale": "Quick menu button size"}}

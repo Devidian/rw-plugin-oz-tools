@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## [0.28.0] - 2026-10-06 | Inventory shortcut visibility
+
+- feat: let players hide all inventory plugin shortcuts while keeping `/ozt open` available.
+- build: move the plugin baseline to Java 25 and refresh the bundled PluginAPI 0.9.3.2 JAR.
+
 ## [0.27.3] - 2026-10-06 | Scaled quick menu
 
 - fix: keep plugin navigation buttons inside the settings sidebar without a scrollbar.

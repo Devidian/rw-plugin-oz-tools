@@ -65,6 +65,15 @@ public class ToolsPlayerPluginSettingsPanel extends BasePlayerPluginSettingsPane
             redrawContent();
         }));
         flexWrapper.addChild(labels);
+        OZUIElement shortcuts = defaultSettingsContainer();
+        shortcuts.addChild(defaultSettingsLabel(t().get("tc.tools.setting.inventory.shortcuts", uiPlayer)));
+        shortcuts.addChild(switchButtons(uiPlayer, ToolsPlayerPreferences.showInventoryShortcuts(uiPlayer), event -> {
+            boolean next = !ToolsPlayerPreferences.showInventoryShortcuts(uiPlayer);
+            ToolsPlayerPreferences.setShowInventoryShortcuts(uiPlayer, next);
+            InventoryOverlayPanel.refreshAllVisible();
+            redrawContent();
+        }));
+        flexWrapper.addChild(shortcuts);
 
     }
 

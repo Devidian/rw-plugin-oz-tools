@@ -6,6 +6,7 @@ import net.risingworld.api.objects.Player;
 
 public final class ToolsPlayerPreferences {
     public static final String SHOW_INVENTORY_SHORTCUT_LABELS = "oztools.inventoryShortcutLabels.visible";
+    public static final String SHOW_INVENTORY_SHORTCUTS = "oztools.inventoryShortcuts.visible";
     public static final String QUICK_MENU_SCALE = "oztools.quickMenu.scale";
     public static final String ICON_STYLE = "oztools.iconStyle";
     public static final String ICON_STYLE_MODERN = "modern";
@@ -61,6 +62,25 @@ public final class ToolsPlayerPreferences {
             return;
         }
         settings.setBoolean(player.getDbID(), SHOW_INVENTORY_SHORTCUT_LABELS, value);
+    }
+
+    public static boolean showInventoryShortcuts(Player player) {
+        PlayerSettings settings = de.omegazirkel.risingworld.OZTools.playerSettings();
+        if (player == null || settings == null) return true;
+        try {
+            return settings.getBoolean(player.getDbID(), SHOW_INVENTORY_SHORTCUTS).orElse(true);
+        } catch (RuntimeException ex) {
+            de.omegazirkel.risingworld.OZTools.logger()
+                    .warn("Failed to read inventory shortcut preference: " + ex.getMessage());
+            return true;
+        }
+    }
+
+    public static void setShowInventoryShortcuts(Player player, boolean value) {
+        PlayerSettings settings = de.omegazirkel.risingworld.OZTools.playerSettings();
+        if (player != null && settings != null) {
+            settings.setBoolean(player.getDbID(), SHOW_INVENTORY_SHORTCUTS, value);
+        }
     }
 
     public static String iconStyle(Player player) {

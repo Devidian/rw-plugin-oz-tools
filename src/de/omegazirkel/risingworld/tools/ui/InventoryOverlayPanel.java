@@ -36,6 +36,7 @@ public class InventoryOverlayPanel extends OZUIElement {
 
     public static void show(Player player) {
         remove(player);
+        if (!ToolsPlayerPreferences.showInventoryShortcuts(player)) return;
         List<MenuItem> buttons = PluginMenuManager.mainMenuItems(player);
         if (buttons.isEmpty()) {
             return;
