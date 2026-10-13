@@ -69,6 +69,18 @@ class OZToolsRuntime extends Plugin {
     private static volatile PluginUpdateService activePluginUpdateService;
     private static volatile OZToolsRuntime activeTools;
 
+    private void reloadPluginsAfterClosingWindows() {
+        for (Player player : Server.getAllPlayers()) {
+            if (player != null && player.isConnected()) {
+                InventoryOverlayPanel.remove(player);
+                InventoryOverlayPanel.removeMenu(player);
+                player.hideInventory();
+                player.closeAllActiveUIWindows();
+            }
+        }
+        executeDelayed(0.2f, () -> Server.sendInputCommand("reloadplugins"));
+    }
+
     static void runAfterModalClose(Player player, Runnable action) {
         OZToolsRuntime tools = activeTools;
         if (tools == null || player == null || action == null) return;
@@ -188,7 +200,7 @@ class OZToolsRuntime extends Plugin {
                     if (player != null) player.sendTextMessage(t.get("tc.plugin.update.install.completed", player));
                     service.markInstalledLatest(pluginName);
                     if (onStateChanged != null) onStateChanged.run();
-                    tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
+                    tools.executeDelayed(5, tools::reloadPluginsAfterClosingWindows);
                 }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
                     if (player != null) player.sendTextMessage(t.get("unsupported-windows".equals(reason) ? "tc.plugin.update.windows.message"
                             : "untrusted-release-source".equals(reason)
@@ -210,7 +222,7 @@ class OZToolsRuntime extends Plugin {
             service.markInstalledLatest(pluginName);
             player.sendTextMessage(t.get("tc.plugin.update.reinstall.completed", player));
             if (onStateChanged != null) onStateChanged.run();
-            tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
+            tools.executeDelayed(5, tools::reloadPluginsAfterClosingWindows);
         }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
             player.sendTextMessage(t.get("tc.plugin.update.install.failed", player));
             if (onStateChanged != null) onStateChanged.run();
@@ -226,7 +238,7 @@ class OZToolsRuntime extends Plugin {
         service.uninstallAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() -> {
             player.sendTextMessage(t.get("tc.plugin.update.uninstall.completed", player));
             if (onStateChanged != null) onStateChanged.run();
-            tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
+            tools.executeDelayed(5, tools::reloadPluginsAfterClosingWindows);
         }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
             player.sendTextMessage(t.get("tc.plugin.update.uninstall.failed", player));
             if (onStateChanged != null) onStateChanged.run();
@@ -256,7 +268,7 @@ class OZToolsRuntime extends Plugin {
         if (index >= pending.size()) {
             player.sendTextMessage(t.get("tc.plugin.update.install.completed", player));
             if (onStateChanged != null) onStateChanged.run();
-            tools.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins"));
+            tools.executeDelayed(5, tools::reloadPluginsAfterClosingWindows);
             return;
         }
         String pluginName = pending.get(index);
@@ -338,7 +350,7 @@ class OZToolsRuntime extends Plugin {
             }
             logger().info("ℹ️ Detected jar changes, reloading all plugins...");
             serverThreadDispatcher.dispatch(() ->
-                    this.executeDelayed(5, () -> Server.sendInputCommand("reloadplugins")));
+                    this.executeDelayed(5, this::reloadPluginsAfterClosingWindows));
         }, 15, TimeUnit.SECONDS);
 
         // Watcher start
@@ -380,6 +392,16 @@ class OZToolsRuntime extends Plugin {
                         () -> s.adminSettingsEntries(), s::initSettings));
         PluginInfoStatusProviders.registerProvider(
                 new ToolsPluginInfoStatusProvider(getDescription("name"), getDescription("version"), pluginCMD));
+        Player[] connectedPlayers = Server.getAllPlayers();
+        if (connectedPlayers != null) {
+            for (Player player : connectedPlayers) {
+                if (player != null && player.isConnected()) {
+                    InventoryOverlayPanel.remove(player);
+                    InventoryOverlayPanel.removeMenu(player);
+                    player.hideInventory();
+                }
+            }
+        }
         logger().info("✅ " + this.getName() + " Plugin is enabled version:" + this.getDescription("version"));
     }
 
@@ -388,6 +410,14 @@ class OZToolsRuntime extends Plugin {
      */
     @Override
     public void onDisable() {
+        for (Player player : Server.getAllPlayers()) {
+            if (player != null && player.isConnected()) {
+                InventoryOverlayPanel.remove(player);
+                InventoryOverlayPanel.removeMenu(player);
+                player.hideInventory();
+                player.closeAllActiveUIWindows();
+            }
+        }
         logger().warn("⚠️ Disabling " + this.getName() + " and shutting down services...");
 
         if (serverThreadDispatcher != null) {

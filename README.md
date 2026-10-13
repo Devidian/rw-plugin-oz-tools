@@ -5,6 +5,8 @@
 `/ozt open` displays a centered shortcut grid. The inventory shortcut grid fits 16 icons or 12 labeled entries in one centered row. With more entries, it wraps into 7-icon or 5-label rows in the left inventory area.
 Players can choose x1, x2, or x3 button size for the dedicated `/ozt open` grid in Tools player settings. The inventory shortcut grid keeps its existing size.
 Players can hide the entire inventory shortcut grid in Tools player settings; `/ozt open` remains available.
+On plugin reload, Tools closes attached shortcut panels and the inventory before rebuilding the grid. Opening `/ozt open` closes inventory shortcuts; opening the inventory closes an open quick menu.
+Tools closes connected players' active UI windows before its plugin reload commands and when Tools is disabled.
 
 This plugin has a set of utilities and libs used by different Plugins.
 

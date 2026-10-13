@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [0.28.1] - 2026-10-13 | Reload and shortcut layout
+
+- fix: close active player UI windows before plugin reloads so stale modal overlays do not survive a reload.
+- fix: remove stale inventory shortcut panels across plugin reloads before recreating the grid.
+- fix: keep the centered quick menu and inventory shortcut grid mutually exclusive when either is opened.
+
 ## [0.28.0] - 2026-10-06 | Inventory shortcut visibility
 
 - feat: let players hide all inventory plugin shortcuts while keeping `/ozt open` available.

@@ -8,6 +8,7 @@ import de.omegazirkel.risingworld.tools.ToolsPlayerPreferences;
 import net.risingworld.api.Server;
 import net.risingworld.api.assets.TextureAsset;
 import net.risingworld.api.objects.Player;
+import net.risingworld.api.ui.UIElement;
 import net.risingworld.api.ui.UILabel;
 import net.risingworld.api.ui.UIScrollView;
 import net.risingworld.api.ui.UITarget;
@@ -35,6 +36,7 @@ public class InventoryOverlayPanel extends OZUIElement {
     private final AtomicBoolean activated = new AtomicBoolean();
 
     public static void show(Player player) {
+        removeMenu(player);
         remove(player);
         if (!ToolsPlayerPreferences.showInventoryShortcuts(player)) return;
         List<MenuItem> buttons = PluginMenuManager.mainMenuItems(player);
@@ -48,9 +50,9 @@ public class InventoryOverlayPanel extends OZUIElement {
 
     public static void showMenu(Player player) {
         if (player == null) return;
-        // Escape can close a modal without notifying the server. Discard the old
-        // reference so a late removal cannot close the new menu.
-        player.deleteAttribute(MENU_ATTRIBUTE);
+        remove(player);
+        player.hideInventory();
+        removeMenu(player);
         List<MenuItem> buttons = PluginMenuManager.mainMenuItems(player);
         if (buttons.isEmpty()) return;
         InventoryOverlayPanel panel = new InventoryOverlayPanel(player, buttons, true);
@@ -59,11 +61,18 @@ public class InventoryOverlayPanel extends OZUIElement {
     }
 
     public static void remove(Player player) {
-        InventoryOverlayPanel panel = (InventoryOverlayPanel) player.getAttribute(PLAYER_ATTRIBUTE);
-        if (panel != null) {
-            player.removeUIElement(panel);
-            player.deleteAttribute(PLAYER_ATTRIBUTE);
-        }
+        if (player == null) return;
+        // The player attribute can point to a panel from the previous plugin
+        // class loader. UIElement belongs to the stable game API, so this
+        // removes it without casting to our reloaded implementation class.
+        if (player.getAttribute(PLAYER_ATTRIBUTE) instanceof UIElement panel) player.removeUIElement(panel);
+        player.deleteAttribute(PLAYER_ATTRIBUTE);
+    }
+
+    public static void removeMenu(Player player) {
+        if (player == null) return;
+        if (player.getAttribute(MENU_ATTRIBUTE) instanceof UIElement panel) player.removeUIElement(panel);
+        player.deleteAttribute(MENU_ATTRIBUTE);
     }
 
     public static boolean isVisible(Player player) {
