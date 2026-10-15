@@ -1,1 +1,0 @@
-- feat: Add a topic-aware Discord bridge overload that fails safely with older Discord Connect installations.
