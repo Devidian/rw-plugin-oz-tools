@@ -1,5 +1,7 @@
 # OZTools (Tools for other plugins)
 
+`DiscordBridge.sendTextMessage(message, channelId, image, topic)` optionally routes plugin events to a Discord thread. It returns `false` and logs a warning if the installed Discord Connect lacks the topic API. The existing overloads retain direct-channel delivery. Install this Tools build before consumers that use the new overload.
+
 **Build baseline:** JDK 25 (`--release 25`) and the bundled Rising World PluginAPI 0.9.3.2 JAR.
 
 `/ozt open` displays a centered shortcut grid. The inventory shortcut grid fits 16 icons or 12 labeled entries in one centered row. With more entries, it wraps into 7-icon or 5-label rows in the left inventory area.

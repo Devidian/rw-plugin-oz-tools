@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.28.2] - 2026-10-15 | Discord event threads
+
+- feat: Add a reflection-only topic overload for optional Discord event threads; older Discord Connect versions fail without direct-channel fallback.
+
 ## [0.28.1] - 2026-10-13 | Reload and shortcut layout
 
 - fix: close active player UI windows before plugin reloads so stale modal overlays do not survive a reload.

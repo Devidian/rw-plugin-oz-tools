@@ -2,6 +2,7 @@ package de.omegazirkel.risingworld.tools.bridge;
 
 import java.lang.reflect.Method;
 
+import de.omegazirkel.risingworld.tools.OZLogger;
 import net.risingworld.api.Plugin;
 
 /** Optional, reflection-only bridge to OZ - Discord Connect. */
@@ -38,6 +39,23 @@ public class DiscordBridge {
             method.invoke(discord, message, channelId, image);
             return true;
         } catch (ReflectiveOperationException ex) {
+            return false;
+        }
+    }
+
+    /** Sends to a named thread. An older Discord Connect never receives a direct-channel fallback. */
+    public boolean sendTextMessage(String message, long channelId, byte[] image, String topic) {
+        if (owner == null || channelId <= 0L || message == null || message.isBlank()) return false;
+        Plugin discord = getDiscordPlugin();
+        if (discord == null) return false;
+        try {
+            Method method = discord.getClass().getMethod("sendDiscordMessageToTextChannel", String.class,
+                    long.class, byte[].class, String.class);
+            method.invoke(discord, message, channelId, image, topic);
+            return true;
+        } catch (ReflectiveOperationException ex) {
+            OZLogger.getInstance(owner.getName()).warn("Discord topic delivery requires a compatible Discord Connect: "
+                    + ex.getMessage());
             return false;
         }
     }
