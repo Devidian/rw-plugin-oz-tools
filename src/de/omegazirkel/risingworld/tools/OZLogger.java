@@ -2,6 +2,8 @@ package de.omegazirkel.risingworld.tools;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,6 +18,8 @@ import org.apache.logging.log4j.core.config.ConfigurationSource;
 import org.apache.logging.log4j.core.config.NullConfiguration;
 
 import de.omegazirkel.risingworld.OZTools;
+import de.omegazirkel.risingworld.tools.settings.JsonSettingsFile;
+import net.risingworld.api.World;
 
 public class OZLogger {
 
@@ -23,6 +27,9 @@ public class OZLogger {
     private static final boolean DEBUG_MODE = false;
     private static final String CONFIG_FILE = "oz-log4j2.xml";
     private static boolean isInShutdownMode = false;
+    private static volatile Level globalLevel = Level.DEBUG;
+    private static volatile boolean globalInternalLogOnly;
+    private static volatile boolean settingsConfigured;
 
     private Logger logger() {
         return ctx != null ? ctx.getLogger(loggerName) : null;
@@ -81,7 +88,8 @@ public class OZLogger {
                 ctx.start(config);
                 this.ctx = ctx;
 
-                logger().debug("🪲 Logger initialized: " + loggerName + " using config: " + configUrl);
+                logger().setLevel(globalLevel);
+                debug("🪲 Logger initialized: " + loggerName + " using config: " + configUrl);
             }
 
         } catch (Exception e) {
@@ -93,12 +101,14 @@ public class OZLogger {
     }
 
     public static OZLogger getInstance(String loggerName) {
+        if (!settingsConfigured)
+            bootstrapSettings();
         PluginSettings s = OZTools.getSettings();
-        if (s == null) {
+        if (s == null && !settingsConfigured) {
             System.out.println("[" + loggerName
                     + "] 🆘 OZTools.s is null, default to internalLogOnly=false, use getInstance(String, boolean) instead.");
         }
-        return getInstance(loggerName, s == null ? false : s.logInternal);
+        return getInstance(loggerName, s == null ? globalInternalLogOnly : s.logInternal);
     }
 
     public static OZLogger getInstance(String loggerName, boolean internalLogOnly) {
@@ -148,6 +158,57 @@ public class OZLogger {
         isInShutdownMode = false;
     }
 
+    /** Configures all OZLogger instances, including those created before Tools starts. */
+    public static void configure(String levelName, boolean internalLogOnly) {
+        globalLevel = Level.toLevel(levelName, Level.DEBUG);
+        globalInternalLogOnly = internalLogOnly;
+        settingsConfigured = true;
+        for (OZLogger instance : INSTANCES.values()) {
+            Logger logger = instance.logger();
+            if (logger != null)
+                logger.setLevel(globalLevel);
+        }
+    }
+
+    private static synchronized void bootstrapSettings() {
+        if (settingsConfigured)
+            return;
+        String world;
+        try {
+            world = World.getName();
+        } catch (LinkageError ex) {
+            return;
+        }
+        if (world == null || world.isBlank())
+            return;
+        String safeWorld = world.replaceAll("[^A-Za-z0-9._-]", "_");
+        Path pluginDirectory = Path.of("Plugins", "OZTools");
+        try {
+            var codeSource = OZLogger.class.getProtectionDomain().getCodeSource();
+            URL location = codeSource == null ? null : codeSource.getLocation();
+            if (location != null) {
+                Path jarPath = Path.of(location.toURI());
+                if (jarPath.getFileName().toString().equals("OZTools.jar"))
+                    pluginDirectory = jarPath.getParent();
+            }
+            Path settingsFile = pluginDirectory.resolve("settings." + safeWorld + ".json");
+            if (!Files.exists(settingsFile))
+                settingsFile = pluginDirectory.resolve("settings.default.json");
+            if (!Files.exists(settingsFile))
+                return;
+            Map<String, String> values = JsonSettingsFile.loadFlat(settingsFile);
+            configure(values.getOrDefault("logLevel", "ALL"),
+                    Boolean.parseBoolean(values.getOrDefault("logInternal", "false")));
+        } catch (Exception ex) {
+            settingsConfigured = true;
+            System.err.println("[OZLogger] Could not read early Tools logging settings: " + ex.getMessage());
+        }
+    }
+
+    private static boolean enabled(Level level) {
+        return level.isMoreSpecificThan(globalLevel);
+    }
+
     public OZLogger setLevel(String levelName) {
         return setLevel(Level.toLevel(levelName));
     }
@@ -160,6 +221,8 @@ public class OZLogger {
     }
 
     public void debug(String message) {
+        if (!enabled(Level.DEBUG))
+            return;
         if (logger() == null)
             fallbackLog(message);
         else
@@ -167,6 +230,8 @@ public class OZLogger {
     }
 
     public void info(String message) {
+        if (!enabled(Level.INFO))
+            return;
         if (logger() == null)
             fallbackLog(message);
         else
@@ -174,6 +239,8 @@ public class OZLogger {
     }
 
     public void warn(String message) {
+        if (!enabled(Level.WARN))
+            return;
         if (logger() == null)
             fallbackLog(message);
         else
@@ -181,6 +248,8 @@ public class OZLogger {
     }
 
     public void error(String message) {
+        if (!enabled(Level.ERROR))
+            return;
         if (logger() == null)
             fallbackLog(message);
         else
@@ -188,6 +257,8 @@ public class OZLogger {
     }
 
     public void fatal(String message) {
+        if (!enabled(Level.FATAL))
+            return;
         if (logger() == null)
             fallbackLog(message);
         else

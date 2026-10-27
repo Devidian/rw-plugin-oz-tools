@@ -101,11 +101,11 @@ public class PluginSettings {
 			enablePluginWelcomeMessage = value(settings, defaults, "enablePluginWelcomeMessage", "false")
 					.contentEquals("true");
 
+			OZLogger.configure(logLevel, logInternal);
 			logger().info(plugin.getName() + " Plugin settings loaded");
 			logger().info("Sending welcome message on login is: " + String.valueOf(enablePluginWelcomeMessage));
 			logger().info("enablePluginWelcomeMessage is: " + enablePluginWelcomeMessage);
 			logger().info("Loglevel is set to " + logLevel);
-			logger().setLevel(logLevel);
 			currentSettings = settings;
 			defaultSettings = defaults;
 
@@ -121,7 +121,7 @@ public class PluginSettings {
 	public List<AdminSettingsEntry> adminSettingsEntries() {
 		return Arrays.asList(
 				AdminSettingsEntry.group("logging", "Logging"),
-				new AdminSettingsEntry("logLevel", "Log level", "Controls Tools logging verbosity.",
+				new AdminSettingsEntry("logLevel", "Log level", "Controls logging verbosity for all OZ plugins using OZLogger.",
 						currentSettings.getOrDefault("logLevel", defaultSettings.getOrDefault("logLevel", "ALL")),
 						defaultSettings.getOrDefault("logLevel", "ALL"), AdminSettingsType.SELECT, false,
 						value -> SettingsFileEditor.writeValue(settingsFile, "logLevel", value),

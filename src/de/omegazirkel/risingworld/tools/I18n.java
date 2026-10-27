@@ -26,8 +26,6 @@ public class I18n {
         return OZTools.logger();
     }
 
-    private static PluginSettings s = PluginSettings.getInstance();
-
     private I18n() {
     }
 
@@ -46,8 +44,6 @@ public class I18n {
     }
 
     public static I18n getInstance(Plugin plugin) {
-        logger().setLevel(s.logLevel);
-
         I18n instance = getInstance(plugin.getDescription("name"));
         instance.loadLanguageData(plugin.getPath());
         return instance;

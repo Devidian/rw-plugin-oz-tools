@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## [0.28.3] - 2026-10-27 | Central OZ logging level
+
+- fix: apply the Tools log level to every OZLogger, including early plugin startup, internal console logging, and settings reloads.
+
 ## [0.28.2] - 2026-10-15 | Discord event threads
 
 - feat: Add a reflection-only topic overload for optional Discord event threads; older Discord Connect versions fail without direct-channel fallback.

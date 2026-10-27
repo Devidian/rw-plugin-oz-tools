@@ -167,7 +167,17 @@ _/Plugins/YourPluigin/i18n/__anyotherlanguage__.json
 
 ## Logger
 
-This feature uses Log4J framework for logging your plugin stuff in seperate log files.
+`OZTools/settings.<world>.json` sets `logLevel` for all plugins using `OZLogger`.
+The logger reads this file on first use, including when another plugin starts
+before Tools.
+The level applies to both Log4j output and the console fallback used when
+`logInternal=true`. Changes to `logLevel` take effect when Tools reloads its
+settings. Existing `logLevel` keys in individual plugin settings do not override
+this central level. Direct game-server and `System.out`/`System.err` output is
+outside `OZLogger` filtering.
+
+With `logInternal=false`, Log4j writes to the console and separate plugin log
+files. With `logInternal=true`, `OZLogger` writes to the game console only.
 
 ```java
 import de.omegazirkel.risingworld.tools.OZLogger;

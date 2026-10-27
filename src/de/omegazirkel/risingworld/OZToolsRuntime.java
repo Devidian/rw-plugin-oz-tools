@@ -313,7 +313,6 @@ class OZToolsRuntime extends Plugin {
         name = this.getDescription("name");
         s = PluginSettings.getInstance((OZTools) this);
         s.initSettings();
-        logger().setLevel(s.logLevel);
         configureThreadDiagnostics();
         t = I18n.getInstance(this);
         AssetManager.loadDefaultIcons((OZTools) this);

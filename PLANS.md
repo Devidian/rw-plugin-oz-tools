@@ -1,5 +1,8 @@
 # PLANS.md
 
+- [x] Apply the Tools log level to all OZLogger output paths, including console fallback.
+- [x] Validate the logging fix on Development with `logInternal=true` and `logLevel=WARN`; restore the original settings afterward.
+
 - [ ] Validate the next-300926 change on Development with a controlled player check.
 - [ ] Validate quick-menu button sizes and plugin navigation width with a player on Development.
 
