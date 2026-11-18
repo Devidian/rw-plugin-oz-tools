@@ -11,6 +11,9 @@
   "allowExternalPluginRepositories": false,
   "allowWindowsUpdate": false,
   "web.allowUnsecureRequests": false,
+  "web.allowRoutes": false,
   "web.useWebsockets": false,
-  "web.wsTargetUrl": "wss://rw-servers.omega-zirkel.de/ws"
+  "web.wsTargetUrl": "wss://rw-servers.omega-zirkel.de/ws",
+  "web.publicManagerUrl": "https://rw-servers.omega-zirkel.de/",
+  "privacy.rejectAction": "allow"
 }

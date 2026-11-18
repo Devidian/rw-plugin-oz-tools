@@ -299,6 +299,9 @@ class OZToolsRuntime extends Plugin {
     private static PluginSettings s = null;
     private static I18n t = null;
     private static Connection sqliteCon;
+    private de.omegazirkel.risingworld.tools.privacy.PlayerErasureService playerErasureService;
+    private de.omegazirkel.risingworld.tools.privacy.PlayerErasureService.Registration managerErasureRegistration;
+    private AutoCloseable managerErasureFeature;
     private static PlayerSettings playerSettings;
     private final static Colors c = Colors.getInstance();
     public static String name = null;
@@ -322,6 +325,14 @@ class OZToolsRuntime extends Plugin {
         } catch (RuntimeException ex) {
             logger().error("Failed to initialize Tools player settings database: " + ex.getMessage());
         }
+        if (playerSettings != null) {
+            try {
+                playerErasureService = new de.omegazirkel.risingworld.tools.privacy.PlayerErasureService(
+                        (OZTools) this, t, playerSettings);
+            } catch (SQLException | RuntimeException ex) {
+                logger().error("Failed to initialize player erasure journal: " + ex.getMessage());
+            }
+        }
 
         serverThreadDispatcher = new ServerThreadDispatcher(this);
         SharedIndicatorManager.start(this::isMainThread, serverThreadDispatcher::dispatch);
@@ -331,6 +342,13 @@ class OZToolsRuntime extends Plugin {
         gameConnectorService = new GameConnectorService((OZTools) this, s);
         rebindGameConnectorFeatures();
         gameConnectorService.start();
+        managerErasureFeature = registerGameConnectorFeature("playerErasure");
+        managerErasureRegistration = de.omegazirkel.risingworld.tools.privacy.PlayerErasureService.register(
+                "manager", ignored -> gameConnectorService != null && gameConnectorService.erasureReady(), request -> {
+                    String uid = Server.getPlayerUID(request.playerDbId());
+                    return uid != null && !uid.isBlank() && gameConnectorService != null
+                            && gameConnectorService.erasePlayer(request.id(), request.playerDbId(), uid);
+                });
         if (s.automaticPluginUpdateCheck) {
             executeDelayed(Math.max(1, s.pluginUpdateCheckDelaySeconds), pluginUpdateService::checkAsync);
         }
@@ -433,6 +451,9 @@ class OZToolsRuntime extends Plugin {
             activeTools = null;
         }
         if (gameConnectorService != null) {
+            if (managerErasureRegistration != null) managerErasureRegistration.close();
+            try { if (managerErasureFeature != null) managerErasureFeature.close(); }
+            catch (Exception ex) { logger().warn("Failed to close Manager erasure feature: " + ex.getMessage()); }
             gameConnectorService.stop();
             gameConnectorService = null;
         }
@@ -450,6 +471,11 @@ class OZToolsRuntime extends Plugin {
 
         SharedIndicatorManager.stop();
         PluginInfoStatusProviders.unregisterProvider(getDescription("name"));
+        if (playerErasureService != null) {
+            try { playerErasureService.close(); }
+            catch (SQLException ex) { logger().warn("Failed to close player erasure journal: " + ex.getMessage()); }
+            playerErasureService = null;
+        }
         playerSettings = null;
         if (sqliteCon != null) {
             try {
@@ -468,6 +494,19 @@ class OZToolsRuntime extends Plugin {
     }
 
     public void onPlayerSpawn(PlayerSpawnEvent event) {
+        Player consentPlayer = event.getPlayer();
+        if (consentPlayer != null && !consentPlayer.hasAttribute("tools.privacy.loginNoticeShown")) {
+            consentPlayer.setAttribute("tools.privacy.loginNoticeShown", true);
+            var purposes = de.omegazirkel.risingworld.tools.ExternalDataConsent.activePurposes();
+            boolean pending = purposes.stream().anyMatch(purpose -> de.omegazirkel.risingworld.tools.ExternalDataConsent.status(
+                    consentPlayer.getDbID(), purpose) == de.omegazirkel.risingworld.tools.ExternalDataConsent.Status.PENDING);
+            boolean declined = purposes.stream().anyMatch(purpose -> de.omegazirkel.risingworld.tools.ExternalDataConsent.status(
+                    consentPlayer.getDbID(), purpose) == de.omegazirkel.risingworld.tools.ExternalDataConsent.Status.DECLINED);
+            if (pending) consentPlayer.showInfoMessageBox(t.get("tc.privacy.login.title", consentPlayer),
+                    t.get("tc.privacy.login.notice", consentPlayer));
+            if (declined && "warn".equals(s.privacyRejectAction)) consentPlayer.showWarningMessageBox(t.get("tc.privacy.login.title", consentPlayer),
+                    t.get("tc.privacy.login.declined", consentPlayer));
+        }
         if (s.enablePluginWelcomeMessage) {
             Player player = event.getPlayer();
             player.sendTextMessage(t.get("tc.msg.plugin.welcome", player)
@@ -480,10 +519,17 @@ class OZToolsRuntime extends Plugin {
     }
 
     public void onPlayerConnect(PlayerConnectEvent event) {
+        Player player = event.getPlayer();
+        if (playerErasureService != null && player != null
+                && de.omegazirkel.risingworld.tools.privacy.PlayerErasureService.isPending(player.getDbID())) {
+            playerErasureService.disconnectPendingPlayer(player);
+            return;
+        }
         SharedIndicatorManager.refreshAllPlayers();
     }
 
     public void onPlayerDisconnect(PlayerDisconnectEvent event) {
+        if (event.getPlayer() != null) event.getPlayer().deleteAttribute("tools.privacy.loginNoticeShown");
     }
 
     public void onPlayerToggleInventory(PlayerToggleInventoryEvent event) {
@@ -503,7 +549,7 @@ class OZToolsRuntime extends Plugin {
     }
 
     public void onPlayerCommand(PlayerCommandEvent event) {
-        String[] commandArgs = event.getCommand().split(" ");
+        String[] commandArgs = event.getCommand().strip().split("\\s+");
         if (!commandArgs[0].contentEquals("/" + pluginCMD)) {
             event.setCancelled(true);
             return;
@@ -514,6 +560,11 @@ class OZToolsRuntime extends Plugin {
         }
         Player player = event.getPlayer();
         switch (command) {
+            case "delete":
+                if (playerErasureService != null) playerErasureService.command(player, commandArgs);
+                else player.showInfoMessageBox(t.get("tc.privacy.erasure.title", player),
+                        t.get("tc.privacy.erasure.unavailable", player));
+                break;
             case "status":
             case "info":
                 PluginInfoStatusProviders.show(player, getDescription("name"));
@@ -531,6 +582,26 @@ class OZToolsRuntime extends Plugin {
                 player.addUIElement(overlay, UITarget.Modal);
                 player.setAttribute("tools.ui.overlay", overlay);
                 break;
+            case "privacy":
+                if (!player.isAdmin()) break;
+                int page = 1;
+                if (commandArgs.length > 2) {
+                    try { page = Math.max(1, Integer.parseInt(commandArgs[2])); }
+                    catch (NumberFormatException ignored) { page = 1; }
+                }
+                var declined = de.omegazirkel.risingworld.tools.ExternalDataConsent.declinedPlayers();
+                int first = (int) Math.min(declined.size(), ((long) page - 1L) * 20L);
+                int last = Math.min(declined.size(), first + 20);
+                player.sendTextMessage(t.get("tc.privacy.admin.header", player)
+                        .replace("PH_COUNT", String.valueOf(declined.size()))
+                        .replace("PH_PAGE", String.valueOf(page)));
+                for (var row : declined.subList(first, last)) {
+                    player.sendTextMessage(t.get("tc.privacy.admin.row", player)
+                            .replace("PH_DBID", String.valueOf(row.dbId()))
+                            .replace("PH_PURPOSE", t.get("tc.privacy.purpose."
+                                    + row.purpose().name().toLowerCase(java.util.Locale.ROOT), player)));
+                }
+                break;
             case "help":
             case "":
             default:
@@ -542,6 +613,7 @@ class OZToolsRuntime extends Plugin {
 
     public void onSettingsChanged(Path settingsPath) {
         s.initSettings(settingsPath.toString());
+        de.omegazirkel.risingworld.tools.WSClientEndpoint.refreshGlobalAccess();
         configureThreadDiagnostics();
         if (gameConnectorService != null) {
             gameConnectorService.stop();

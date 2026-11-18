@@ -1,11 +1,38 @@
 {
   "tc": {
+    "privacy": {
+      "erasure": {
+        "title": "Spielerdaten löschen",
+        "confirm": "Deine Daten in OZ-Plugins und verbundenen Diensten werden gelöscht oder anonymisiert. Gemeinsam genutzte Inhalte und dein Rising-World-Charakter bleiben erhalten. Während des Löschauftrags ist die Anmeldung gesperrt. Möchtest du fortfahren?",
+        "pending": "Dein Löschauftrag wird verarbeitet. Melde dich nach Abschluss wieder an.",
+        "usage": "Verwendung: /ozt delete oder /ozt delete --character",
+        "unavailable": "Die Selbstlöschung ist derzeit auf diesem Server nicht verfügbar.",
+        "characterUnavailable": "Die native Charakterlöschung ist wegen eines Fehlers in der Spiel-API derzeit nicht verfügbar. Es wurde kein Löschauftrag angelegt."
+      },
+      "title": "Externe Datenverarbeitung",
+      "subtitle": "Entscheide für jeden Zweck, ob dieser Server deine Daten an externe Dienste senden darf.",
+      "statusLabel": "Deine Entscheidung",
+      "accept": "Erlauben",
+      "reject": "Ablehnen / widerrufen",
+      "leave": "Server verlassen",
+      "leaveReason": "Du hast den Server auf eigenen Wunsch verlassen.",
+      "declinedKickReason": "Dieser Server verlangt die Freigabe externer Datenverarbeitung.",
+      "admin": {"header": "Abgelehnte externe Freigaben: PH_COUNT Einträge, Seite PH_PAGE (/ozt privacy SEITE)", "row": "Spieler-DBID PH_DBID: PH_PURPOSE abgelehnt", "title": "Abgelehnte Freigaben", "subtitle": "Serverinterne Entscheidungen der Spieler", "legend": "Nur für Serveradmins sichtbar", "dbid": "Spieler-DBID", "name": "Spielername", "purpose": "Zweck", "next": "Weiter", "empty": "Keine abgelehnten Freigaben vorhanden."},
+      "purpose": {"manager": "Manager", "map": "Online-Karte", "discord": "Discord", "stargate": "Stargate", "intercom": "Global Intercom"},
+      "login": {"title": "Externe Datenverarbeitung", "notice": "Für externe Funktionen stehen noch Entscheidungen aus. Bitte öffne /ozt config und entscheide für jeden Zweck in Ruhe. Du kannst auch ohne diese Freigaben spielen.", "declined": "Für ein reibungsloses Zusammenspiel wünscht sich der Server ausdrücklich deine Einwilligung für die angebotenen externen Funktionen. Du kannst deine Entscheidung jederzeit unter /ozt config ändern."},
+      "status": {"pending": "offen", "accepted": "erlaubt", "declined": "abgelehnt"},
+      "manager": "Dieser Server kann deine UID, serverinterne DBID und deinen aktuellen Charakternamen an einen Drittserver senden. Dort werden sie für Statistiken und Online-Funktionen verarbeitet. Deine Spielaktivität kann unter PH_MANAGER_URL öffentlich sichtbar sein.",
+      "map": "Für die Online-Karte kann dieser Server zusätzlich deine aktuelle und letzte Position an einen Drittserver senden und dort verarbeiten lassen.",
+      "discord": "Dieser Server bietet keinen alternativen lokalen Chat, sondern einen über Discord gestützten Community-Chat. Senden und Empfangen von Community-Nachrichten sind nur mit deiner Freigabe möglich, solange Discord verbunden ist. Ist Discord nicht erreichbar, steht der lokale Chat allen offen. Konfigurierte administrative Spielereignisse können auch ohne Freigabe an Discord gehen; statt deines Namens wird Spieler # mit deiner serverinternen DBID verwendet.",
+      "stargate": "Für Reisen im Stargate-Netzwerk kann dieser Server deine UID, deinen Namen und reisebezogene Daten an den Netzwerkserver senden. Lokale Reisen auf diesem Server bleiben auch ohne Freigabe möglich.",
+      "intercom": "Für Global Intercom kann dieser Server deine UID, deinen Namen und deine Intercom-Nachrichten an den Chat-Relay senden. Ohne Freigabe kannst du Intercom-Nachrichten weder senden noch empfangen."
+    },
     "btn": {
       "cancel": "Abbrechen",
       "close": "Schließen"
     },
     "cmd": {
-      "help": "Plugin Hilfe\nTippe \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD rk [KEY]\u003c/color\u003e um eine Taste [KEY] zu registrieren der das Menü öffnet.\nTippe \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD open\u003c/color\u003e um das Menü zu öffnen.",
+      "help": "Plugin-Hilfe\n/PH_PLUGIN_CMD open – Hauptmenü öffnen\n/PH_PLUGIN_CMD config – Einstellungen und externe Datenverarbeitung öffnen\n/PH_PLUGIN_CMD status oder info – Plugin-Status anzeigen\n/PH_PLUGIN_CMD privacy [SEITE] – abgelehnte Freigaben anzeigen (nur Admins)\n/PH_PLUGIN_CMD help – diese Hilfe anzeigen",
       "status": "🔎 Plugin Status\n➡️ Plugin version: PH_VERSION\n➡️ Installierte Sprachen: PH_LANG_AVAILABLE\n➡️ Deine Sprache: PH_LANGUAGE\n➡️ Verwendete Sprache: PH_USEDLANG"
     },
     "data": {
@@ -16,7 +43,8 @@
     "menu": {
       "back": "Zurück",
       "close": "Menü schließen",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "privacyAdmin": "Abgelehnte Freigaben"
     },
     "msg": {
       "plugin": {
@@ -134,6 +162,10 @@
       "title": "Plugin Einstellungen für PH_PLUGIN_NAME"
     },
     "setting": {
+      "externaldata": { "label": "Externe Datenverbindungen", "desc": "Verbindungen der OZ-Plugins zu externen Diensten." },
+      "web_usewebsockets": { "label": "WebSockets verwenden", "desc": "Erlaubt OZ-Plugins Verbindungen zu externen WebSocket-Diensten." },
+      "web_allowroutes": { "label": "Plugin-Webrouten bereitstellen", "desc": "Erlaubt OZ-Plugin-Routen auf dem Webserver des Spiels. Einzelne Routeneinstellungen gelten weiterhin." },
+      "privacy_rejectaction": { "label": "Bei abgelehnter Freigabe", "desc": "Spieler dürfen weiter spielen. Optional erscheint bei jeder Anmeldung ein Warnhinweis.", "option": { "allow": "Erlauben", "warn": "Warnen" } },
       "allowwindowsupdate": { "label": "Windows-Updates erlauben", "desc": "Erlaubt Plugin-Updates auf Windows-Servern, wenn Dateien nicht gesperrt sind." },
       "allowexternalpluginrepositories": {
         "desc": "Erlaubt kompatible öffentliche GitHub-Repositories außerhalb von OZ.",
@@ -197,6 +229,7 @@
         "notes": "Release-Hinweise"
       },
       "external": {
+        "data": "Externe Datenverarbeitung",
         "notes": "Hinweise"
       },
       "settings": "Einstellungen"

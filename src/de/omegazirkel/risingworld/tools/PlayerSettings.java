@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class PlayerSettings {
 
@@ -69,6 +71,21 @@ public final class PlayerSettings {
                     ps.setString(2, key);
                 },
                 rs -> rs.getInt("value") == 1);
+    }
+
+    public synchronized List<Integer> playerIdsWithBoolean(String key, boolean value) {
+        List<Integer> ids = new ArrayList<>();
+        try (PreparedStatement ps = connection.prepareStatement(
+                "SELECT player_id FROM player_settings_bool WHERE key=? AND value=? ORDER BY player_id")) {
+            ps.setString(1, key);
+            ps.setInt(2, value ? 1 : 0);
+            try (ResultSet rows = ps.executeQuery()) {
+                while (rows.next()) ids.add(rows.getInt(1));
+            }
+            return ids;
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to list player settings", ex);
+        }
     }
 
     public void setBoolean(int playerId, String key, boolean value) {
@@ -145,7 +162,34 @@ public final class PlayerSettings {
                 });
     }
 
-    private void upsert(String sql, SQLConsumer<PreparedStatement> binder) {
+    /** Removes every shared plugin setting and consent decision for a player. Call last in an erasure workflow. */
+    public synchronized void erasePlayer(int playerId) {
+        if (playerId <= 0) throw new IllegalArgumentException("Player DBID must be positive");
+        try {
+            boolean previousAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                for (String table : List.of("player_settings_bool", "player_settings_int",
+                        "player_settings_string", "player_settings_float")) {
+                    try (PreparedStatement statement = connection.prepareStatement(
+                            "DELETE FROM " + table + " WHERE player_id = ?")) {
+                        statement.setInt(1, playerId);
+                        statement.executeUpdate();
+                    }
+                }
+                connection.commit();
+            } catch (SQLException | RuntimeException ex) {
+                connection.rollback();
+                throw ex;
+            } finally {
+                connection.setAutoCommit(previousAutoCommit);
+            }
+        } catch (SQLException ex) {
+            throw new IllegalStateException("Failed to erase player settings", ex);
+        }
+    }
+
+    private synchronized void upsert(String sql, SQLConsumer<PreparedStatement> binder) {
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             binder.accept(ps);
             ps.executeUpdate();
@@ -154,7 +198,7 @@ public final class PlayerSettings {
         }
     }
 
-    private <T> Optional<T> querySingle(
+    private synchronized <T> Optional<T> querySingle(
             String sql,
             SQLConsumer<PreparedStatement> binder,
             SQLFunction<ResultSet, T> mapper) {

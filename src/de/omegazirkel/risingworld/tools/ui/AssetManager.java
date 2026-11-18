@@ -233,6 +233,7 @@ public class AssetManager {
         loadIconFromPlugin(plugin, "menu-exit");
         loadIconFromPlugin(plugin, "undo");
         loadIconFromPlugin(plugin, "menu-plugin-config");
+        loadIconFromPlugin(plugin, "menu-privacy-shield");
         loadIconFromPlugin(plugin, "info-status");
         loadIconFromPlugin(plugin, "placeholder");
         loadIconFromPlugin(plugin, "soon");

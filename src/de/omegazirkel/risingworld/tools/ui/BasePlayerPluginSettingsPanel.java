@@ -43,7 +43,7 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         this.removeAllChilds();
 
         // add title label
-        UILabel titleLabel = new UILabel(t().get("tc.settings.title", uiPlayer).replace("PH_PLUGIN_NAME", title));
+        UILabel titleLabel = new UILabel(headingText());
         titleLabel.setPivot(Pivot.UpperLeft);
         titleLabel.style.left.set(5, Unit.Percent);
         titleLabel.style.top.set(0, Unit.Pixel);
@@ -55,7 +55,7 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         titleLabel.setTextAlign(TextAnchor.MiddleLeft);
         this.addChild(titleLabel);
         // add description label
-        UILabel descLabel = new UILabel(t().get("tc.settings.desc", uiPlayer).replace("PH_PLUGIN_NAME", title));
+        UILabel descLabel = new UILabel(descriptionText());
         descLabel.setPivot(Pivot.UpperLeft);
         descLabel.style.left.set(5, Unit.Percent);
         descLabel.style.top.set(12, Unit.Pixel);
@@ -76,6 +76,14 @@ public abstract class BasePlayerPluginSettingsPanel extends OZUIElement {
         content.style.borderTopColor.set(0x6A5228FF);
         this.addChild(content);
 
+    }
+
+    protected String headingText() {
+        return t().get("tc.settings.title", uiPlayer).replace("PH_PLUGIN_NAME", title);
+    }
+
+    protected String descriptionText() {
+        return t().get("tc.settings.desc", uiPlayer).replace("PH_PLUGIN_NAME", title);
     }
 
     protected UIElement createIconStyleSettings() {

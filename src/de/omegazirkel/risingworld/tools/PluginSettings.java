@@ -41,8 +41,12 @@ public class PluginSettings {
 	public boolean allowWindowsUpdate = false;
 	/** Native plugin HTTP routes are disabled unless an administrator explicitly opts in. */
 	public boolean webAllowUnsecureRequests = false;
-	public boolean webUseWebsockets = false;
+	public volatile boolean webAllowRoutes = false;
+	public volatile boolean webUseWebsockets = false;
 	public String webWsTargetUrl = "wss://rw-servers.omega-zirkel.de/ws";
+	public String webPublicManagerUrl = "https://rw-servers.omega-zirkel.de/";
+	/** Declined external approvals never block login. WARN adds a native login reminder. */
+	public String privacyRejectAction = "allow";
 	private Path settingsFile;
 	private java.util.Map<String, String> currentSettings = new LinkedHashMap<>();
 	private java.util.Map<String, String> defaultSettings = new LinkedHashMap<>();
@@ -90,8 +94,12 @@ public class PluginSettings {
 			allowExternalPluginRepositories = value(settings, defaults, "allowExternalPluginRepositories", "false").contentEquals("true");
 			allowWindowsUpdate = value(settings, defaults, "allowWindowsUpdate", "false").contentEquals("true");
 			webAllowUnsecureRequests = value(settings, defaults, "web.allowUnsecureRequests", "false").contentEquals("true");
+			webAllowRoutes = value(settings, defaults, "web.allowRoutes", "false").contentEquals("true");
 			webUseWebsockets = value(settings, defaults, "web.useWebsockets", "false").contentEquals("true");
 			webWsTargetUrl = value(settings, defaults, "web.wsTargetUrl", "wss://rw-servers.omega-zirkel.de/ws");
+			webPublicManagerUrl = value(settings, defaults, "web.publicManagerUrl", "https://rw-servers.omega-zirkel.de/");
+			privacyRejectAction = "warn".equalsIgnoreCase(value(settings, defaults, "privacy.rejectAction", "allow"))
+					? "warn" : "allow";
 			pluginUpdateCheckDelaySeconds = Integer.parseInt(value(settings, defaults, "pluginUpdateCheckDelaySeconds", "30"));
 			pluginUpdateCheckDelayBetweenPluginsSeconds = Math.max(0, Integer.parseInt(value(settings, defaults,
 					"pluginUpdateCheckDelayBetweenPluginsSeconds", "3")));
@@ -144,6 +152,16 @@ public class PluginSettings {
 				entry("allowWindowsUpdate", "Allow Windows updates",
 						"Attempt installed-plugin updates on Windows. Running plugins can still lock files and cause the update to fail.",
 						AdminSettingsType.BOOLEAN),
+				AdminSettingsEntry.group("externalData", "External data connections"),
+				entry("web.useWebsockets", "Use WebSockets",
+						"Allow OZ plugins to connect to external WebSocket services.", AdminSettingsType.BOOLEAN),
+				entry("web.allowRoutes", "Expose plugin web routes",
+						"Allow OZ plugin routes on the game webserver. Individual route settings still apply.", AdminSettingsType.BOOLEAN),
+				new AdminSettingsEntry("privacy.rejectAction", "Declined approval response",
+						"Allow play after a declined external approval; optionally show a warning at login.",
+						privacyRejectAction, "allow", AdminSettingsType.SELECT, false,
+						value -> SettingsFileEditor.writeValue(settingsFile, "privacy.rejectAction", value),
+						List.of("allow", "warn")),
 				AdminSettingsEntry.group("playerMessages", "Player messages"),
 				entry("enablePluginWelcomeMessage", "Welcome message",
 						"If true, Tools sends a welcome message when a player joins.", AdminSettingsType.BOOLEAN));

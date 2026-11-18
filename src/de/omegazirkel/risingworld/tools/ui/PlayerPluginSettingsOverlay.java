@@ -31,6 +31,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     private static final String TAB_RELEASE_NOTES = "releaseNotes";
     private static final String TAB_PLUGIN_SETTINGS = "pluginSettings";
     private static final String TAB_EXTERNAL_NOTES = "externalNotes";
+    private static final String TAB_EXTERNAL_DATA = "externalData";
 
     private static I18n t() {
         return I18n.getInstance(OZTools.name);
@@ -114,6 +115,9 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
             selectedPlugin = firstPluginLabel();
         }
         if (TAB_PLUGIN_SETTINGS.equals(selectedTab) && !canShowPluginSettingsTab(selectedPlugin)) {
+            selectedTab = TAB_SETTINGS;
+        }
+        if (TAB_EXTERNAL_DATA.equals(selectedTab) && !OZTools.name.equals(selectedPlugin)) {
             selectedTab = TAB_SETTINGS;
         }
         if (TAB_RELEASE_NOTES.equals(selectedTab) && !canShowReleaseNotesTab(selectedPlugin)) selectedTab = TAB_SETTINGS;
@@ -241,6 +245,10 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         }
         if (canShowPluginSettingsTab(selectedPlugin)) {
             addTabButton(TAB_PLUGIN_SETTINGS, t().get("tc.tab.plugin.settings", uiPlayer), tabPosition);
+            tabPosition += 150;
+        }
+        if (OZTools.name.equals(selectedPlugin)) {
+            addTabButton(TAB_EXTERNAL_DATA, t().get("tc.tab.external.data", uiPlayer), tabPosition, 195);
         }
 
         // clear content
@@ -258,6 +266,10 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
                 pluginSettingsContent.updateUI();
                 content.addChild(pluginSettingsContent);
             }
+        } else if (TAB_EXTERNAL_DATA.equals(selectedTab)) {
+            ToolsExternalDataConsentPanel consentContent = new ToolsExternalDataConsentPanel(uiPlayer, selectedPlugin);
+            consentContent.updateUI();
+            content.addChild(consentContent);
         } else if (TAB_DATA.equals(selectedTab)) {
             PlayerPluginData ppd = playerPluginData.get(selectedPlugin);
             if (ppd != null) {
@@ -300,6 +312,10 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
     }
 
     private void addTabButton(String tab, String label, int x) {
+        addTabButton(tab, label, x, 140);
+    }
+
+    private void addTabButton(String tab, String label, int x, int width) {
         boolean active = tab.equals(selectedTab);
         AdvancedButton tabButton = AdvancedButtonFactory.custom(new AdvancedButtonState(
                 AdvancedBaseButton.State.DEFAULT, active ? 0xD7AE55FF : 0x5E4A25FF,
@@ -310,7 +326,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
                 }));
         tabButton.setPivot(Pivot.UpperLeft);
         tabButton.setPosition(x, 0, false);
-        tabButton.setSize(140, 34, false);
+        tabButton.setSize(width, 34, false);
         tabButton.setBackgroundColor(active ? 0x3A2D18D8 : 0x181713C8);
         tabButton.setHoverBackgroundColor(0x2A2419E8);
         tabButton.setBorder(1);
@@ -319,7 +335,7 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         UILabel tabLabel = new UILabel(label);
         tabLabel.setPivot(Pivot.MiddleCenter);
         tabLabel.setPosition(50, 50, true);
-        tabLabel.setFontSize(13);
+        tabLabel.setFontSize(width > 140 ? 12 : 13);
         tabLabel.setFontColor(active ? 0xF2C766FF : 0xF4F0E6FF);
         tabLabel.setTextAlign(TextAnchor.MiddleCenter);
         tabButton.addChild(tabLabel);

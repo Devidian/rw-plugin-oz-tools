@@ -1,11 +1,38 @@
 {
   "tc": {
+    "privacy": {
+      "erasure": {
+        "title": "Delete player data",
+        "confirm": "Your data in OZ plugins and connected services will be deleted or anonymized. Shared content and your Rising World character will be retained. You will be signed out while the request is being processed. Continue?",
+        "pending": "Your deletion request is being processed. Sign in again after it completes.",
+        "usage": "Usage: /ozt delete or /ozt delete --character",
+        "unavailable": "Self-service deletion is currently unavailable on this server.",
+        "characterUnavailable": "Native character deletion is currently unavailable because of an issue in the game API. No deletion request was created."
+      },
+      "title": "External data processing",
+      "subtitle": "Choose for each purpose whether this server may send your data to external services.",
+      "statusLabel": "Your choice",
+      "accept": "Allow",
+      "reject": "Decline / withdraw",
+      "leave": "Leave server",
+      "leaveReason": "You chose to leave this server.",
+      "declinedKickReason": "This server requires approval for external data processing.",
+      "admin": {"header": "Declined external approvals: PH_COUNT entries, page PH_PAGE (/ozt privacy PAGE)", "row": "Player DBID PH_DBID: PH_PURPOSE declined", "title": "Declined approvals", "subtitle": "Player decisions stored on this server", "legend": "Visible to server admins only", "dbid": "Player DBID", "name": "Player name", "purpose": "Purpose", "next": "Next", "empty": "No declined approvals."},
+      "purpose": {"manager": "Manager", "map": "Online map", "discord": "Discord", "stargate": "Stargate", "intercom": "Global Intercom"},
+      "login": {"title": "External data processing", "notice": "Some choices about external features are still pending. Please open /ozt config and decide for each purpose when ready. You can play without these permissions.", "declined": "For smooth community play, this server expressly asks you to allow the offered external features. You can change your choice at any time under /ozt config."},
+      "status": {"pending": "pending", "accepted": "allowed", "declined": "declined"},
+      "manager": "This server can send your UID, server database ID and current character name to a third-party server for statistics and online features. Your activity may be publicly visible at PH_MANAGER_URL.",
+      "map": "For the online map, this server can also send and process your current and last position on a third-party server.",
+      "discord": "This server offers a Discord-backed community chat and no alternative local chat while Discord is connected. Sending and receiving community messages requires your permission. If Discord is unavailable, local chat is open to everyone. Configured administrative game events may still be sent to Discord without permission; they identify you as Spieler # followed by your server-local DBID instead of your name.",
+      "stargate": "For travel through the Stargate network, this server can send your UID, name and travel-related data to the network server. Local travel on this server remains possible without permission.",
+      "intercom": "For Global Intercom, this server can send your UID, name and Intercom messages to the chat relay. Without permission you cannot send or receive Intercom messages."
+    },
     "btn": {
       "cancel": "Cancel",
       "close": "Close"
     },
     "cmd": {
-      "help": "Plugin help\nType \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD rk [KEY]\u003c/color\u003e to bind a key [KEY] to open the plugin menu.\nType \u003ccolor\u003dyellow\u003e/PH_PLUGIN_CMD open\u003c/color\u003e to open plugin menu.",
+      "help": "Plugin help\n/PH_PLUGIN_CMD open – open the main menu\n/PH_PLUGIN_CMD config – open settings and external data choices\n/PH_PLUGIN_CMD status or info – show plugin status\n/PH_PLUGIN_CMD privacy [PAGE] – show declined permissions (admins only)\n/PH_PLUGIN_CMD help – show this help",
       "status": "🔎 Plugin Status\n➡️ Plugin version: PH_VERSION\n➡️ Installed languages: PH_LANG_AVAILABLE\n➡️ Your language: PH_LANGUAGE\n➡️ Used language: PH_USEDLANG\n➡️ Translated by: Devidian"
     },
     "data": {
@@ -16,7 +43,8 @@
     "menu": {
       "back": "back",
       "close": "close menu",
-      "settings": "Settings"
+      "settings": "Settings",
+      "privacyAdmin": "Declined approvals"
     },
     "msg": {
       "plugin": {
@@ -134,6 +162,10 @@
       "title": "Plugin Settings for PH_PLUGIN_NAME"
     },
     "setting": {
+      "externaldata": { "label": "External data connections", "desc": "OZ plugin connections to external services." },
+      "web_usewebsockets": { "label": "Use WebSockets", "desc": "Allow OZ plugins to connect to external WebSocket services." },
+      "web_allowroutes": { "label": "Expose plugin web routes", "desc": "Allow OZ plugin routes on the game webserver. Individual route settings still apply." },
+      "privacy_rejectaction": { "label": "When approval is declined", "desc": "Players may continue playing. Optionally show a warning at every login.", "option": { "allow": "Allow", "warn": "Warn" } },
       "allowwindowsupdate": { "label": "Allow Windows updates", "desc": "Allows plugin updates on Windows servers when files are not locked." },
       "allowexternalpluginrepositories": {
         "desc": "Allow compatible public GitHub repositories outside OZ.",
@@ -197,6 +229,7 @@
         "notes": "Release notes"
       },
       "external": {
+        "data": "External data processing",
         "notes": "Notes"
       },
       "settings": "Settings"

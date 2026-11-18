@@ -1,5 +1,17 @@
 # PLANS.md
 
+- [x] Persist pending player erasure steps in SQLite and test continuation after failure and restart.
+- [x] Connect the coordinator to the runtime, plugin-owned erasure steps, and the confirmed player command.
+- [ ] Validate the complete erasure flow with an isolated Development player and configured relay credentials.
+
+- [x] Separate consent tab, native login notices, German admin-setting labels and complete `/ozt` help.
+- [ ] Verify the new dialog and consent layout with a player on Development.
+
+- [x] Notify purpose owners after a persisted player decision so connected recipients can refresh immediately.
+- [ ] Confirm Manager and map cache removal on Development after a live revocation and after connector reconnection.
+
+- [ ] Validate the default-off WebSocket and plugin-route switches on Development, including a live settings toggle and consumer plugins.
+
 - [x] Apply the Tools log level to all OZLogger output paths, including console fallback.
 - [x] Validate the logging fix on Development with `logInternal=true` and `logLevel=WARN`; restore the original settings afterward.
 

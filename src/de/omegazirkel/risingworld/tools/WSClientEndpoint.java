@@ -21,6 +21,7 @@ import de.omegazirkel.risingworld.OZTools;
 public class WSClientEndpoint {
 
 	private static final Map<String, WSClientEndpoint> INSTANCES = new ConcurrentHashMap<>();
+	private static final java.util.Set<WSClientEndpoint> ACTIVE = ConcurrentHashMap.newKeySet();
 
 	private final URI endpointUri;
 
@@ -43,6 +44,7 @@ public class WSClientEndpoint {
 
 	public WSClientEndpoint(URI uri) {
 		this.endpointUri = uri;
+		ACTIVE.add(this);
 		// The reconnect loop is now started on the first call to ensureConnected()
 	}
 
@@ -87,7 +89,7 @@ public class WSClientEndpoint {
 
 	/** Ensures connection is active, tries async connect if not */
 	private void ensureConnected() {
-		if (isShuttingDown.get())
+		if (isShuttingDown.get() || !webSocketsAllowed())
 			return;
 
 		// Start the reconnect loop only once on the first call
@@ -104,7 +106,7 @@ public class WSClientEndpoint {
 
 	/** The actual task that is scheduled to run periodically. */
 	private void reconnectTask() {
-		if (isShuttingDown.get() || isConnected.get()) {
+		if (isShuttingDown.get() || isConnected.get() || !webSocketsAllowed()) {
 			return;
 		}
 		logger().debug("[WebSocket] Reconnecting to " + endpointUri);
@@ -113,6 +115,7 @@ public class WSClientEndpoint {
 
 	/** Connects without blocking the server thread */
 	private void connectAsync() {
+		if (!webSocketsAllowed()) return;
 		if (!isConnecting.compareAndSet(false, true)) {
 			logger().debug("[WebSocket] connect already in progress for " + endpointUri);
 			return;
@@ -121,6 +124,7 @@ public class WSClientEndpoint {
 		try {
 			scheduler.execute(() -> {
 			try {
+				if (!webSocketsAllowed()) return;
 				WebSocket newSocket = new WebSocketFactory()
 						.setConnectionTimeout(10000)
 						.setSocketTimeout(0)
@@ -128,6 +132,10 @@ public class WSClientEndpoint {
 				newSocket.addListener(new WebSocketAdapter() {
 					@Override
 					public void onConnected(WebSocket websocket, Map<String, java.util.List<String>> headers) {
+						if (!webSocketsAllowed()) {
+							websocket.disconnect();
+							return;
+						}
 						socket = websocket;
 						isConnected.set(true);
 						logger().info("🔌 WebSocket connection opened");
@@ -137,6 +145,7 @@ public class WSClientEndpoint {
 
 					@Override
 					public void onTextMessage(WebSocket websocket, String message) {
+						if (!webSocketsAllowed()) return;
 						// Payloads can contain provisioning credentials. Handlers decide what
 						// domain-safe diagnostics to emit; transport never logs their content.
 						logger().debug("[WebSocket] Received text message");
@@ -146,6 +155,7 @@ public class WSClientEndpoint {
 
 					@Override
 					public void onBinaryMessage(WebSocket websocket, byte[] binary) {
+						if (!webSocketsAllowed()) return;
 						logger().info("📩 Received (binary) " + binary.length + " bytes");
 						if (handler != null)
 							handler.onBinaryMessage(ByteBuffer.wrap(binary));
@@ -202,6 +212,7 @@ public class WSClientEndpoint {
 	}
 
 	public boolean send(String msg) {
+		if (!webSocketsAllowed()) return false;
 		ensureConnected(); // Ensure the connection logic is active
 		if (!isConnected.get() || socket == null || !socket.isOpen())
 			return false;
@@ -210,6 +221,7 @@ public class WSClientEndpoint {
 	}
 
 	public boolean send(ByteBuffer data) {
+		if (!webSocketsAllowed()) return false;
 		ensureConnected(); // Ensure the connection logic is active
 		if (!isConnected.get() || socket == null || !socket.isOpen())
 			return false;
@@ -220,12 +232,12 @@ public class WSClientEndpoint {
 	}
 
 	public boolean isConnected() {
-		return isConnected.get();
+		return webSocketsAllowed() && isConnected.get();
 	}
 
 	/** Closes the current session and immediately starts a fresh connection attempt. */
 	public void reconnect() {
-		if (isShuttingDown.get()) return;
+		if (isShuttingDown.get() || !webSocketsAllowed()) return;
 		WebSocket current = socket;
 		isConnected.set(false);
 		if (current != null) {
@@ -257,12 +269,30 @@ public class WSClientEndpoint {
 		isConnected.set(false);
 		isConnecting.set(false);
 		INSTANCES.remove(endpointUri.toString(), this);
+		ACTIVE.remove(this);
+	}
+
+	private static boolean webSocketsAllowed() {
+		return PluginSettings.getInstance().webUseWebsockets;
+	}
+
+	/** Immediately closes all sessions when the global administrator switch is disabled. */
+	public static void refreshGlobalAccess() {
+		if (webSocketsAllowed()) {
+			for (WSClientEndpoint client : ACTIVE) client.ensureConnected();
+			return;
+		}
+		for (WSClientEndpoint client : ACTIVE) {
+			client.isConnected.set(false);
+			WebSocket current = client.socket;
+			if (current != null) current.disconnect();
+		}
 	}
 
 	/** Cleanly shuts down all managed WebSocket client instances. */
 	public static void shutdownAll() {
 		logger().info("🛑 Shutting down all WebSocket clients...");
-		for (WSClientEndpoint client : INSTANCES.values()) {
+		for (WSClientEndpoint client : java.util.List.copyOf(ACTIVE)) {
 			client.shutdown();
 		}
 		INSTANCES.clear();

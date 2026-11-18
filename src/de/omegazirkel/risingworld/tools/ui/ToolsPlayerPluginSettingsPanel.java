@@ -9,6 +9,8 @@ import de.omegazirkel.risingworld.tools.I18n;
 import de.omegazirkel.risingworld.tools.ToolsPlayerPreferences;
 import net.risingworld.api.events.player.ui.PlayerUITextFieldChangeEvent;
 import net.risingworld.api.objects.Player;
+import net.risingworld.api.ui.UIElement;
+import net.risingworld.api.ui.UILabel;
 import net.risingworld.api.ui.UITextField;
 import net.risingworld.api.ui.style.Pivot;
 import net.risingworld.api.ui.style.Position;

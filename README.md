@@ -1,8 +1,14 @@
 # OZTools (Tools for other plugins)
 
+Players make separate external-data decisions in the dedicated `/ozt config` tab. A pending choice produces one native information dialog on login; a declined choice produces a native warning on each login. Declining never disconnects the player, even if an older world settings file still contains `privacy.rejectAction=kick`. The admin UI labels for WebSockets and plugin routes are localized in German and English.
+
 `DiscordBridge.sendTextMessage(message, channelId, image, topic)` optionally routes plugin events to a Discord thread. It returns `false` and logs a warning if the installed Discord Connect lacks the topic API. The existing overloads retain direct-channel delivery. Install this Tools build before consumers that use the new overload.
 
 **Build baseline:** JDK 25 (`--release 25`) and the bundled Rising World PluginAPI 0.9.3.2 JAR.
+
+External-data purpose owners may register a decision listener through `ExternalDataConsent.registerDecisionListener`; registration returns a closeable for plugin shutdown. Callbacks run after the versioned decision is stored and can refresh connected external snapshots.
+
+Player self-erasure is reserved for an explicitly configured Development test character. It is disabled by default.
 
 `/ozt open` displays a centered shortcut grid. The inventory shortcut grid fits 16 icons or 12 labeled entries in one centered row. With more entries, it wraps into 7-icon or 5-label rows in the left inventory area.
 Players can choose x1, x2, or x3 button size for the dedicated `/ozt open` grid in Tools player settings. The inventory shortcut grid keeps its existing size.
@@ -294,9 +300,8 @@ identifiers instead of Rising World API objects.
 
 ### Manager game connector
 
-Tools maintains its private Manager connector through the configured
-`web.wsTargetUrl`, including while `web.useWebsockets=false`, so it can
-reprovision a rejected native-route credential. The default endpoint requires `wss`; credentials are
+Tools opens its private Manager connector through the configured
+`web.wsTargetUrl` only while `web.useWebsockets=true`. The default endpoint requires `wss`; credentials are
 not written to `settings.*.json` or exposed in the settings UI. On first start,
 Tools creates a private random local key beside its encrypted credential; no
 container or server environment variable is required. An optional
@@ -308,8 +313,8 @@ otherwise Tools deliberately refuses to replace its encryption key. Automatic
 provisioning identifies a server only through the trusted
 proxy's observed peer IP plus the runtime game port. Set
 `web.useWebsockets=true` only after the backend connector is available; this
-enables feature negotiation, while the authenticated connector itself remains
-available for credential recovery.
+enables the connection and feature negotiation. Turning it off closes all
+Tools-managed WebSocket sessions, including those used by other OZ plugins.
 When the backend detects a rejected protected native-route credential on an
 authenticated connector session, Tools accepts its `connector.reset` command,
 deletes the private credential, and reconnects to provision a replacement.
@@ -324,8 +329,9 @@ AutoCloseable registration = OZTools.registerGameConnectorFeature("playerStatus"
 Registration is a non-blocking no-op while Tools is not active. Payload
 delivery remains deliberately unavailable until the versioned event contract is
 released. Native plugin routes remain disabled by default through
-`web.allowUnsecureRequests=false`; consumer route guards are delivered with the
-consumer migration wave.
+`web.allowRoutes=false`. Individual route settings and the credential guard
+still apply when the global switch is enabled. `web.allowUnsecureRequests`
+controls only whether the credential guard may be bypassed.
 
 ## Radial Main menu
 

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## [0.29.0] - 2026-11-18 | External data choices
+
+- Show purpose decisions in a dedicated compact tab; explain pending and declined choices with native login dialogs, and never kick a player for declining.
+- Localize the WebSocket and plugin-route admin settings and list every `/ozt` command in help.
+
+- Notify purpose owners immediately after a player changes an external-data consent decision.
+
+- Make the global WebSocket opt-in block connection establishment and close active OZ WebSocket sessions when disabled.
+- Add a default-off global switch for OZ plugin web routes.
+
 ## [0.28.3] - 2026-10-27 | Central OZ logging level
 
 - fix: apply the Tools log level to every OZLogger, including early plugin startup, internal console logging, and settings reloads.

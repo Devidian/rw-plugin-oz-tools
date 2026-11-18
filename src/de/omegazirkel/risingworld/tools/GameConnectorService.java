@@ -36,9 +36,11 @@ public final class GameConnectorService implements WebSocketHandler {
     private final Set<String> featureEvents = ConcurrentHashMap.newKeySet();
     private final Set<String> acceptedFeatureEvents = ConcurrentHashMap.newKeySet();
     private final ConcurrentHashMap<String, Set<Runnable>> featureReadyCallbacks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Boolean> erasureRequests = new ConcurrentHashMap<>();
     private final AtomicLong eventSequence = new AtomicLong();
     private WSClientEndpoint endpoint;
     private volatile String credential;
+    private volatile boolean erasureSupported;
 
     public GameConnectorService(OZTools plugin, PluginSettings settings) {
         this.plugin = plugin;
@@ -49,6 +51,7 @@ public final class GameConnectorService implements WebSocketHandler {
     }
 
     public void start() {
+        if (!settings.webUseWebsockets) return;
         if (!pluginWebExposureEnabled(plugin.getPath())) {
             OZTools.logger().info("Game connector disabled: Server_WebserverExposePlugins is not enabled in server.properties");
             return;
@@ -127,7 +130,12 @@ public final class GameConnectorService implements WebSocketHandler {
                 sendFeatures();
                 return;
             }
+            if ("connector.playerErasure.completed".equals(type) && message.get("schemaVersion").getAsInt() == 1) {
+                erasureRequests.replace(message.get("requestId").getAsString(), true);
+                return;
+            }
             if ("connector.features.accepted".equals(type) && message.has("events")) {
+                erasureSupported = message.has("playerErasure") && message.get("playerErasure").getAsBoolean();
                 acceptedFeatureEvents.clear();
                 for (JsonElement event : message.getAsJsonArray("events")) {
                     if (!event.isJsonPrimitive()) continue;
@@ -163,6 +171,12 @@ public final class GameConnectorService implements WebSocketHandler {
 
     /** Applies the shared native-route credential contract before DTO parsing. */
     public boolean authorizeRoute(HttpRequestEvent event) {
+        if (!settings.webAllowRoutes) {
+            event.setResponseCode(404);
+            event.setContentType("application/json; charset=utf-8");
+            event.setResponseBody("{\"error\":\"not_found\"}");
+            return false;
+        }
         if (settings.webAllowUnsecureRequests) return true;
         String header = event.getHeader("Authorization");
         String prefix = "Bearer ";
@@ -223,6 +237,23 @@ public final class GameConnectorService implements WebSocketHandler {
         message.addProperty("sequence", eventSequence.incrementAndGet());
         message.add("data", data);
         return endpoint.send(message.toString());
+    }
+
+    public boolean erasePlayer(String requestId, int dbId, String uid) {
+        if (erasureRequests.remove(requestId, true)) return true;
+        if (!erasureReady()) return false;
+        erasureRequests.putIfAbsent(requestId, false);
+        JsonObject data = new JsonObject();
+        data.addProperty("requestId", requestId);
+        data.addProperty("dbId", dbId);
+        data.addProperty("uid", uid);
+        publishFeatureEvent("playerErasure", data);
+        return false;
+    }
+
+    public boolean erasureReady() {
+        return erasureSupported && acceptedFeatureEvents.contains("playerErasure")
+                && endpoint != null && endpoint.isConnected();
     }
 
     private void sendFeatures() {

@@ -7,6 +7,10 @@ public final class OZToolsNativeWebAccess {
     private OZToolsNativeWebAccess() {
     }
 
+    public static boolean routesEnabled() {
+        return OZTools.getSettings() != null && OZTools.getSettings().webAllowRoutes;
+    }
+
     public static boolean authorize(HttpRequestEvent event) {
         return OZToolsRuntime.authorizeNativeWebRequest(event);
     }
