@@ -38,6 +38,7 @@ import de.omegazirkel.risingworld.tools.ui.PluginInfoStatusProviders;
 import de.omegazirkel.risingworld.tools.ui.PluginMenuManager;
 import de.omegazirkel.risingworld.tools.ui.SharedIndicatorManager;
 import de.omegazirkel.risingworld.tools.ui.ToolsPluginInfoStatusProvider;
+import de.omegazirkel.risingworld.tools.ui.ToolsPrivacyOverlay;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginData;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginSettings;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginSettingsPanel;
@@ -583,12 +584,14 @@ class OZToolsRuntime extends Plugin {
                 player.setAttribute("tools.ui.overlay", overlay);
                 break;
             case "privacy":
-                if (!player.isAdmin()) break;
-                int page = 1;
-                if (commandArgs.length > 2) {
-                    try { page = Math.max(1, Integer.parseInt(commandArgs[2])); }
-                    catch (NumberFormatException ignored) { page = 1; }
+                if (commandArgs.length == 2) {
+                    ToolsPrivacyOverlay.show(player);
+                    break;
                 }
+                if (!player.isAdmin()) break;
+                int page;
+                try { page = Math.max(1, Integer.parseInt(commandArgs[2])); }
+                catch (NumberFormatException ignored) { page = 1; }
                 var declined = de.omegazirkel.risingworld.tools.ExternalDataConsent.declinedPlayers();
                 int first = (int) Math.min(declined.size(), ((long) page - 1L) * 20L);
                 int last = Math.min(declined.size(), first + 20);

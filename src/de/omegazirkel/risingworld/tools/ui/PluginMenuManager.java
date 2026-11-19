@@ -45,7 +45,9 @@ public class PluginMenuManager {
                             p.addUIElement(overlay, UITarget.Modal);
                             p.setAttribute("tools.ui.overlay", overlay);
                         }));
-        if (player.isAdmin()) menuItemsCopy.add(MenuItem.iconKey("menu-privacy-shield",
+        menuItemsCopy.add(MenuItem.iconKey("menu-privacy-shield",
+                t().get("tc.menu.privacy", player), ToolsPrivacyOverlay::show));
+        if (player.isAdmin()) menuItemsCopy.add(MenuItem.iconKey("menu-administration",
                 t().get("tc.menu.privacyAdmin", player), DeclinedConsentAdminPanel::show));
         return menuItemsCopy;
     }

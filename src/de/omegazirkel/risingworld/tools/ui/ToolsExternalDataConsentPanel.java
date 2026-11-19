@@ -4,6 +4,7 @@ import java.util.Locale;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.ExternalDataConsent;
+import de.omegazirkel.risingworld.tools.ExternalDataConsent.Purpose;
 import de.omegazirkel.risingworld.tools.I18n;
 import net.risingworld.api.objects.Player;
 import net.risingworld.api.ui.UIElement;
@@ -35,35 +36,42 @@ public final class ToolsExternalDataConsentPanel extends BasePlayerPluginSetting
     @Override
     protected void redrawContent() {
         flexWrapper.removeAllChilds();
-        for (ExternalDataConsent.Purpose purpose : ExternalDataConsent.activePurposes()) {
-            flexWrapper.addChild(consentRow(purpose));
+        for (Purpose purpose : ExternalDataConsent.activePurposes()) {
+            flexWrapper.addChild(consentRow(uiPlayer, purpose, this::redrawContent));
         }
     }
 
-    private OZUIElement consentRow(ExternalDataConsent.Purpose purpose) {
-        ExternalDataConsent.Status status = ExternalDataConsent.status(uiPlayer.getDbID(), purpose);
+    static String purposeLabel(Player player, Purpose purpose) {
+        return text(player, "tc.privacy.purpose." + purpose.name().toLowerCase(Locale.ROOT));
+    }
+
+    static OZUIElement consentRow(Player player, Purpose purpose, Runnable refresh) {
+        ExternalDataConsent.Status status = ExternalDataConsent.status(player.getDbID(), purpose);
         String purposeKey = purpose.name().toLowerCase(Locale.ROOT);
-        String description = text("tc.privacy." + purposeKey);
-        if (purpose == ExternalDataConsent.Purpose.MANAGER) {
+        String description = text(player, "tc.privacy." + purposeKey);
+        if (purpose == Purpose.MANAGER) {
             description = description.replace("PH_MANAGER_URL", OZTools.getSettings().webPublicManagerUrl);
         }
 
-        OZUIElement row = defaultSettingsContainer();
-        row.setMargin(0);
+        OZUIElement row = new OZUIElement();
+        row.setPivot(Pivot.UpperLeft);
+        row.setBackgroundColor(0x181713D8);
+        row.setBorder(1);
+        row.setBorderColor(0x7A5D2AFF);
         row.style.marginBottom.set(12);
         row.style.width.set(100, Unit.Percent);
-        row.style.height.set(190, Unit.Pixel);
+        row.style.height.set(240, Unit.Pixel);
 
-        UILabel heading = label(text("tc.privacy.purpose." + purposeKey), 14, 28, true);
+        UILabel heading = label(purposeLabel(player, purpose), 14, 28, true);
         heading.setFontSize(16);
         row.addChild(heading);
 
-        UILabel details = label(description, 42, 60, false);
+        UILabel details = label(description, 42, 110, false);
         details.setFontSize(13);
         row.addChild(details);
 
-        UILabel decision = label(text("tc.privacy.statusLabel") + ": "
-                + text("tc.privacy.status." + status.name().toLowerCase(Locale.ROOT)), 105, 24, true);
+        UILabel decision = label(text(player, "tc.privacy.statusLabel") + ": "
+                + text(player, "tc.privacy.status." + status.name().toLowerCase(Locale.ROOT)), 155, 24, true);
         decision.setFontSize(13);
         decision.setFontColor(switch (status) {
             case PENDING -> 0xD7AE55FF;
@@ -75,19 +83,19 @@ public final class ToolsExternalDataConsentPanel extends BasePlayerPluginSetting
         UIElement actions = new UIElement();
         actions.setPivot(Pivot.UpperCenter);
         actions.style.left.set(50, Unit.Percent);
-        actions.style.top.set(139, Unit.Pixel);
+        actions.style.top.set(189, Unit.Pixel);
         actions.setSize(346, 34, false);
 
         AdvancedButton reject = status == ExternalDataConsent.Status.DECLINED
-                ? AdvancedButtonFactory.danger(text("tc.privacy.reject"), event -> reject(purpose))
-                : AdvancedButtonFactory.defaultButton(text("tc.privacy.reject"), event -> reject(purpose));
+                ? AdvancedButtonFactory.danger(text(player, "tc.privacy.reject"), event -> decide(player, purpose, false, refresh))
+                : AdvancedButtonFactory.defaultButton(text(player, "tc.privacy.reject"), event -> decide(player, purpose, false, refresh));
         reject.setPivot(Pivot.UpperLeft);
         reject.setPosition(0, 0, false);
         reject.setSize(202, 34, false);
 
         AdvancedButton accept = status == ExternalDataConsent.Status.ACCEPTED
-                ? AdvancedButtonFactory.ok(text("tc.privacy.accept"), event -> accept(purpose))
-                : AdvancedButtonFactory.defaultButton(text("tc.privacy.accept"), event -> accept(purpose));
+                ? AdvancedButtonFactory.ok(text(player, "tc.privacy.accept"), event -> decide(player, purpose, true, refresh))
+                : AdvancedButtonFactory.defaultButton(text(player, "tc.privacy.accept"), event -> decide(player, purpose, true, refresh));
         accept.setPivot(Pivot.UpperLeft);
         accept.setPosition(214, 0, false);
         accept.setSize(132, 34, false);
@@ -99,7 +107,7 @@ public final class ToolsExternalDataConsentPanel extends BasePlayerPluginSetting
         return row;
     }
 
-    private UILabel label(String value, int top, int height, boolean bold) {
+    private static UILabel label(String value, int top, int height, boolean bold) {
         UILabel label = new UILabel(value);
         label.setPivot(Pivot.UpperLeft);
         label.setPosition(16, top, false);
@@ -112,17 +120,18 @@ public final class ToolsExternalDataConsentPanel extends BasePlayerPluginSetting
         return label;
     }
 
-    private void reject(ExternalDataConsent.Purpose purpose) {
-        ExternalDataConsent.decide(uiPlayer, purpose, false);
-        redrawContent();
-    }
-
-    private void accept(ExternalDataConsent.Purpose purpose) {
-        ExternalDataConsent.decide(uiPlayer, purpose, true);
-        redrawContent();
+    private static void decide(Player player, Purpose purpose, boolean accepted, Runnable refresh) {
+        if (ExternalDataConsent.activePurposes().contains(purpose)) {
+            ExternalDataConsent.decide(player, purpose, accepted);
+        }
+        refresh.run();
     }
 
     private String text(String key) {
-        return I18n.getInstance(OZTools.name).get(key, uiPlayer);
+        return text(uiPlayer, key);
+    }
+
+    private static String text(Player player, String key) {
+        return I18n.getInstance(OZTools.name).get(key, player);
     }
 }

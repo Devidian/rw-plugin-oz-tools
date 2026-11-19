@@ -1,0 +1,2 @@
+- Add a dedicated privacy overlay with one tab per active external data purpose. Open it from the plugin shortcut menu or with `/ozt privacy`. Login notices now point to the privacy command.
+- Clarify that the in-game Discord chat permission requires neither a Discord account nor server membership.

@@ -1,6 +1,6 @@
 # OZTools (Tools for other plugins)
 
-Players make separate external-data decisions in the dedicated `/ozt config` tab. A pending choice produces one native information dialog on login; a declined choice produces a native warning on each login. Declining never disconnects the player, even if an older world settings file still contains `privacy.rejectAction=kick`. The admin UI labels for WebSockets and plugin routes are localized in German and English.
+Open **Privacy** in the plugin shortcut menu or run `/ozt privacy`. The overlay shows one tab per active external purpose. Players can review, grant, or withdraw permission in those tabs or in the external-data section of `/ozt config`. Admins can list declined decisions with `/ozt privacy PAGE` or open **Declined approvals** from the shortcut menu. A pending choice produces one native information dialog on login; a declined choice produces a native warning on each login. Declining never disconnects the player, even if an older world settings file still contains `privacy.rejectAction=kick`. The admin UI labels for WebSockets and plugin routes are localized in German and English.
 
 `DiscordBridge.sendTextMessage(message, channelId, image, topic)` optionally routes plugin events to a Discord thread. It returns `false` and logs a warning if the installed Discord Connect lacks the topic API. The existing overloads retain direct-channel delivery. Install this Tools build before consumers that use the new overload.
 

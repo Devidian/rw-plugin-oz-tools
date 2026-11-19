@@ -11,6 +11,7 @@
       },
       "title": "External data processing",
       "subtitle": "Choose for each purpose whether this server may send your data to external services.",
+      "empty": "This server currently has no external features that require your permission.",
       "statusLabel": "Your choice",
       "accept": "Allow",
       "reject": "Decline / withdraw",
@@ -19,11 +20,11 @@
       "declinedKickReason": "This server requires approval for external data processing.",
       "admin": {"header": "Declined external approvals: PH_COUNT entries, page PH_PAGE (/ozt privacy PAGE)", "row": "Player DBID PH_DBID: PH_PURPOSE declined", "title": "Declined approvals", "subtitle": "Player decisions stored on this server", "legend": "Visible to server admins only", "dbid": "Player DBID", "name": "Player name", "purpose": "Purpose", "next": "Next", "empty": "No declined approvals."},
       "purpose": {"manager": "Manager", "map": "Online map", "discord": "Discord", "stargate": "Stargate", "intercom": "Global Intercom"},
-      "login": {"title": "External data processing", "notice": "Some choices about external features are still pending. Please open /ozt config and decide for each purpose when ready. You can play without these permissions.", "declined": "For smooth community play, this server expressly asks you to allow the offered external features. You can change your choice at any time under /ozt config."},
+      "login": {"title": "External data processing", "notice": "Some choices about external features are still pending. Please open /ozt privacy and decide for each purpose when ready. You can play without these permissions.", "declined": "For smooth community play, this server expressly asks you to allow the offered external features. You can change your choice at any time under /ozt privacy."},
       "status": {"pending": "pending", "accepted": "allowed", "declined": "declined"},
       "manager": "This server can send your UID, server database ID and current character name to a third-party server for statistics and online features. Your activity may be publicly visible at PH_MANAGER_URL.",
       "map": "For the online map, this server can also send and process your current and last position on a third-party server.",
-      "discord": "This server offers a Discord-backed community chat and no alternative local chat while Discord is connected. Sending and receiving community messages requires your permission. If Discord is unavailable, local chat is open to everyone. Configured administrative game events may still be sent to Discord without permission; they identify you as Spieler # followed by your server-local DBID instead of your name.",
+      "discord": "Your permission lets you receive messages from Discord in the game and send messages there. You do not need a Discord account or to join the Discord server. While Discord is connected, there is no separate local chat. If Discord is unavailable, local chat is open to everyone. Configured admin events may still go to Discord without permission and use Spieler # with your server-local DBID instead of your name.",
       "stargate": "For travel through the Stargate network, this server can send your UID, name and travel-related data to the network server. Local travel on this server remains possible without permission.",
       "intercom": "For Global Intercom, this server can send your UID, name and Intercom messages to the chat relay. Without permission you cannot send or receive Intercom messages."
     },
@@ -32,7 +33,7 @@
       "close": "Close"
     },
     "cmd": {
-      "help": "Plugin help\n/PH_PLUGIN_CMD open – open the main menu\n/PH_PLUGIN_CMD config – open settings and external data choices\n/PH_PLUGIN_CMD status or info – show plugin status\n/PH_PLUGIN_CMD privacy [PAGE] – show declined permissions (admins only)\n/PH_PLUGIN_CMD help – show this help",
+      "help": "Plugin help\n/PH_PLUGIN_CMD open – open the main menu\n/PH_PLUGIN_CMD config – open settings and external data choices\n/PH_PLUGIN_CMD status or info – show plugin status\n/PH_PLUGIN_CMD privacy – open your privacy choices\n/PH_PLUGIN_CMD privacy PAGE – show declined permissions (admins only)\n/PH_PLUGIN_CMD help – show this help",
       "status": "🔎 Plugin Status\n➡️ Plugin version: PH_VERSION\n➡️ Installed languages: PH_LANG_AVAILABLE\n➡️ Your language: PH_LANGUAGE\n➡️ Used language: PH_USEDLANG\n➡️ Translated by: Devidian"
     },
     "data": {
@@ -44,6 +45,7 @@
       "back": "back",
       "close": "close menu",
       "settings": "Settings",
+      "privacy": "Privacy",
       "privacyAdmin": "Declined approvals"
     },
     "msg": {
