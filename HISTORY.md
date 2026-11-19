@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+## [0.29.1] - 2026-11-19 | Privacy shortcut
+
+- Add a dedicated privacy overlay with one tab per active external data purpose. Open it from the plugin shortcut menu or with `/ozt privacy`. Login notices now point to the privacy command.
+- Clarify that the in-game Discord chat permission requires neither a Discord account nor server membership.
+
 ## [0.29.0] - 2026-11-18 | External data choices
 
 - Show purpose decisions in a dedicated compact tab; explain pending and declined choices with native login dialogs, and never kick a player for declining.
