@@ -19,6 +19,6 @@ Relevant context patterns:
 - AGENTS.md
 - PLANS.md
 - docs/policies/*
-- .codex/agents.toml
+- .codex/agents/*.toml
 - .codex/skills/*
 """
