@@ -34,3 +34,7 @@ Does not own:
 - Run `mvn -B test` when tests exist.
 - Verify new Rising World API usage before relying on it.
 - Review consuming plugin impact when shared APIs or contracts change.
+
+## CodeMap
+
+For unfamiliar modules and cross-repository impact, start at [the local CodeMap](.codemap/README.md) and use the [CodeMap skill](.agents/skills/codemap/SKILL.md). Verify relevant source and update and validate affected entries when indexed information changes.
