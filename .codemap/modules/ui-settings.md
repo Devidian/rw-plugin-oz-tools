@@ -7,6 +7,8 @@ Reusable overlays, player settings and privacy UI. Shared settings and UI contra
 
 ## Source and tests
 
+- [Scoped UI registration tests](../../src-test/de/omegazirkel/risingworld/tools/ui/PluginUiRegistrationTest.java) cover owner replacement, stale menu actions and exact panel generation retirement. The settings overlay removes the retired panel on the server thread.
+
 - [`PlayerPluginSettingsOverlay`](../../src/de/omegazirkel/risingworld/tools/ui/PlayerPluginSettingsOverlay.java)
 - [`PlayerPluginSettings`](../../src/de/omegazirkel/risingworld/tools/ui/PlayerPluginSettings.java)
 - [`ToolsPrivacyOverlay`](../../src/de/omegazirkel/risingworld/tools/ui/ToolsPrivacyOverlay.java)

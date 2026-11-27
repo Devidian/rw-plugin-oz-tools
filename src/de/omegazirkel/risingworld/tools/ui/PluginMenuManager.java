@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.omegazirkel.risingworld.OZTools;
@@ -14,7 +16,16 @@ import net.risingworld.api.objects.Player;
 import net.risingworld.api.ui.UITarget;
 
 public class PluginMenuManager {
-    private static List<MenuItem> menuItems = new ArrayList<>();
+    private static final List<MenuItem> menuItems = new CopyOnWriteArrayList<>();
+    private static final ConcurrentHashMap<String, ScopedMenu> scopedMenus = new ConcurrentHashMap<>();
+
+    private static final class ScopedMenu {
+        private final MenuItem item;
+
+        ScopedMenu(MenuItem item) {
+            this.item = item.whileRegistered(() -> scopedMenus.get(item.getPluginName()) == this);
+        }
+    }
     private static final Comparator<MenuItem> MENU_ITEM_ORDER = Comparator
             .comparing((MenuItem item) -> sortKey(item.getLabel()));
 
@@ -24,6 +35,14 @@ public class PluginMenuManager {
 
     public static void registerPluginMenu(MenuItem menu) {
         menuItems.add(menu);
+    }
+
+    /** Registers one menu for this plugin name and returns its idempotent cleanup action. */
+    public static Runnable registerScopedPluginMenu(MenuItem menu) {
+        ScopedMenu registration = new ScopedMenu(menu);
+        String owner = menu.getPluginName();
+        scopedMenus.put(owner, registration);
+        return () -> scopedMenus.remove(owner, registration);
     }
 
     public static void showMainMenu(Player player) {
@@ -52,8 +71,9 @@ public class PluginMenuManager {
         return menuItemsCopy;
     }
 
-    private static List<MenuItem> sortedPluginMenuItems() {
+    static List<MenuItem> sortedPluginMenuItems() {
         List<MenuItem> sortedItems = new ArrayList<>(menuItems);
+        for (ScopedMenu scopedMenu : scopedMenus.values()) sortedItems.add(scopedMenu.item);
         sortedItems.sort(MENU_ITEM_ORDER);
         return sortedItems;
     }

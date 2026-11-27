@@ -24,6 +24,10 @@ public final class OZTools extends OZToolsRuntime implements Listener, FileChang
     public static void runAfterModalClose(Player player, Runnable action) {
         OZToolsRuntime.runAfterModalClose(player, action);
     }
+    /** Dispatches a UI lifecycle change while Tools owns the server-thread dispatcher. */
+    public static void dispatchPluginUiChange(Runnable action) {
+        OZToolsRuntime.dispatchPluginUiChange(action);
+    }
     public static void checkPluginUpdates() { OZToolsRuntime.checkPluginUpdates(); }
     public static void checkPluginUpdates(Player player) { OZToolsRuntime.checkPluginUpdates(player); }
     public static void checkPluginUpdates(Player player, Runnable onCompleted) {

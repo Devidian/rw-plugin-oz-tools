@@ -93,6 +93,14 @@ class OZToolsRuntime extends Plugin {
             if (activeTools == tools && player.isConnected()) action.run();
         });
     }
+
+    static void dispatchPluginUiChange(Runnable action) {
+        OZToolsRuntime tools = activeTools;
+        if (tools != null && tools.serverThreadDispatcher != null) {
+            tools.serverThreadDispatcher.dispatch(action);
+        }
+    }
+
     private static final Set<GameConnectorFeatureRegistration> connectorFeatureRegistrations = ConcurrentHashMap.newKeySet();
 
     private static final class GameConnectorFeatureRegistration implements AutoCloseable {

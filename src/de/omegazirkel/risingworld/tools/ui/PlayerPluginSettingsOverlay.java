@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -14,6 +13,7 @@ import de.omegazirkel.risingworld.tools.I18n;
 import de.omegazirkel.risingworld.tools.PluginSettings;
 import de.omegazirkel.risingworld.tools.PluginUpdateService;
 import de.omegazirkel.risingworld.tools.settings.PlayerPluginAdminSettings;
+import net.risingworld.api.Server;
 import net.risingworld.api.objects.Player;
 import net.risingworld.api.ui.UIElement;
 import net.risingworld.api.ui.UILabel;
@@ -37,14 +37,15 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
         return I18n.getInstance(OZTools.name);
     }
 
-    private static ConcurrentHashMap<String, PlayerPluginSettings> playerPluginSettings = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, PlayerPluginData> playerPluginData = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, PlayerPluginAdminSettings> playerPluginAdminSettings = new ConcurrentHashMap<>();
+    private static final PluginUiRegistry<PlayerPluginSettings> playerPluginSettings = new PluginUiRegistry<>();
+    private static final PluginUiRegistry<PlayerPluginData> playerPluginData = new PluginUiRegistry<>();
+    private static final PluginUiRegistry<PlayerPluginAdminSettings> playerPluginAdminSettings = new PluginUiRegistry<>();
 
     private UIElement navSidebar;
     private UIScrollView navList;
     private UIElement tabBar;
     private UIElement content;
+    private PluginUiRegistry.Entry<?> displayedEntry;
 
     private String selectedPlugin;
     private String selectedTab = TAB_SETTINGS;
@@ -253,56 +254,92 @@ public class PlayerPluginSettingsOverlay extends OverlayBackPanel {
 
         // clear content
         content.removeAllChilds();
+        displayedEntry = null;
         // select content
         if (TAB_EXTERNAL_NOTES.equals(selectedTab)) {
             content.addChild(externalNotesContent(selectedPlugin));
         } else if (TAB_RELEASE_NOTES.equals(selectedTab)) {
             content.addChild(releaseNotesContent(selectedPlugin));
         } else if (TAB_PLUGIN_SETTINGS.equals(selectedTab)) {
-            PlayerPluginAdminSettings ppas = playerPluginAdminSettings.get(selectedPlugin);
-            if (ppas != null) {
-                AdminPluginSettingsPanel pluginSettingsContent = new AdminPluginSettingsPanel(uiPlayer, ppas,
+            var entry = playerPluginAdminSettings.entry(selectedPlugin);
+            if (entry != null) {
+                AdminPluginSettingsPanel pluginSettingsContent = new AdminPluginSettingsPanel(uiPlayer, entry.provider,
                         this::updateUI);
                 pluginSettingsContent.updateUI();
-                content.addChild(pluginSettingsContent);
+                display(entry, pluginSettingsContent);
             }
         } else if (TAB_EXTERNAL_DATA.equals(selectedTab)) {
             ToolsExternalDataConsentPanel consentContent = new ToolsExternalDataConsentPanel(uiPlayer, selectedPlugin);
             consentContent.updateUI();
             content.addChild(consentContent);
         } else if (TAB_DATA.equals(selectedTab)) {
-            PlayerPluginData ppd = playerPluginData.get(selectedPlugin);
-            if (ppd != null) {
-                BasePlayerPluginDataPanel dataContent = ppd.createPlayerPluginDataUIElement(uiPlayer);
+            var entry = playerPluginData.entry(selectedPlugin);
+            if (entry != null) {
+                BasePlayerPluginDataPanel dataContent = entry.provider.createPlayerPluginDataUIElement(uiPlayer);
                 dataContent.updateUI();
-                content.addChild(dataContent);
+                display(entry, dataContent);
             } else {
                 BasePlayerPluginDataPanel emptyContent = emptyDataContent(selectedPlugin);
                 emptyContent.updateUI();
                 content.addChild(emptyContent);
             }
         } else {
-            PlayerPluginSettings pps = playerPluginSettings.get(selectedPlugin);
-            if (pps == null) {
+            var entry = playerPluginSettings.entry(selectedPlugin);
+            if (entry == null) {
                 content.addChild(emptySettingsContent(selectedPlugin));
                 return;
             }
-            BasePlayerPluginSettingsPanel settingsContent = pps.createPlayerPluginSettingsUIElement(uiPlayer);
+            BasePlayerPluginSettingsPanel settingsContent = entry.provider.createPlayerPluginSettingsUIElement(uiPlayer);
             settingsContent.updateUI();
-            content.addChild(settingsContent);
+            display(entry, settingsContent);
         }
     }
 
+    private void display(PluginUiRegistry.Entry<?> entry, UIElement panel) {
+        if (entry.isRetired()) return;
+        content.addChild(panel);
+        displayedEntry = entry;
+    }
+
+    private static void removeRetiredPanel(PluginUiRegistry.Entry<?> entry) {
+        OZTools.dispatchPluginUiChange(() -> {
+            for (Player player : Server.getAllPlayers()) {
+                if (player != null && player.isConnected()
+                        && player.getAttribute("tools.ui.overlay") instanceof PlayerPluginSettingsOverlay overlay
+                        && overlay.displayedEntry == entry) {
+                    overlay.content.removeAllChilds();
+                    overlay.displayedEntry = null;
+                }
+            }
+        });
+    }
+
     public static void registerPlayerPluginSettings(PlayerPluginSettings pps) {
-        playerPluginSettings.put(pps.pluginLabel, pps);
+        playerPluginSettings.register(pps.pluginLabel, pps);
     }
 
     public static void registerPlayerPluginData(PlayerPluginData ppd) {
-        playerPluginData.put(ppd.pluginLabel, ppd);
+        playerPluginData.register(ppd.pluginLabel, ppd);
     }
 
     public static void registerPlayerPluginAdminSettings(PlayerPluginAdminSettings ppas) {
-        playerPluginAdminSettings.put(ppas.pluginLabel, ppas);
+        playerPluginAdminSettings.register(ppas.pluginLabel, ppas);
+    }
+
+    /** Registers a provider with a cleanup action that applies only to this registration. */
+    public static Runnable registerScopedPlayerPluginSettings(PlayerPluginSettings provider) {
+        return playerPluginSettings.register(provider.pluginLabel, provider,
+                PlayerPluginSettingsOverlay::removeRetiredPanel);
+    }
+
+    public static Runnable registerScopedPlayerPluginData(PlayerPluginData provider) {
+        return playerPluginData.register(provider.pluginLabel, provider,
+                PlayerPluginSettingsOverlay::removeRetiredPanel);
+    }
+
+    public static Runnable registerScopedPlayerPluginAdminSettings(PlayerPluginAdminSettings provider) {
+        return playerPluginAdminSettings.register(provider.pluginLabel, provider,
+                PlayerPluginSettingsOverlay::removeRetiredPanel);
     }
 
     public void close() {

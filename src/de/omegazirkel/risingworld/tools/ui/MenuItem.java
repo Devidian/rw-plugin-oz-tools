@@ -2,6 +2,7 @@ package de.omegazirkel.risingworld.tools.ui;
 
 import de.omegazirkel.risingworld.OZTools;
 import de.omegazirkel.risingworld.tools.I18n;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import net.risingworld.api.assets.TextureAsset;
 import net.risingworld.api.callbacks.Callback;
@@ -66,6 +67,12 @@ public class MenuItem {
     public static MenuItem iconKey(String pluginName, String iconKey, String label, Callback<Player> action,
             Predicate<Player> visibility) {
         return new MenuItem(pluginName, null, iconKey, label, action, visibility);
+    }
+
+    MenuItem whileRegistered(BooleanSupplier active) {
+        return new MenuItem(pluginName, icon, iconKey, label, player -> {
+            if (active.getAsBoolean()) action.onCall(player);
+        }, player -> active.getAsBoolean() && (visibility == null || visibility.test(player)));
     }
 
     public String getPluginName() {
