@@ -16,6 +16,8 @@ Players can hide the entire inventory shortcut grid in Tools player settings; `/
 On plugin reload, Tools closes attached shortcut panels and the inventory before rebuilding the grid. Opening `/ozt open` closes inventory shortcuts; opening the inventory closes an open quick menu.
 Tools closes connected players' active UI windows before its plugin reload commands and when Tools is disabled.
 
+`OZTools.installPluginUpdate` requires admin permissions when a player is supplied. Server-side plugins can continue to call it with a null player.
+
 This plugin has a set of utilities and libs used by different Plugins.
 
 The admin settings panel renders selection settings, including log levels, in a compact button grid.

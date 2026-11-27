@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Require admin permissions for player-scoped plugin installation and updates at the API entry point.
+
 ## [0.29.1] - 2026-11-19 | Privacy shortcut
 
 - Add a dedicated privacy overlay with one tab per active external data purpose. Open it from the plugin shortcut menu or with `/ozt privacy`. Login notices now point to the privacy command.

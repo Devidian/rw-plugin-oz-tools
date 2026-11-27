@@ -39,6 +39,7 @@ import de.omegazirkel.risingworld.tools.ui.PluginMenuManager;
 import de.omegazirkel.risingworld.tools.ui.SharedIndicatorManager;
 import de.omegazirkel.risingworld.tools.ui.ToolsPluginInfoStatusProvider;
 import de.omegazirkel.risingworld.tools.ui.ToolsPrivacyOverlay;
+import de.omegazirkel.risingworld.tools.ui.PluginUpdateActions;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginData;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginSettings;
 import de.omegazirkel.risingworld.tools.ui.ToolsPlayerPluginSettingsPanel;
@@ -66,6 +67,7 @@ class OZToolsRuntime extends Plugin {
     private ServerThreadDispatcher serverThreadDispatcher;
     private ThreadDiagnostics threadDiagnostics;
     private PluginUpdateService pluginUpdateService;
+    private PluginUpdateActions pluginUpdateActions;
     private GameConnectorService gameConnectorService;
     private static volatile PluginUpdateService activePluginUpdateService;
     private static volatile OZToolsRuntime activeTools;
@@ -135,33 +137,18 @@ class OZToolsRuntime extends Plugin {
     }
 
     public static void checkPluginUpdates(Player player, Runnable onCompleted) {
-        PluginUpdateService service = activePluginUpdateService;
-        OZToolsRuntime tools = activeTools;
-        if (service == null || tools == null || player == null || !player.isAdmin()) return;
-        player.sendTextMessage(t.get("tc.plugin.update.check.started", player));
-        service.checkAsync(pluginName -> tools.serverThreadDispatcher.dispatch(() -> player.sendTextMessage(
-                t.get("tc.plugin.update.check.plugin", player).replace("PH_PLUGIN_NAME", pluginName))),
-                ignored -> tools.serverThreadDispatcher.dispatch(() -> {
-                    if (onCompleted != null) onCompleted.run();
-                }),
-                updatesAvailable -> tools.serverThreadDispatcher.dispatch(() -> {
-                    player.sendTextMessage(t.get(service.isGitHubRateLimited() ? "tc.plugin.update.check.rate.limited"
-                            : updatesAvailable ? "tc.plugin.update.check.updates.available" : "tc.plugin.update.check.none", player));
-                    if (onCompleted != null) onCompleted.run();
-                }));
+        PluginUpdateActions actions = updateActions();
+        if (actions != null) actions.checkPluginUpdates(player, onCompleted);
     }
 
     public static void checkPluginUpdate(String pluginName, Player player, Runnable onCompleted) {
-        PluginUpdateService service = activePluginUpdateService;
-        OZToolsRuntime tools = activeTools;
-        if (service == null || tools == null || player == null || !player.isAdmin()) return;
-        player.sendTextMessage(t.get("tc.plugin.update.check.plugin", player).replace("PH_PLUGIN_NAME", pluginName));
-        service.checkPluginAsync(pluginName, ignored -> tools.serverThreadDispatcher.dispatch(() -> {
-            player.sendTextMessage(service.isGitHubRateLimited()
-                    ? t.get("tc.plugin.update.check.rate.limited", player)
-                    : t.get("tc.plugin.update.check.plugin.completed", player).replace("PH_PLUGIN_NAME", pluginName));
-            if (onCompleted != null) onCompleted.run();
-        }));
+        PluginUpdateActions actions = updateActions();
+        if (actions != null) actions.checkPluginUpdate(pluginName, player, onCompleted);
+    }
+
+    private static PluginUpdateActions updateActions() {
+        OZToolsRuntime runtime = activeTools;
+        return runtime == null ? null : runtime.pluginUpdateActions;
     }
 
     public static PluginUpdateService.Result pluginUpdateResult(String pluginName) {
@@ -176,121 +163,26 @@ class OZToolsRuntime extends Plugin {
         return ToolsPlayerPreferences.language(player);
     }
 
-    private static boolean rejectWindowsInstallation(Player player) {
-        if (PluginUpdateService.isInstallationSupported(true)) return false;
-        if (player != null) player.showWarningMessageBox(t.get("tc.plugin.update.windows.title", player),
-                t.get("tc.plugin.update.windows.message", player));
-        return true;
-    }
-
     public static void installPluginUpdate(String pluginName, Player player, Runnable onStateChanged) {
-        PluginUpdateService service = activePluginUpdateService;
-        OZToolsRuntime tools = activeTools;
-        if (service == null || tools == null) return;
-        PluginUpdateService.Result result = pluginUpdateResult(pluginName);
-        if ((result == null || result.state() != PluginUpdateService.State.NOT_INSTALLED)
-                && rejectWindowsInstallation(player)) return;
-        if (player != null && player.isAdmin() && result != null) {
-            player.sendTextMessage(t.get("tc.plugin.update.install.started", player)
-                    .replace("PH_PLUGIN_NAME", pluginName)
-                    .replace("PH_INSTALLED_VERSION", result.installedVersion())
-                    .replace("PH_LATEST_VERSION", result.latestVersion()));
-        }
-        service.installLatestAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() ->
-                {
-                    if (player != null) player.sendTextMessage(t.get("tc.plugin.update.install.completed", player));
-                    service.markInstalledLatest(pluginName);
-                    if (onStateChanged != null) onStateChanged.run();
-                    tools.executeDelayed(5, tools::reloadPluginsAfterClosingWindows);
-                }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
-                    if (player != null) player.sendTextMessage(t.get("unsupported-windows".equals(reason) ? "tc.plugin.update.windows.message"
-                            : "untrusted-release-source".equals(reason)
-                            ? "tc.plugin.update.install.failed.untrusted.source" : "tc.plugin.update.install.failed", player));
-                    if (onStateChanged != null) onStateChanged.run();
-                }));
-        if (onStateChanged != null) onStateChanged.run();
+        PluginUpdateActions actions = updateActions();
+        if (actions != null) actions.installPluginUpdate(pluginName, player, onStateChanged);
     }
 
     public static void reinstallPlugin(String pluginName, Player player, Runnable onStateChanged) {
-        PluginUpdateService service = activePluginUpdateService;
-        OZToolsRuntime tools = activeTools;
-        PluginUpdateService.Result result = pluginUpdateResult(pluginName);
-        if (service == null || tools == null || player == null || !player.isAdmin() || result == null
-                || result.state() != PluginUpdateService.State.CURRENT || rejectWindowsInstallation(player)) return;
-        player.sendTextMessage(t.get("tc.plugin.update.reinstall.started", player).replace("PH_PLUGIN_NAME", pluginName)
-                .replace("PH_LATEST_VERSION", result.latestVersion()));
-        service.reinstallLatestAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() -> {
-            service.markInstalledLatest(pluginName);
-            player.sendTextMessage(t.get("tc.plugin.update.reinstall.completed", player));
-            if (onStateChanged != null) onStateChanged.run();
-            tools.executeDelayed(5, tools::reloadPluginsAfterClosingWindows);
-        }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
-            player.sendTextMessage(t.get("tc.plugin.update.install.failed", player));
-            if (onStateChanged != null) onStateChanged.run();
-        }));
-        if (onStateChanged != null) onStateChanged.run();
+        PluginUpdateActions actions = updateActions();
+        if (actions != null) actions.reinstallPlugin(pluginName, player, onStateChanged);
     }
 
     public static void uninstallPlugin(String pluginName, Player player, Runnable onStateChanged) {
-        PluginUpdateService service = activePluginUpdateService;
-        OZToolsRuntime tools = activeTools;
-        if (service == null || tools == null || player == null || !player.isAdmin() || rejectWindowsInstallation(player)) return;
-        player.sendTextMessage(t.get("tc.plugin.update.uninstall.started", player).replace("PH_PLUGIN_NAME", pluginName));
-        service.uninstallAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() -> {
-            player.sendTextMessage(t.get("tc.plugin.update.uninstall.completed", player));
-            if (onStateChanged != null) onStateChanged.run();
-            tools.executeDelayed(5, tools::reloadPluginsAfterClosingWindows);
-        }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
-            player.sendTextMessage(t.get("tc.plugin.update.uninstall.failed", player));
-            if (onStateChanged != null) onStateChanged.run();
-        }));
-        if (onStateChanged != null) onStateChanged.run();
+        PluginUpdateActions actions = updateActions();
+        if (actions != null) actions.uninstallPlugin(pluginName, player, onStateChanged);
     }
 
-    /** Installs confirmed releases one after another and reloads only after the
-     * complete batch has been staged successfully. */
     public static void installPluginUpdates(List<String> pluginNames, Player player, Runnable onStateChanged) {
-        PluginUpdateService service = activePluginUpdateService;
-        OZToolsRuntime tools = activeTools;
-        if (service == null || tools == null || player == null || !player.isAdmin() || pluginNames == null) return;
-        if (rejectWindowsInstallation(player)) return;
-        List<String> pending = pluginNames.stream()
-                .filter(name -> {
-                    PluginUpdateService.Result result = pluginUpdateResult(name);
-                    return result != null && result.state() == PluginUpdateService.State.UPDATE_AVAILABLE;
-                }).toList();
-        if (pending.isEmpty()) return;
-        installPluginUpdatesNext(service, tools, pending, 0, player, onStateChanged);
+        PluginUpdateActions actions = updateActions();
+        if (actions != null) actions.installPluginUpdates(pluginNames, player, onStateChanged);
     }
 
-    private static void installPluginUpdatesNext(PluginUpdateService service, OZToolsRuntime tools,
-            List<String> pending,
-            int index, Player player, Runnable onStateChanged) {
-        if (index >= pending.size()) {
-            player.sendTextMessage(t.get("tc.plugin.update.install.completed", player));
-            if (onStateChanged != null) onStateChanged.run();
-            tools.executeDelayed(5, tools::reloadPluginsAfterClosingWindows);
-            return;
-        }
-        String pluginName = pending.get(index);
-        PluginUpdateService.Result result = pluginUpdateResult(pluginName);
-        if (result != null) {
-            player.sendTextMessage(t.get("tc.plugin.update.install.started", player)
-                    .replace("PH_PLUGIN_NAME", pluginName)
-                    .replace("PH_INSTALLED_VERSION", result.installedVersion())
-                    .replace("PH_LATEST_VERSION", result.latestVersion()));
-        }
-        service.installLatestAsync(pluginName, () -> tools.serverThreadDispatcher.dispatch(() -> {
-            service.markInstalledLatest(pluginName);
-            if (onStateChanged != null) onStateChanged.run();
-            installPluginUpdatesNext(service, tools, pending, index + 1, player, onStateChanged);
-        }), reason -> tools.serverThreadDispatcher.dispatch(() -> {
-            player.sendTextMessage(t.get("unsupported-windows".equals(reason) ? "tc.plugin.update.windows.message"
-                            : "untrusted-release-source".equals(reason)
-                    ? "tc.plugin.update.install.failed.untrusted.source" : "tc.plugin.update.install.failed", player));
-            if (onStateChanged != null) onStateChanged.run();
-        }));
-    }
     private static final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
 
     public static OZLogger logger() {
@@ -338,6 +230,8 @@ class OZToolsRuntime extends Plugin {
         serverThreadDispatcher = new ServerThreadDispatcher(this);
         SharedIndicatorManager.start(this::isMainThread, serverThreadDispatcher::dispatch);
         pluginUpdateService = new PluginUpdateService((OZTools) this, sqliteCon);
+        pluginUpdateActions = new PluginUpdateActions(pluginUpdateService, serverThreadDispatcher, t,
+                () -> executeDelayed(5, this::reloadPluginsAfterClosingWindows));
         activePluginUpdateService = pluginUpdateService;
         activeTools = this;
         gameConnectorService = new GameConnectorService((OZTools) this, s);
@@ -449,6 +343,7 @@ class OZToolsRuntime extends Plugin {
             pluginUpdateService.close();
             pluginUpdateService = null;
             activePluginUpdateService = null;
+            pluginUpdateActions = null;
             activeTools = null;
         }
         if (gameConnectorService != null) {

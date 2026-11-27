@@ -1,5 +1,7 @@
 # PLANS.md
 
+- [x] Enforce the player-scoped plugin install and update permission before starting any work.
+
 - [x] Persist pending player erasure steps in SQLite and test continuation after failure and restart.
 - [x] Connect the coordinator to the runtime, plugin-owned erasure steps, and the confirmed player command.
 - [ ] Validate the complete erasure flow with an isolated Development player and configured relay credentials.
