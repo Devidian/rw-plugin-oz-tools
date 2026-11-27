@@ -32,3 +32,8 @@ Planning is stored in repository-local docs.
 Every implementation plan must include objective, ownership, dependencies, risks, validation strategy, affected repositories/plugins, rollback considerations, and a markdown checkbox checklist.
 
 Discord event thread routing is implemented locally; Development Discord validation and the separately authorized release remain open. Configuration is documented in README.md.
+
+## Maintenance
+
+Cached SQLite stores flush during shutdown. Scoped menu and settings registration, update UI dispatch and permission template copying are available in Tools.
+Validate panel removal and replacement with connected players before adopting the scoped registration API in feature plugins.

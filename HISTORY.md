@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Cached SQLite stores flush during shutdown. Scoped menu and settings registration, update UI dispatch and permission template copying are available in Tools.
 - Remove displayed settings, data and admin panels when their scoped provider registration ends or is replaced.
 - Require admin permissions for player-scoped plugin installation and updates at the API entry point.
 

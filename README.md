@@ -691,4 +691,5 @@ package; ZIP assembly also excludes stale legacy settings and translations.
 
 ## Maintenance
 
+Cached SQLite stores flush during shutdown. Scoped menu and settings registration, update UI dispatch and permission template copying are available in Tools.
 Scoped settings, data and admin panels are removed on the server thread when the displayed registration ends or is replaced.

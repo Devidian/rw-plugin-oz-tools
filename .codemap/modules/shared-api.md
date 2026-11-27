@@ -7,7 +7,7 @@ Shared runtime facade, logging, i18n, GameConnector and optional plugin bridges.
 
 ## Source and tests
 
-- [Plugin update actions](../../src/de/omegazirkel/risingworld/tools/ui/PluginUpdateActions.java) check permissions for player-scoped updates and dispatch player callbacks.
+- [Plugin update actions](../../src/de/omegazirkel/risingworld/tools/ui/PluginUpdateActions.java) check permissions for player-scoped updates and dispatch player callbacks. [Area permission templates](../../src/de/omegazirkel/risingworld/tools/utils/AreaPermissionTemplates.java) copy feature-owned packaged area permissions.
 
 - [`OZTools`](../../src/de/omegazirkel/risingworld/OZTools.java)
 - [`OZToolsRuntime`](../../src/de/omegazirkel/risingworld/OZToolsRuntime.java)
