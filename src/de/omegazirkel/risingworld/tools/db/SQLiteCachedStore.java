@@ -4,8 +4,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import de.omegazirkel.risingworld.tools.db.interfaces.CachedStore;
 import de.omegazirkel.risingworld.tools.db.interfaces.DatabaseSchema;
@@ -17,10 +18,12 @@ import net.risingworld.api.Timer;
 public abstract class SQLiteCachedStore<K, E> implements CachedStore<K, E>, StoreLifecycle {
 
     private final Map<K, E> cache = new ConcurrentHashMap<>();
-    private final Set<E> dirty = ConcurrentHashMap.newKeySet();
+    private final Map<K, E> dirty = new HashMap<>();
 
-    private final Timer flushTimer;
-    private volatile boolean shutdown = false;
+    private final Connection connection;
+    private final Runnable stopTimer;
+    private boolean timerStopped;
+    private boolean shutdown;
 
     private final EntityMapper<K, E> mapper;
     protected final SQLitePersistenceBackend<K, E> backend;
@@ -30,22 +33,28 @@ public abstract class SQLiteCachedStore<K, E> implements CachedStore<K, E>, Stor
             DatabaseSchema schema,
             SQLiteEntityMapper<K, E> mapper,
             float flushIntervalSeconds) throws SQLException {
+        this(connection, schema, mapper, flush -> {
+            Timer timer = new Timer(flushIntervalSeconds, flushIntervalSeconds, -1, flush);
+            timer.start();
+            return timer::kill;
+        });
+    }
+
+    SQLiteCachedStore(Connection connection, DatabaseSchema schema, SQLiteEntityMapper<K, E> mapper,
+            Function<Runnable, Runnable> startTimer) throws SQLException {
+        this.connection = connection;
         this.mapper = mapper;
         this.backend = new SQLitePersistenceBackend<>(connection, schema, mapper);
         loadAll();
-
-        this.flushTimer = new Timer(
-                flushIntervalSeconds,
-                flushIntervalSeconds,
-                -1,
-                this::flushSafely);
-        this.flushTimer.start();
+        this.stopTimer = startTimer.apply(this::flushSafely);
     }
 
     @Override
     public void loadAll() {
-        for (E entity : backend.loadAll()) {
-            cache.put(mapper.keyOf(entity), entity);
+        synchronized (connection) {
+            for (E entity : backend.loadAll()) {
+                cache.put(mapper.keyOf(entity), entity);
+            }
         }
     }
 
@@ -61,22 +70,28 @@ public abstract class SQLiteCachedStore<K, E> implements CachedStore<K, E>, Stor
 
     @Override
     public void put(K key, E entity) {
-        cache.put(key, entity);
-        dirty.add(entity);
+        synchronized (connection) {
+            cache.put(key, entity);
+            dirty.put(key, entity);
+        }
     }
 
     @Override
     public void markDirty(E entity) {
-        dirty.add(entity);
+        synchronized (connection) {
+            dirty.put(mapper.keyOf(entity), entity);
+        }
     }
 
     @Override
     public void flush(boolean all) {
-        if (shutdown || (all ? cache.isEmpty() : dirty.isEmpty())) {
-            return;
+        synchronized (connection) {
+            if (shutdown || (all ? cache.isEmpty() : dirty.isEmpty())) {
+                return;
+            }
+            backend.saveAll(all ? cache.values() : dirty.values());
+            dirty.clear();
         }
-        backend.saveAll(all ? cache.values() : dirty);
-        dirty.clear();
     }
 
     public void flush() {
@@ -93,29 +108,38 @@ public abstract class SQLiteCachedStore<K, E> implements CachedStore<K, E>, Stor
 
     @Override
     public void clear() {
-        cache.clear();
-        dirty.clear();
+        synchronized (connection) {
+            cache.clear();
+            dirty.clear();
+        }
     }
 
     @Override
     public void remove(K key) {
-        E entity = cache.remove(key);
-        if (entity != null) {
-            dirty.remove(entity);
-            backend.delete(entity);
+        synchronized (connection) {
+            E entity = cache.get(key);
+            if (entity != null) {
+                backend.delete(entity);
+                cache.remove(key);
+                dirty.remove(key);
+            }
         }
     }
 
     @Override
-    public synchronized void shutdown() {
-        if (shutdown) {
-            return;
+    public void shutdown() {
+        synchronized (connection) {
+            if (shutdown) {
+                return;
+            }
+            if (!timerStopped) {
+                stopTimer.run();
+                timerStopped = true;
+            }
+            flush(true);
+            shutdown = true;
+            clear();
         }
-        shutdown = true;
-
-        flushTimer.kill();
-        flush(true);
-        cache.clear();
     }
 
 }

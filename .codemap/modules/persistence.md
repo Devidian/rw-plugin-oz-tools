@@ -3,7 +3,7 @@
 
 ## Responsibility
 
-SQLite persistence interfaces, caching and player settings. Tools supplies reusable persistence primitives and owns shared player settings. Feature plugins own their domain databases.
+SQLite persistence interfaces, caching and player settings. Tools supplies reusable persistence primitives and owns shared player settings. Feature plugins own their domain databases. The cached-store shutdown flushes before retiring in-memory state. [Shutdown tests](../../src-test/de/omegazirkel/risingworld/tools/db/SQLiteCachedStoreShutdownTest.java) exercise failed-write retry.
 
 ## Source and tests
 
